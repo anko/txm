@@ -1,14 +1,14 @@
 {
-  "name": "testxmd",
+  "name": "tests-ex-markdown",
   "version": "0.0.0",
-  "description": "Tests ex markdown! Use usage examples from a markdown file as unit tests",
+  "description": "Unit test usage examples from a markdown file",
   "main": "index.js",
   "scripts": {
     "prepublish": "lsc --compile --bare --print index.ls | sed '1s:^:#!/usr/bin/env node\\n:' > index.js",
-    "test": "lsc index.ls test.markdown"
+    "test": "lsc index.ls test.markdown; lsc index.ls readme.markdown"
   },
   "bin": {
-    "testxmd": "index.js"
+    "txm": "index.js"
   },
   "author": "Anko <an@cyan.io>",
   "license": "ISC",
