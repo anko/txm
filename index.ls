@@ -78,6 +78,7 @@ visit = (node) ->
       if state.spec-name
 
         name = state.spec-name
+        state.spec-name := null
 
         state.specs[name] = node.value
 
@@ -90,12 +91,11 @@ visit = (node) ->
             }
           ]
 
-        state.spec-name := null
-
 
       else if state.result-name
 
         name = state.result-name
+        state.result-name := null
 
         state.results[name] = node.value
 
@@ -107,8 +107,6 @@ visit = (node) ->
               result    : state.results[name]
             }
           ]
-
-        state.result-name := null
 
     return []
 
