@@ -4,6 +4,7 @@
 # results.
 
 require! <[ fs mdast ]>
+test = require \tape
 { flip, each, map, fold, unwords } = require \prelude-ls
 { exec-sync } = require \child_process
 
@@ -120,10 +121,13 @@ if e
   process.exit 1
 
 tests = visit mdast.parse contents.to-string!
-tests |> each ({ program, spec, result }) ->
+tests |> each ({ program, spec, result : intended-output }) ->
   try
-    output = exec-sync program, input : spec
-    console.log output.to-string!
+    test "testxmd test" (t) ->
+      output = exec-sync program, input : spec .to-string!
+      t.equals output, intended-output
+      t.end!
+
   catch e
     console.error e
     process.exit 1

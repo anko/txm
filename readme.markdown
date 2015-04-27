@@ -19,5 +19,12 @@ Look ma, no hands!
     foot!
 ```
 
-Run `testxmd file.markdown` to check the results when run with the specified
-program match.
+`testxmd file.markdown` then passes each `spec` to the [`stdin`][1] of an
+instance of the last specified `program`, and checks if the `stdout` matches
+the corresponding `result`.
+
+The output is in [Test Anything Protocol version 13][2], just like [tape][3].
+
+[1]: http://en.wikipedia.org/wiki/Standard_streams
+[2]: https://testanything.org/tap-version-13-specification.html
+[3]: https://www.npmjs.com/package/tape
