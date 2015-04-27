@@ -1,4 +1,4 @@
-# testxmd
+# testxmd ![](https://img.shields.io/badge/api_stability-experimental-red.svg?style=flat-square)
 
 *Tests ex markdown*!  Use usage examples from a markdown file as unit tests.
 
