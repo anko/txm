@@ -4,7 +4,8 @@
 # results.
 
 require! <[ fs mdast ]>
-{ flip, each, map, fold, words } = require \prelude-ls
+{ flip, each, map, fold, unwords } = require \prelude-ls
+{ exec-sync } = require \child_process
 
 [ ...files ] = process.argv.slice 2
 
@@ -122,6 +123,9 @@ if e
 
 tests = visit mdast.parse contents.to-string!
 tests |> each ({ program, spec, result }) ->
-  console.log program
-  console.log spec
-  console.log result
+  try
+    output = exec-sync program, input : spec
+    console.log output.to-string!
+  catch e
+    console.error e
+    process.exit 1

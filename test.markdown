@@ -8,7 +8,10 @@ XML/HTML templating with [LiveScript][1]'s [cascade][2] syntax.
 &emsp;
 [![npm dependencies](https://img.shields.io/david/anko/whatxml.svg?style=flat-square)](https://david-dm.org/anko/whatxml)
 
-<!-- !test program lsc \-\-stdin -->
+<!-- !test program
+sed '1s/^/require! \\whatxml;/' | lsc \-\-stdin
+-->
+<!-- !test before -->
 <!-- !test spec 1 -->
 ```ls
 x = whatxml \html
