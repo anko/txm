@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prepublish" : "lsc --compile --bare index.ls",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "lsc index.ls test.markdown"
   },
   "author": "Anko <an@cyan.io>",
   "license": "ISC",
