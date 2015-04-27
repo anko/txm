@@ -41,7 +41,7 @@ visit = (node) ->
          -->           # HTML comment end
          //m
 
-    [ _, command ] = node.value .match re
+    [ _, command ] = (node.value .match re) || []
 
     if command
 
