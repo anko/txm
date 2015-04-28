@@ -1,4 +1,4 @@
-# tests-ex-markdown ![](https://img.shields.io/badge/api_status-getting_there-yellow.svg?style=flat-square)
+# tests-ex-markdown ![](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)
 
 Run [markdown][1] code snippets as unit tests.
 
