@@ -1,4 +1,4 @@
-# tests-ex-markdown ![](https://img.shields.io/badge/api_status-getting_there-yellow.svg)
+# tests-ex-markdown ![](https://img.shields.io/badge/api_status-getting_there-yellow.svg?style=flat-square)
 
 Run [markdown][1] code snippets as unit tests.
 
@@ -87,8 +87,10 @@ They're [illegal in HTML comments][5], so txm provides a way to escape them:
 
 The program is run as a shell command, so it can contain arbitrary
 [redirection][6].  You can use this to prepend obvious things to the input to
-reduce redundancy in your example code (e.g. `var m = require("mymodule");"`)
-or to trim off a trailing newline from the output (using `head -c -1`).
+reduce redundancy in your example code (e.g. using `sed` to drop in a line of
+`var m = require("mymodule");`) or to trim off a trailing newline from the
+output (using `head -c -1`) to match the expected output, or even [burrito][7]
+it for crazy code instrumentation.
 
 ## Why
 
@@ -96,12 +98,12 @@ I constantly write usage examples in markdown files, in various languages.  I
 wanted a way to automatically verify that they're still correct.
 
 I didn't want to introduce a build step for readme files, because that could
-cause a [chicken-and-egg dilemma][7], as you might need the readme file to know
+cause a [chicken-and-egg dilemma][8], as you might need the readme file to know
 how to build the readme file.  So comment annotations seemed fine.
 
 * * *
 
-The name is dumb wordplay on "[*deus ex machina*][8]".
+The name is dumb wordplay on "[*deus ex machina*][9]".
 
 [1]: http://daringfireball.net/projects/markdown/syntax
 [2]: https://testanything.org/tap-version-13-specification.html
@@ -109,5 +111,6 @@ The name is dumb wordplay on "[*deus ex machina*][8]".
 [4]: http://en.wikipedia.org/wiki/Standard_streams
 [5]: http://www.w3.org/TR/REC-xml/#sec-comments
 [6]: http://en.wikipedia.org/wiki/Redirection_(computing)
-[7]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
-[8]: http://en.wikipedia.org/wiki/Deus_ex_machina
+[7]: https://github.com/substack/node-burrito
+[8]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
+[9]: http://en.wikipedia.org/wiki/Deus_ex_machina
