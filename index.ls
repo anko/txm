@@ -5,12 +5,9 @@
 
 require! <[ fs mdast ]>
 test = require \tape
-{ flip, each, map, fold, unwords } = require \prelude-ls
+{ each, map, fold, unwords, keys } = require \prelude-ls
 { exec-sync } = require \child_process
-
-[ ...files ] = process.argv.slice 2
-
-process.exit 0 unless files.length
+concat = require \concat-stream
 
 die = (message) ->
   console.error message
@@ -21,61 +18,56 @@ die = (message) ->
 unescape = (script) ->
   script.replace /\\(.)/g -> &1
 
-file <- (flip each) files
-e, contents <- fs.read-file file
+test-this = (contents) ->
+  state =
+    program     : null
+    spec-name   : null
+    result-name : null
+    specs       : {}
+    results     : {}
 
-state =
-  program     : null
-  spec-name   : null
-  result-name : null
-  specs       : {}
-  results     : {}
+  visit = (node) ->
+    if node.type is \html
 
-visit = (node) ->
-  if node.type is \html
+      re = //
+           <!--          # HTML comment start
+           (?:\s+)?      # optional whitespace
+           !test         # test command marker
+           \s+           # whitespace
+           ([\s\S]*)     # interesting commands
+           -->           # HTML comment end
+           //m
 
-    re = //
-         <!--          # HTML comment start
-         (?:\s+)?      # optional whitespace
-         !test         # test command marker
-         \s+           # whitespace
-         ([\s\S]*)     # interesting commands
-         -->           # HTML comment end
-         //m
+      [ _, command ] = (node.value .match re) || []
 
-    [ _, command ] = (node.value .match re) || []
+      if command
 
-    if command
+        w = command .split /\s+/
 
-      w = command .split /\s+/
+        switch w.0
 
-      switch w.0
+        | \program =>
 
-      | \program =>
+          program = command
+                    |> (.slice w.0.length)
+                    |> (.trim!)
+                    |> unescape
 
-        program = command
-                  |> (.slice w.0.length)
-                  |> (.trim!)
-                  |> unescape
+          state.program = program
 
-        state.program = program
+        | \input
+          if state.spec-name or state.result-name
+            die "Consecutive spec or result commands"
+          state.spec-name = w.1
 
-      | \input
-        if state.spec-name or state.result-name
-          die "Consecutive spec or result commands"
-        state.spec-name = w.1
+        | \output
+          if state.spec-name or state.result-name
+            die "Consecutive spec or result commands"
+          state.result-name = w.1
 
-      | \output
-        if state.spec-name or state.result-name
-          die "Consecutive spec or result commands"
-        state.result-name = w.1
+      return []
 
-    return []
-
-  else if node.type is \code
-    if state.program
-
-
+    else if node.type is \code
       if state.spec-name
 
         name = state.spec-name
@@ -83,7 +75,10 @@ visit = (node) ->
 
         state.specs[name] = node.value
 
+
         if state.results[name] # corresponding result has been found
+          if not state.program
+            die "Input and output `#name` matched, but no program given yet"
           return [
             {
               program   : state.program
@@ -101,6 +96,8 @@ visit = (node) ->
         state.results[name] = node.value
 
         if state.results[name] # corresponding spec has been found
+          if not state.program
+            die "Input and output `#name` matched, but no program given yet"
           return [
             {
               program   : state.program
@@ -109,25 +106,46 @@ visit = (node) ->
             }
           ]
 
-    return []
+      return []
 
-  else if \children of node
-    node.children |> map visit |> fold (++), []
-  else []
+    else if \children of node
+      node.children |> map visit |> fold (++), []
+    else []
+
+  tests = visit mdast.parse contents.to-string!
+
+  # Inspect state as it was left, to check for inputs and outputs that weren't
+  # matched.
+  state.specs |> keys |> each (k) ->
+    if not state.results[k]
+      die "No matching output for input `#k`"
+  state.results |> keys |> each (k) ->
+    if not state.specs[k]
+      die "No matching input for output `#k`"
 
 
-if e
-  console.error e
-  process.exit 1
+  tests |> each ({ program, spec, result : intended-output }) ->
+    try
+      test "testxmd test" (t) ->
+        output = exec-sync program, input : spec .to-string!
+        t.equals output, intended-output
+        t.end!
 
-tests = visit mdast.parse contents.to-string!
-tests |> each ({ program, spec, result : intended-output }) ->
-  try
-    test "testxmd test" (t) ->
-      output = exec-sync program, input : spec .to-string!
-      t.equals output, intended-output
-      t.end!
+    catch e
+      console.error e
+      process.exit 1
 
-  catch e
-    console.error e
-    process.exit 1
+
+[ ...files ] = process.argv.slice 2
+
+if files.length is 0
+  # Read from stdin
+  process.stdin
+    ..on \error (e) -> console.error e ; process.exit 2
+    ..pipe concat (data) ->
+      test-this data
+else
+  files |> each (file) ->
+    e, data <- fs.read-file file
+    throw e if e
+    test-this data
