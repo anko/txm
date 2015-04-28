@@ -14,18 +14,18 @@ F=$(mktemp); cat > "$F";
 rm -f "$F"
 -->
 
-<!-- !test spec simple -->
+<!-- !test input simple -->
 
 ```md
-<!-- !test program  node -->
+<!-- !test program node -->
 
 Look ma, no hands!
 
-<!-- !test spec 1 -->
+<!-- !test input 1 -->
 
     process.stdout.write("foot!");
 
-<!-- !test result 1 -->
+<!-- !test output 1 -->
 
     foot!
 ```
@@ -36,7 +36,7 @@ Run:
 
 Receive [Test Anything Protocol version 13][2] output (through [tape][3]):
 
-<!-- !test result simple -->
+<!-- !test output simple -->
 
     TAP version 13
     # testxmd test

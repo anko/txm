@@ -60,12 +60,12 @@ visit = (node) ->
 
         state.program = program
 
-      | \spec
+      | \input
         if state.spec-name or state.result-name
           die "Consecutive spec or result commands"
         state.spec-name = w.1
 
-      | \result
+      | \output
         if state.spec-name or state.result-name
           die "Consecutive spec or result commands"
         state.result-name = w.1

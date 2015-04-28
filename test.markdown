@@ -7,7 +7,7 @@ sed '1s/^/require! \\whatxml;/' \
 | lsc -\-stdin \
 | head -c -1
 -->
-<!-- !test spec 1 -->
+<!-- !test input 1 -->
 ```ls
 x = whatxml \html
   .. \head
@@ -21,7 +21,7 @@ console.log x.to-string { content : "Here's a paragraph." }
 
 To get this:
 
-<!-- !test result 1 -->
+<!-- !test output 1 -->
 ```html
 <html><head><title>My page</title><link rel="stylesheet" type="text/css" href="main.css" /></head><body><p>Here&#x27;s a paragraph.</p></body></html>
 ```
