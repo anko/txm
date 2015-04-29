@@ -36,6 +36,8 @@ Run:
 
     txm whatever.markdown
 
+(Passing it on `stdin` is OK too.)
+
 Receive [Test Anything Protocol version 13][2] output (through [tape][3]):
 
 <!-- !test output simple -->
@@ -50,18 +52,19 @@ Receive [Test Anything Protocol version 13][2] output (through [tape][3]):
 
     # ok
 
-The HTML comments remain invisible, but your code examples are now testable.
+The HTML comments remain invisible when rendered, but your code examples become
+easily testable!
 
-As you might guess, the above example is itself a unit test for this module.
+As you might guess, the above example is itself a unit test for this module. :)
 
 ## How it works
 
 ### Input/output commands
 
-The Markdown file is parsed sequentially. Only code blocks and HTML comments
+The Markdown file is parsed sequentially.  Only code blocks and HTML comments
 starting "!test" are read. When an `input` command is read, the next code block
-will be read as a test input. When an `output` command is read, it will be read
-as expected output.
+will be read as a test input.  When an `output` command is read, it will be
+read as expected output.
 
 Each `input`/`output` command has an associated identifier that associates them
 as pairs.  These can be any string.  These exist to let you put matching inputs
