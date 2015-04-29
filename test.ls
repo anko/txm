@@ -42,7 +42,7 @@ txm-expect do
   0
   """
   TAP version 13
-  # testxmd test
+  # 1
   ok 1 should be equal
 
   1..1
@@ -138,7 +138,7 @@ txm-expect do
   0
   """
   TAP version 13
-  # testxmd test
+  # 1
   ok 1 should be equal
 
   1..1
@@ -175,9 +175,9 @@ txm-expect do
   0
   """
   TAP version 13
-  # testxmd test
+  # 1
   ok 1 should be equal
-  # testxmd test
+  # 2
   ok 2 should be equal
 
   1..2
@@ -255,7 +255,7 @@ txm-expect do
   0
   """
   TAP version 13
-  # testxmd test
+  # something fairly long going in here
   ok 1 should be equal
 
   1..1
@@ -282,7 +282,7 @@ txm-expect do
   0
   """
   TAP version 13
-  # testxmd test
+  # 本当にいいんですか
   ok 1 should be equal
 
   1..1
@@ -309,7 +309,7 @@ txm-expect do
   0
   """
   TAP version 13
-  # testxmd test
+  # spacing
   ok 1 should be equal
 
   1..1

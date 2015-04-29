@@ -22,13 +22,13 @@ rm -f "$F"
 
 Here's how to print without a trailing [newline][1] in [Node.js][2]:
 
-<!-- !test in 1 -->
+<!-- !test in simple example -->
 
     process.stdout.write("hi");
 
 It will print this:
 
-<!-- !test out 1 -->
+<!-- !test out simple example -->
 
     hi
 
@@ -47,7 +47,7 @@ Receive [Test Anything Protocol version 13][2] output.
 <!-- !test out simple -->
 
     TAP version 13
-    # testxmd test
+    # simple example
     ok 1 should be equal
 
     1..1

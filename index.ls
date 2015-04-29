@@ -88,6 +88,7 @@ test-this = (contents) ->
             die "Input and output `#name` matched, but no program given yet"
           return [
             {
+              name      : name
               program   : state.program
               spec      : state.specs[name]
               result    : state.results[name]
@@ -110,6 +111,7 @@ test-this = (contents) ->
             die "Input and output `#name` matched, but no program given yet"
           return [
             {
+              name      : name
               program   : state.program
               spec      : state.specs[name]
               result    : state.results[name]
@@ -134,9 +136,9 @@ test-this = (contents) ->
       die "No matching input for output `#k`"
 
 
-  tests |> each ({ program, spec, result : intended-output }) ->
+  tests |> each ({ name, program, spec, result : intended-output }) ->
     try
-      test "testxmd test" (t) ->
+      test name, (t) ->
         output = exec-sync program, input : spec .to-string!
         t.equals output, intended-output
         t.end!
