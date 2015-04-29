@@ -13,8 +13,8 @@ txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) 
   test name, (t) ->
     { stdout, status, stderr } = txm md-string
 
-    if expected-exit
-      status `t.equals` expected-exit
+    if not expected-exit then t.not-ok status  # anything falsy
+    else status `t.equals` expected-exit       # specific number
     if expected-stdout
       stdout.to-string! `t.equals` expected-stdout
     if expected-stderr
