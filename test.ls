@@ -189,3 +189,53 @@ txm-expect do
 
   """
   ""
+
+txm-expect do
+  "Multiple inputs with conflicting id"
+  """
+  <!-- !test program cat -->
+  <!-- !test input 1 -->
+
+      one
+
+  <!-- !test input 1 -->
+
+      two
+
+  <!-- !test output 1 -->
+
+      one
+
+  <!-- !test input 1 -->
+
+      two
+
+  """
+  1
+  "" # no stdout
+  "Multiple inputs with name `1`\n"
+
+txm-expect do
+  "Multiple outputs with conflicting id"
+  """
+  <!-- !test program cat -->
+  <!-- !test output 1 -->
+
+      one
+
+  <!-- !test output 1 -->
+
+      two
+
+  <!-- !test input 1 -->
+
+      one
+
+  <!-- !test output 1 -->
+
+      two
+
+  """
+  1
+  "" # no stdout
+  "Multiple outputs with name `1`\n"

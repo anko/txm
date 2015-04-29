@@ -73,6 +73,9 @@ test-this = (contents) ->
         name = state.spec-name
         state.spec-name := null
 
+        if state.specs[name]
+          die "Multiple inputs with name `#name`"
+
         state.specs[name] = node.value
 
 
@@ -92,6 +95,9 @@ test-this = (contents) ->
 
         name = state.result-name
         state.result-name := null
+
+        if state.results[name]
+          die "Multiple outputs with name `#name`"
 
         state.results[name] = node.value
 
