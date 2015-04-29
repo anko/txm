@@ -1,7 +1,7 @@
 {
   "name": "tests-ex-markdown",
   "version": "1.0.0",
-  "description": "Unit test usage examples from a markdown file",
+  "description": "Run markdown usage examples as unit tests",
   "main": "index.js",
   "scripts": {
     "prepublish": "lsc --compile --bare --print index.ls | sed '1s:^:#!/usr/bin/env node\\n:' > index.js",
@@ -14,6 +14,11 @@
   "engines": {
     "node": ">=0.11"
   },
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/anko/tests-ex-markdown"
+  },
+  "bugs": "https://github.com/anko/tests-ex-markdown/issues",
   "license": "ISC",
   "files": [
     "index.js",
