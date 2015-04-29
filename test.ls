@@ -30,11 +30,11 @@ txm-expect do
   "simple cat passthrough"
   """
   <!-- !test program cat -->
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       hi
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       hi
 
@@ -57,11 +57,11 @@ txm-expect do
 txm-expect do
   "no program specified"
   """
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       hi
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       hi
 
@@ -74,7 +74,7 @@ txm-expect do
   "input without matching output"
   """
   <!-- !test program cat -->
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       hi
   """
@@ -86,7 +86,7 @@ txm-expect do
   "output without matching input"
   """
   <!-- !test program cat -->
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       hi
   """
@@ -107,14 +107,14 @@ txm-expect do
   | head -c -1
   -->
 
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
   ```ls
   console.log("yo");
   ```
 
   To get this:
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
   ```html
   hi
   yo
@@ -126,11 +126,11 @@ txm-expect do
   "output defined before input"
   """
   <!-- !test program cat -->
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       hi
 
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       hi
 
@@ -155,19 +155,19 @@ txm-expect do
   "interleaved tests"
   """
   <!-- !test program cat -->
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       one
 
-  <!-- !test input 2 -->
+  <!-- !test in 2 -->
 
       two
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       one
 
-  <!-- !test output 2 -->
+  <!-- !test out 2 -->
 
       two
 
@@ -194,19 +194,19 @@ txm-expect do
   "Multiple inputs with conflicting id"
   """
   <!-- !test program cat -->
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       one
 
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       two
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       one
 
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       two
 
@@ -219,19 +219,19 @@ txm-expect do
   "Multiple outputs with conflicting id"
   """
   <!-- !test program cat -->
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       one
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       two
 
-  <!-- !test input 1 -->
+  <!-- !test in 1 -->
 
       one
 
-  <!-- !test output 1 -->
+  <!-- !test out 1 -->
 
       two
 
@@ -244,11 +244,11 @@ txm-expect do
   "Long test name"
   """
   <!-- !test program cat -->
-  <!-- !test input something fairly long going in here -->
+  <!-- !test in something fairly long going in here -->
 
       hi
 
-  <!-- !test output something fairly long going in here -->
+  <!-- !test out something fairly long going in here -->
 
       hi
   """
@@ -271,11 +271,11 @@ txm-expect do
   "Test name in Unicode"
   """
   <!-- !test program cat -->
-  <!-- !test input 本当にいいんですか -->
+  <!-- !test in 本当にいいんですか -->
 
       hi
 
-  <!-- !test output 本当にいいんですか -->
+  <!-- !test out 本当にいいんですか -->
 
       hi
   """
@@ -298,11 +298,11 @@ txm-expect do
   "Whitespace at ends is ignored when matching inputs and outputs"
   """
   <!-- !test program cat -->
-  <!-- !test input           spacing         -->
+  <!-- !test in           spacing         -->
 
       hi
 
-  <!-- !test output spacing-->
+  <!-- !test out spacing-->
 
       hi
   """
@@ -325,11 +325,11 @@ txm-expect do
   "Whitespace inside input/output name is significant"
   """
   <!-- !test program cat -->
-  <!-- !test input big cat -->
+  <!-- !test in big cat -->
 
       hi
 
-  <!-- !test output big               cat -->
+  <!-- !test out big               cat -->
 
       hi
   """

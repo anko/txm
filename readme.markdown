@@ -4,7 +4,9 @@ Run [markdown][1] code snippets as unit tests.
 
 ## Use
 
-Annotate your markdown with `!test` commands within HTML comments:
+Annotate your markdown with `!test` commands within HTML comments, to define
+what **program** the test should run with, what to pass as **input** and what
+**output** to expect:
 
 <!-- !test program
 # Write to temporary file, ignore TAP's last newlines
@@ -13,7 +15,7 @@ F=$(mktemp); cat > "$F";
 rm -f "$F"
 -->
 
-<!-- !test input simple -->
+<!-- !test in simple -->
 
 ```md
 <!-- !test program node -->
@@ -21,13 +23,13 @@ rm -f "$F"
 I'm now doing to demonstrate how to print things in
 [Node.js](https://nodejs.org/):
 
-<!-- !test input 1 -->
+<!-- !test in 1 -->
 
     process.stdout.write("hi");
 
 You can expect that to produce this:
 
-<!-- !test output 1 -->
+<!-- !test out 1 -->
 
     hi
 ```
@@ -40,7 +42,7 @@ Run:
 
 Receive [Test Anything Protocol version 13][2] output (through [tape][3]):
 
-<!-- !test output simple -->
+<!-- !test out simple -->
 
     TAP version 13
     # testxmd test
@@ -62,13 +64,13 @@ As you might guess, the above example is itself a unit test for this module. :)
 ### Input/output commands
 
 The Markdown file is parsed sequentially.  Only code blocks and HTML comments
-starting "!test" are read. When an `input` command is read, the next code block
-will be read as a test input.  When an `output` command is read, it will be
-read as expected output.
+starting "!test" are read. When an `in` command is read, the next code block
+will be read as a test input.  When an `out` command is read, it will be read
+as expected output.
 
-Each `input`/`output` command has an associated identifier that associates them
-as pairs.  These can be any string.  These exist to let you put matching inputs
-and outputs in any order wherever you like.
+Each `in`/`out` command has an associated identifier that associates them as
+pairs.  These can be any string.  These exist to let you put matching inputs
+and outputs in any order you like anywhere in the file.
 
 ### The program command
 

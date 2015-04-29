@@ -55,14 +55,14 @@ test-this = (contents) ->
 
           state.program = program
 
-        | \input
+        | \in
           if state.spec-name or state.result-name
             die "Consecutive spec or result commands"
           state.spec-name = command
             .slice w.0.length
             .trim!
 
-        | \output
+        | \out
           if state.spec-name or state.result-name
             die "Consecutive spec or result commands"
           state.result-name = command
