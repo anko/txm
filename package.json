@@ -1,6 +1,6 @@
 {
   "name": "tests-ex-markdown",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Unit test usage examples from a markdown file",
   "main": "index.js",
   "scripts": {
@@ -11,19 +11,21 @@
     "txm": "index.js"
   },
   "author": "Anko <an@cyan.io>",
-  "engines": { "node": ">=0.11" },
+  "engines": {
+    "node": ">=0.11"
+  },
   "license": "ISC",
   "files": [
     "index.js",
     "readme.markdown"
   ],
   "keywords": [
-      "markdown",
-      "test",
-      "example",
-      "readme",
-      "comment",
-      "tap"
+    "markdown",
+    "test",
+    "example",
+    "readme",
+    "comment",
+    "tap"
   ],
   "dependencies": {
     "concat-stream": "^1.4.8",
