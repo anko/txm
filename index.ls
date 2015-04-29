@@ -132,8 +132,7 @@ test-this = (contents) ->
         t.end!
 
     catch e
-      console.error e
-      process.exit 1
+      die e
 
 
 [ ...files ] = process.argv.slice 2
@@ -141,7 +140,7 @@ test-this = (contents) ->
 if files.length is 0
   # Read from stdin
   process.stdin
-    ..on \error (e) -> console.error e ; process.exit 2
+    ..on \error (e) -> die e
     ..pipe concat (data) ->
       test-this data
 else
