@@ -150,3 +150,42 @@ txm-expect do
 
   """
   ""
+
+txm-expect do
+  "interleaved tests"
+  """
+  <!-- !test program cat -->
+  <!-- !test input 1 -->
+
+      one
+
+  <!-- !test input 2 -->
+
+      two
+
+  <!-- !test output 1 -->
+
+      one
+
+  <!-- !test output 2 -->
+
+      two
+
+  """
+  0
+  """
+  TAP version 13
+  # testxmd test
+  ok 1 should be equal
+  # testxmd test
+  ok 2 should be equal
+
+  1..2
+  # tests 2
+  # pass  2
+
+  # ok
+
+
+  """
+  ""
