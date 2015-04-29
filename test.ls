@@ -130,3 +130,31 @@ passes do
   yo
   ```
   """
+
+passes do
+  "output defined before input"
+  """
+  <!-- !test program cat -->
+  <!-- !test output 1 -->
+
+      hi
+
+  <!-- !test input 1 -->
+
+      hi
+
+  """
+  """
+  TAP version 13
+  # testxmd test
+  ok 1 should be equal
+
+  1..1
+  # tests 1
+  # pass  1
+
+  # ok
+
+
+  """
+  ""

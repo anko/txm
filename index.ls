@@ -95,7 +95,7 @@ test-this = (contents) ->
 
         state.results[name] = node.value
 
-        if state.results[name] # corresponding spec has been found
+        if state.specs[name] # corresponding spec has been found
           if not state.program
             die "Input and output `#name` matched, but no program given yet"
           return [
