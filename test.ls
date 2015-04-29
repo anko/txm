@@ -239,3 +239,84 @@ txm-expect do
   1
   "" # no stdout
   "Multiple outputs with name `1`\n"
+
+txm-expect do
+  "Long test name"
+  """
+  <!-- !test program cat -->
+  <!-- !test input something fairly long going in here -->
+
+      hi
+
+  <!-- !test output something fairly long going in here -->
+
+      hi
+  """
+  0
+  """
+  TAP version 13
+  # testxmd test
+  ok 1 should be equal
+
+  1..1
+  # tests 1
+  # pass  1
+
+  # ok
+
+
+  """
+
+txm-expect do
+  "Test name in Unicode"
+  """
+  <!-- !test program cat -->
+  <!-- !test input 本当にいいんですか -->
+
+      hi
+
+  <!-- !test output 本当にいいんですか -->
+
+      hi
+  """
+  0
+  """
+  TAP version 13
+  # testxmd test
+  ok 1 should be equal
+
+  1..1
+  # tests 1
+  # pass  1
+
+  # ok
+
+
+  """
+
+txm-expect do
+  "Whitespace at ends is ignored when matching inputs and outputs"
+  """
+  <!-- !test program cat -->
+  <!-- !test input           spacing         -->
+
+      hi
+
+  <!-- !test output spacing-->
+
+      hi
+  """
+  0
+  """
+  TAP version 13
+  # testxmd test
+  ok 1 should be equal
+
+  1..1
+  # tests 1
+  # pass  1
+
+  # ok
+
+
+  """
