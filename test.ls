@@ -2,12 +2,14 @@
 { exec-sync } = require \child_process
 test = require \tape
 
-txm = (md-string) ->
-  try
-    return stdout : exec-sync "./index.ls" { input : md-string }
-  catch e
-    return e
 txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) ->
+
+  txm = (md-string) ->
+    try
+      return stdout : exec-sync "./index.ls" { input : md-string }
+    catch e
+      return e
+
   test name, (t) ->
     { stdout, status, stderr } = txm md-string
 
