@@ -7,28 +7,12 @@ txm = (md-string) ->
     return stdout : exec-sync "./index.ls" { input : md-string }
   catch e
     return e
-
-# Asserts that the given markdown's tests should PASS in txm.
-passes = (name, md-string, expected-stdout, expected-stderr) ->
+txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) ->
   test name, (t) ->
     { stdout, status, stderr } = txm md-string
 
-    t.not-ok status, "Error code indicates success"
-
-    if expected-stdout
-      stdout.to-string! `t.equals` expected-stdout
-    if expected-stderr
-      stderr?to-string! `t.equals` expected-stderr
-
-    t.end!
-
-# Asserts that the given markdown's tests should FAIL in txm.
-fails = (name, md-string, expected-stdout, expected-stderr) ->
-  test name, (t) ->
-    { stdout, status, stderr } = txm md-string
-
-    t.ok status, "Error code indicates error happened"
-
+    if expected-exit
+      status `t.equals` expected-exit
     if expected-stdout
       stdout.to-string! `t.equals` expected-stdout
     if expected-stderr
@@ -40,7 +24,7 @@ fails = (name, md-string, expected-stdout, expected-stderr) ->
 # These tests are so meta.
 #
 
-passes do
+txm-expect do
   "simple cat passthrough"
   """
   <!-- !test program cat -->
@@ -53,6 +37,7 @@ passes do
       hi
 
   """
+  0
   """
   TAP version 13
   # testxmd test
@@ -67,7 +52,7 @@ passes do
 
   """
 
-fails do
+txm-expect do
   "no program specified"
   """
   <!-- !test input 1 -->
@@ -79,10 +64,11 @@ fails do
       hi
 
   """
+  1
   "" # No stdout
   "Input and output `1` matched, but no program given yet\n"
 
-fails do
+txm-expect do
   "input without matching output"
   """
   <!-- !test program cat -->
@@ -90,10 +76,11 @@ fails do
 
       hi
   """
+  1
   "" # No stdout
   "No matching output for input `1`\n"
 
-fails do
+txm-expect do
   "output without matching input"
   """
   <!-- !test program cat -->
@@ -101,10 +88,11 @@ fails do
 
       hi
   """
+  1
   "" # No stdout
   "No matching input for output `1`\n"
 
-passes do
+txm-expect do
   "redirection in program"
   """
   # whatxml
@@ -130,8 +118,9 @@ passes do
   yo
   ```
   """
+  0
 
-passes do
+txm-expect do
   "output defined before input"
   """
   <!-- !test program cat -->
@@ -144,6 +133,7 @@ passes do
       hi
 
   """
+  0
   """
   TAP version 13
   # testxmd test
