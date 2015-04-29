@@ -320,3 +320,19 @@ txm-expect do
 
 
   """
+
+txm-expect do
+  "Whitespace inside input/output name is significant"
+  """
+  <!-- !test program cat -->
+  <!-- !test input big cat -->
+
+      hi
+
+  <!-- !test output big               cat -->
+
+      hi
+  """
+  1
+  ""
+  "No matching output for input `big cat`\n"

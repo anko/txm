@@ -58,12 +58,16 @@ test-this = (contents) ->
         | \input
           if state.spec-name or state.result-name
             die "Consecutive spec or result commands"
-          state.spec-name = w.1
+          state.spec-name = command
+            .slice w.0.length
+            .trim!
 
         | \output
           if state.spec-name or state.result-name
             die "Consecutive spec or result commands"
-          state.result-name = w.1
+          state.result-name = command
+            .slice w.0.length
+            .trim!
 
       return []
 
