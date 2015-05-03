@@ -1,8 +1,10 @@
 # tests-ex-markdown
+
 [![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1]
 [![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2]
+[![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
 
-Run your [markdown][3] code examples as unit tests.
+Run your [markdown][4] code examples as unit tests.
 
 ## Use
 
@@ -44,7 +46,7 @@ Run:
 
 (Or write the Markdown to `stdin`.)
 
-Receive [Test Anything Protocol version 13][4] output.
+Receive [Test Anything Protocol version 13][5] output.
 
 <!-- !test out simple -->
 
@@ -77,7 +79,7 @@ and outputs in any order you like anywhere in the file.
 ### The program command
 
 The `program` command defines the program the input is passed to, which is then
-expected to produce the given output.  (That's [standard input and output][5].)
+expected to produce the given output.  (That's [standard input and output][6].)
 
 Whenever a pair of input/output commands get matched, the last encountered
 program command is used.  (So you can just have the program command once if
@@ -87,16 +89,16 @@ Some tips for writing these correctly:
 
 #### Escape double hyphens (`--`)
 
-They're [illegal in HTML comments][6], so txm provides a way to escape them:
+They're [illegal in HTML comments][7], so txm provides a way to escape them:
 `\-` means the same as a hyphen.  For a literal backslash, write `\\`.
 
 #### Modify input with shell commands
 
 The program is run as a shell command, so it can contain arbitrary
-[redirection][7].  You can use this to prepend obvious things to the input to
+[redirection][8].  You can use this to prepend obvious things to the input to
 reduce redundancy in your example code (e.g. using `sed` to drop in a line of
 `var m = require("mymodule");`) or to trim off a trailing newline from the
-output (using `head -c -1`) to match the expected output, or even [burrito][8]
+output (using `head -c -1`) to match the expected output, or even [burrito][9]
 it for crazy code instrumentation.
 
 ## Why
@@ -107,20 +109,21 @@ tested this way.
 
 Comment annotations were chosen because they're easy to plug into an existing
 file.  I didn't want to introduce a build step for readme files, because that
-could cause a [chicken-and-egg dilemma][9]—you might need the readme file to
+could cause a [chicken-and-egg dilemma][10]—you might need the readme file to
 learn how to build the readme file!
 
 * * *
 
-The name is dumb wordplay on "[*deus ex machina*][10]".
+The name is dumb wordplay on "[*deus ex machina*][11]".
 
 [1]: https://www.npmjs.com/package/tests-ex-markdown
 [2]: https://travis-ci.org/anko/tests-ex-markdown
-[3]: http://daringfireball.net/projects/markdown/syntax
-[4]: https://testanything.org/tap-version-13-specification.html
-[5]: http://en.wikipedia.org/wiki/Standard_streams
-[6]: http://www.w3.org/TR/REC-xml/#sec-comments
-[7]: http://en.wikipedia.org/wiki/Redirection_(computing)
-[8]: https://github.com/substack/node-burrito
-[9]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
-[10]: http://en.wikipedia.org/wiki/Deus_ex_machina
+[3]: https://david-dm.org/anko/whatxml
+[4]: http://daringfireball.net/projects/markdown/syntax
+[5]: https://testanything.org/tap-version-13-specification.html
+[6]: http://en.wikipedia.org/wiki/Standard_streams
+[7]: http://www.w3.org/TR/REC-xml/#sec-comments
+[8]: http://en.wikipedia.org/wiki/Redirection_(computing)
+[9]: https://github.com/substack/node-burrito
+[10]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
+[11]: http://en.wikipedia.org/wiki/Deus_ex_machina
