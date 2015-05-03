@@ -55,13 +55,15 @@ test-this = (contents) ->
         | \in
           die "Consecutive spec or result commands" if have-spec-or-result!
           state.spec-name = command
-                            .slice that.length # rest of command
-                            .trim!
+                            |> (.slice that.length) # rest of command
+                            |> (.trim!)
+                            |> unescape
         | \out
           die "Consecutive spec or result commands" if have-spec-or-result!
           state.result-name = command
-                              .slice that.length # rest of command
-                              .trim!
+                              |> (.slice that.length) # rest of command
+                              |> (.trim!)
+                              |> unescape
 
       return []
 

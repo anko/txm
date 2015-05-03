@@ -332,3 +332,31 @@ txm-expect do
   1
   ""
   "No matching output for input `big cat`\n"
+
+
+txm-expect do
+  "Escaping dashes works in all commands"
+  """
+  <!-- !test program echo -\\-version > /dev/null ; cat -->
+  <!-- !test in \\-\\- -->
+
+      hi
+
+  <!-- !test out -\\- -->
+
+      hi
+  """
+  0
+  """
+  TAP version 13
+  # --
+  ok 1 should be equal
+
+  1..1
+  # tests 1
+  # pass  1
+
+  # ok
+
+
+  """
