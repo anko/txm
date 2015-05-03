@@ -22,10 +22,6 @@ txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) 
 
     t.end!
 
-#
-# These tests are so meta.
-#
-
 txm-expect do
   "simple cat passthrough"
   """
