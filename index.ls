@@ -5,7 +5,7 @@
 
 require! <[ fs mdast ]>
 test = require \tape
-{ each, map, fold, unwords, keys } = require \prelude-ls
+{ each, map, fold, unwords, keys, first } = require \prelude-ls
 { exec-sync } = require \child_process
 concat = require \concat-stream
 
@@ -15,16 +15,18 @@ die = (message) ->
 
 # Consecutive dashes are illegal inside HTML comments, so let's allow them to
 # be escaped in the "program" command.
-unescape = (script) ->
-  script.replace /\\(.)/g -> &1
+unescape = (script) -> script.replace /\\(.)/g -> &1
 
 test-this = (contents) ->
+
   state =
     program     : null
     spec-name   : null
     result-name : null
     specs       : {}
     results     : {}
+
+  have-spec-or-result = -> state.spec-name? || state.result-name?
 
   visit = (node) ->
     if node.type is \html
@@ -42,32 +44,24 @@ test-this = (contents) ->
 
       if command
 
-        w = command .split /\s+/
+        command-words = command .split /\s+/
 
-        switch w.0
+        switch first command-words
 
-        | \program =>
-
-          program = command
-                    |> (.slice w.0.length)
-                    |> (.trim!)
-                    |> unescape
-
-          state.program = program
-
+        | \program
+          state.program = command |> (.slice that.length) # rest of command
+                                  |> (.trim!)
+                                  |> unescape
         | \in
-          if state.spec-name or state.result-name
-            die "Consecutive spec or result commands"
+          die "Consecutive spec or result commands" if have-spec-or-result!
           state.spec-name = command
-            .slice w.0.length
-            .trim!
-
+                            .slice that.length # rest of command
+                            .trim!
         | \out
-          if state.spec-name or state.result-name
-            die "Consecutive spec or result commands"
+          die "Consecutive spec or result commands" if have-spec-or-result!
           state.result-name = command
-            .slice w.0.length
-            .trim!
+                              .slice that.length # rest of command
+                              .trim!
 
       return []
 
