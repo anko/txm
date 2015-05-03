@@ -26,7 +26,9 @@ test-this = (contents) ->
     specs       : {}
     results     : {}
 
-  have-spec-or-result = -> state.spec-name? || state.result-name?
+  die-if-have-spec-or-result = ->
+    if state.spec-name? or state.result-name?
+      die "Consecutive spec or result commands"
 
   visit = (node) ->
     if node.type is \html
@@ -44,27 +46,19 @@ test-this = (contents) ->
 
       if command
 
+        actions =
+          program : -> state.program := it
+          in      : -> die-if-have-spec-or-result! ; state.spec-name   := it
+          out     : -> die-if-have-spec-or-result! ; state.result-name := it
+
         command-words = command .split /\s+/
+        first-word    = first command-words
 
-        switch first command-words
-
-        | \program
-          state.program = command |> (.slice that.length) # rest of command
-                                  |> (.trim!)
-                                  |> unescape
-        | \in
-          die "Consecutive spec or result commands" if have-spec-or-result!
-          state.spec-name = command
-                            |> (.slice that.length) # rest of command
-                            |> (.trim!)
-                            |> unescape
-        | \out
-          die "Consecutive spec or result commands" if have-spec-or-result!
-          state.result-name = command
-                              |> (.slice that.length) # rest of command
-                              |> (.trim!)
-                              |> unescape
-
+        if actions[first-word]
+          rest = command |> (.slice first-word.length)
+                         |> (.trim!)
+                         |> unescape
+          that rest
       return []
 
     else if node.type is \code
