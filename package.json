@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "concat-stream": "^1.4.8",
-    "mdast": "^0.19.0",
+    "mdast": "^0.20.0",
     "prelude-ls": "^1.1.1",
     "tape": "^4.0.0"
   },
