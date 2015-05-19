@@ -118,7 +118,7 @@ The name is dumb wordplay on "[*deus ex machina*][11]".
 
 [1]: https://www.npmjs.com/package/tests-ex-markdown
 [2]: https://travis-ci.org/anko/tests-ex-markdown
-[3]: https://david-dm.org/anko/whatxml
+[3]: https://david-dm.org/anko/tests-ex-markdown
 [4]: http://daringfireball.net/projects/markdown/syntax
 [5]: https://testanything.org/tap-version-13-specification.html
 [6]: http://en.wikipedia.org/wiki/Standard_streams
