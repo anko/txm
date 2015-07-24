@@ -6,6 +6,8 @@
 
 Run your [markdown][4] code examples as unit tests.
 
+Yes, the name is dumb wordplay on "[*deus ex machina*][5]".
+
 ## Use
 
 Write code usage examples in markdown as you usually would, but annotate them
@@ -46,7 +48,7 @@ Run:
 
 (Or write the Markdown to `stdin`.)
 
-Receive [Test Anything Protocol version 13][5] output.
+Receive [Test Anything Protocol version 13][6] output.
 
 <!-- !test out simple -->
 
@@ -79,7 +81,7 @@ and outputs in any order you like anywhere in the file.
 ### The program command
 
 The `program` command defines the program the input is passed to, which is then
-expected to produce the given output.  (That's [standard input and output][6].)
+expected to produce the given output.  (That's [standard input and output][7].)
 
 Whenever a pair of input/output commands get matched, the last encountered
 program command is used.  (So you can just have the program command once if
@@ -89,16 +91,16 @@ Some tips for writing these correctly:
 
 #### Escape double hyphens (`--`)
 
-They're [illegal in HTML comments][7], so txm provides a way to escape them:
+They're [illegal in HTML comments][8], so txm provides a way to escape them:
 `\-` means the same as a hyphen.  For a literal backslash, write `\\`.
 
 #### Modify input with shell commands
 
 The program is run as a shell command, so it can contain arbitrary
-[redirection][8].  You can use this to prepend obvious things to the input to
+[redirection][9].  You can use this to prepend obvious things to the input to
 reduce redundancy in your example code (e.g. using `sed` to drop in a line of
 `var m = require("mymodule");`) or to trim off a trailing newline from the
-output (using `head -c -1`) to match the expected output, or even [burrito][9]
+output (using `head -c -1`) to match the expected output, or even [burrito][10]
 it for crazy code instrumentation.
 
 ## Why
@@ -109,21 +111,28 @@ tested this way.
 
 Comment annotations were chosen because they're easy to plug into an existing
 file.  I didn't want to introduce a build step for readme files, because that
-could cause a [chicken-and-egg dilemma][10]—you might need the readme file to
+could cause a [chicken-and-egg dilemma][11]—you might need the readme file to
 learn how to build the readme file!
 
-* * *
+## Similar libraries
 
-The name is dumb wordplay on "[*deus ex machina*][11]".
+This module is very [shell][12]-centric.  If you'd prefer something more
+JavaScript-focused, you might like
+
+-   @pjeby's [mockdown][13], or
+-   @sidorares' [mocha.md][14].
 
 [1]: https://www.npmjs.com/package/tests-ex-markdown
 [2]: https://travis-ci.org/anko/tests-ex-markdown
 [3]: https://david-dm.org/anko/tests-ex-markdown
 [4]: http://daringfireball.net/projects/markdown/syntax
-[5]: https://testanything.org/tap-version-13-specification.html
-[6]: http://en.wikipedia.org/wiki/Standard_streams
-[7]: http://www.w3.org/TR/REC-xml/#sec-comments
-[8]: http://en.wikipedia.org/wiki/Redirection_(computing)
-[9]: https://github.com/substack/node-burrito
-[10]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
-[11]: http://en.wikipedia.org/wiki/Deus_ex_machina
+[5]: http://en.wikipedia.org/wiki/Deus_ex_machina
+[6]: https://testanything.org/tap-version-13-specification.html
+[7]: http://en.wikipedia.org/wiki/Standard_streams
+[8]: http://www.w3.org/TR/REC-xml/#sec-comments
+[9]: http://en.wikipedia.org/wiki/Redirection_(computing)
+[10]: https://github.com/substack/node-burrito
+[11]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
+[12]: https://en.wikipedia.org/wiki/Shell_(computing)
+[13]: https://github.com/pjeby/mockdown#asynchronous-tests
+[14]: https://github.com/sidorares/mocha.md
