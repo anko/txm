@@ -134,5 +134,5 @@ JavaScript-focused, you might like
 [10]: https://github.com/substack/node-burrito
 [11]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
 [12]: https://en.wikipedia.org/wiki/Shell_(computing)
-[13]: https://github.com/pjeby/mockdown#asynchronous-tests
+[13]: https://github.com/pjeby/mockdown
 [14]: https://github.com/sidorares/mocha.md
