@@ -50,6 +50,34 @@ txm-expect do
 
   """
 
+
+txm-expect do
+  "same line comments, some irrelevant"
+  """
+  <!-- !test program cat --><!-- !test in 1 --><!-- something else -->
+
+      hi
+
+  <!-- !test out 1 --><!-- hello! -->
+
+      hi
+
+  """
+  0
+  """
+  TAP version 13
+  # 1
+  ok 1 should be equal
+
+  1..1
+  # tests 1
+  # pass  1
+
+  # ok
+
+
+  """
+
 txm-expect do
   "no program specified"
   """
@@ -104,6 +132,7 @@ txm-expect do
   -->
 
   <!-- !test in 1 -->
+
   ```ls
   console.log("yo");
   ```
@@ -111,6 +140,7 @@ txm-expect do
   To get this:
 
   <!-- !test out 1 -->
+
   ```html
   hi
   yo

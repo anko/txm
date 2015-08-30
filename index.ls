@@ -3,7 +3,7 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs mdast ]>
+require! <[ fs mdast parse5 ]>
 test = require \tape
 { each, map, fold, unwords, keys, first } = require \prelude-ls
 { exec-sync } = require \child_process
@@ -12,6 +12,12 @@ concat = require \concat-stream
 die = (message) ->
   console.error message
   process.exit 1
+
+extract-html-comments = (input) ->
+  comments = []
+  p = new parse5.SimpleApiParser comment : -> comments.push it
+  p.parse input
+  return comments
 
 # Consecutive dashes are illegal inside HTML comments, so let's allow them to
 # be escaped in the "program" command.
@@ -33,35 +39,37 @@ test-this = (contents) ->
   visit = (node) ->
     if node.type is \html
 
-      re = //
-           <!--          # HTML comment start
-           (?:\s+)?      # optional whitespace
-           !test         # test command marker
-           \s+           # whitespace
-           ([\s\S]*)     # interesting commands
-           -->           # HTML comment end
-           //m
+      extract-html-comments node.value .for-each (comment) ->
 
-      [ _, command ] = (node.value .match re) || []
+        re = //
+             (?:\s+)?      # optional whitespace
+             !test         # test command marker
+             \s+           # whitespace
+             ([\s\S]*)     # interesting commands
+             //m
 
-      if command
+        [ _, command ] = (comment .trim! .match re) || []
 
-        actions =
-          program : -> state.program := it
-          in      : -> die-if-have-spec-or-result! ; state.spec-name   := it
-          out     : -> die-if-have-spec-or-result! ; state.result-name := it
+        if command
 
-        command-words = command .split /\s+/
-        first-word    = first command-words
+          actions =
+            program : -> state.program := it
+            in      : -> die-if-have-spec-or-result! ; state.spec-name   := it
+            out     : -> die-if-have-spec-or-result! ; state.result-name := it
 
-        if actions[first-word]
-          rest = command |> (.slice first-word.length)
-                         |> (.trim!)
-                         |> unescape
-          that rest
+          command-words = command .split /\s+/
+          first-word    = first command-words
+
+          if actions[first-word]
+            rest = command |> (.slice first-word.length)
+                           |> (.trim!)
+                           |> unescape
+            that rest
+
       return []
 
     else if node.type is \code
+
       if state.spec-name
 
         name = state.spec-name
