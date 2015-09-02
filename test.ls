@@ -6,7 +6,7 @@ txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) 
 
   txm = (md-string) ->
     try
-      return stdout : exec-sync "./index.ls" { input : md-string }
+      return stdout : exec-sync "lsc index.ls -- --format=tap" { input : md-string }
     catch e
       return e
 

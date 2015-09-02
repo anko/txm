@@ -3,8 +3,31 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs mdast parse5 ]>
-test = require \tape
+require! <[ fs mdast parse5 minimist ]>
+
+argv = (require \minimist) (process.argv.slice 2)
+
+{ queue-test, run-tests } =
+  switch argv.format
+  | \tap => fallthrough
+  | otherwise =>
+    test = require \tape
+
+    queue = []
+
+    queue-test : -> queue.push it
+    run-tests : ->
+      try
+        queue |> each ({ name, program, spec, result : expected-output }) ->
+          test name, (t) ->
+            output = exec-sync program, input : spec.to-string!
+            t.equals do
+              output.to-string!
+              expected-output
+            t.end!
+      catch e
+        die e
+
 { each, map, fold, unwords, keys, first } = require \prelude-ls
 { exec-sync } = require \child_process
 concat = require \concat-stream
@@ -134,18 +157,11 @@ test-this = (contents) ->
       die "No matching input for output `#k`"
 
 
-  tests |> each ({ name, program, spec, result : intended-output }) ->
-    try
-      test name, (t) ->
-        output = exec-sync program, input : spec .to-string!
-        t.equals output, intended-output
-        t.end!
+  tests |> each queue-test
 
-    catch e
-      die e
+  run-tests!
 
-
-[ ...files ] = process.argv.slice 2
+files = argv._
 
 if files.length is 0
   # Read from stdin
