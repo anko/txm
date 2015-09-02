@@ -6,7 +6,7 @@
 require! <[ fs mdast parse5 minimist async ]>
 { exec } = require \child_process
 
-argv = (require \minimist) (process.argv.slice 2)
+argv = (require \minimist) (process.argv.slice 2), { +boolean }
 
 { queue-test, run-tests } =
   switch argv.format
@@ -20,7 +20,9 @@ argv = (require \minimist) (process.argv.slice 2)
     run-tests : ->
       try
 
-        e, outputs <- async.map queue, ({ program, spec }, cb) ->
+        async-map = if argv.series then async.map-series else async.map
+
+        e, outputs <- async-map queue, ({ program, spec }, cb) ->
           exec program, cb
             ..stdin.end spec
 

@@ -62,6 +62,8 @@ Receive [Test Anything Protocol version 13][6] output.
 
     # ok
 
+Tests run in parallel by default.
+
 The comments are omitted when the Markdown is rendered (like on Github).  This
 file is itself a unit test for this module. :)
 
@@ -102,6 +104,14 @@ reduce redundancy in your example code (e.g. using `sed` to drop in a line of
 `var m = require("mymodule");`) or to trim off a trailing newline from the
 output (using `head -c -1`) to match the expected output, or even [burrito][10]
 it for crazy code instrumentation.
+
+### Parallelism
+
+By default, all tests run in parallel.  Their order in the output is constant
+though; it's the order they were fully read.
+
+If you want your tests to run in series (each waiting for the next to finish),
+pass a `--series` flag to `txm`.
 
 ## Why
 
