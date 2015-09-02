@@ -33,6 +33,7 @@
     "tap"
   ],
   "dependencies": {
+    "async": "^1.4.2",
     "concat-stream": "^1.4.8",
     "mdast": "^1.1.0",
     "minimist": "^1.2.0",

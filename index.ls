@@ -3,7 +3,8 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs mdast parse5 minimist ]>
+require! <[ fs mdast parse5 minimist async ]>
+{ exec } = require \child_process
 
 argv = (require \minimist) (process.argv.slice 2)
 
@@ -18,18 +19,27 @@ argv = (require \minimist) (process.argv.slice 2)
     queue-test : -> queue.push it
     run-tests : ->
       try
-        queue |> each ({ name, program, spec, result : expected-output }) ->
-          test name, (t) ->
-            output = exec-sync program, input : spec.to-string!
+
+        e, outputs <- async.map queue, ({ program, spec }, cb) ->
+          exec program, cb
+            ..stdin.end spec
+
+        if e then throw e
+
+        queue.for-each (queued-test, index) ->
+
+          output = outputs[index]
+
+          test queued-test.name, (t) ->
             t.equals do
               output.to-string!
-              expected-output
+              queued-test.result
             t.end!
+
       catch e
         die e
 
 { each, map, fold, unwords, keys, first } = require \prelude-ls
-{ exec-sync } = require \child_process
 concat = require \concat-stream
 
 die = (message) ->
