@@ -43,6 +43,6 @@
     "tapsoneer": "^0.1.0"
   },
   "devDependencies": {
-    "LiveScript": "^1.3.1"
+    "livescript": "^1.4.0"
   }
 }
