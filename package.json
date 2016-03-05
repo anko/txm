@@ -37,7 +37,7 @@
     "concat-stream": "^1.4.8",
     "mdast": "^1.1.0",
     "minimist": "^1.2.0",
-    "parse5": "^1.5.0",
+    "parse5": "^2.1.5",
     "prelude-ls": "^1.1.1",
     "tape": "^4.0.0",
     "tapsoneer": "^0.1.0"

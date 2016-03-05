@@ -50,8 +50,9 @@ die = (message) ->
 
 extract-html-comments = (input) ->
   comments = []
-  p = new parse5.SimpleApiParser comment : -> comments.push it
-  p.parse input
+  p = new parse5.SAXParser!
+    ..on \comment -> comments.push it
+    ..end input
   return comments
 
 # Consecutive dashes are illegal inside HTML comments, so let's allow them to
