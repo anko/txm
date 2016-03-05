@@ -3,7 +3,7 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs mdast parse5 minimist async ]>
+require! <[ fs remark parse5 minimist async ]>
 { exec } = require \child_process
 
 argv = (require \minimist) (process.argv.slice 2), { +boolean }
@@ -158,7 +158,7 @@ test-this = (contents) ->
       node.children |> map visit |> fold (++), []
     else []
 
-  tests = visit mdast.parse contents.to-string!
+  tests = visit remark.parse contents.to-string!
 
   # Inspect state as it was left, to check for inputs and outputs that weren't
   # matched.
