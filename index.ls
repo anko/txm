@@ -3,7 +3,7 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs remark parse5 minimist async ]>
+require! <[ fs unified remark-parse parse5 minimist async ]>
 { exec } = require \child_process
 
 argv = (require \minimist) (process.argv.slice 2), { +boolean }
@@ -158,7 +158,10 @@ test-this = (contents) ->
       node.children |> map visit |> fold (++), []
     else []
 
-  tests = visit remark.parse contents.to-string!
+  mdast-syntax-tree = unified!
+    .use remark-parse
+    .parse contents
+  tests = visit mdast-syntax-tree
 
   # Inspect state as it was left, to check for inputs and outputs that weren't
   # matched.
