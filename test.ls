@@ -6,8 +6,12 @@ txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) 
 
   txm = (md-string) ->
     try
+      # If everything goes as planned, return just an object with the stdout
+      # property.
       return stdout : exec-sync "lsc index.ls -- --format=tap" { input : md-string }
     catch e
+      # If something fails, return the error object, which contains `status`
+      # and `stderr` properties also.
       return e
 
   test name, (t) ->
