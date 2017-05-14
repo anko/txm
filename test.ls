@@ -2,7 +2,7 @@
 { exec-sync } = require \child_process
 test = require \tape
 
-txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) ->
+txm-expect = (name, md-string, expected={}) ->
 
   txm = (md-string) ->
     try
@@ -21,23 +21,23 @@ txm-expect = (name, md-string, expected-exit, expected-stdout, expected-stderr) 
 
   test name, (t) ->
     { stdout, status, stderr } = txm md-string
+    if not status? then status := 0
+    if not stderr? then stderr := ''
 
-    if not expected-exit
-      t.not-ok status, 'exit code 0'
-    else
+    if expected.exit?
       t.equals do
         status
-        expected-exit
-        'exit code matches'
-    if expected-stdout
+        expected.exit
+        "exit code is #{expected.exit}"
+    if expected.stdout?
       t.equals do
         stdout.to-string!
-        expected-stdout
+        expected.stdout
         "stdout matches"
-    if expected-stderr
+    if expected.stderr?
       t.equals do
-        stderr?to-string!
-        expected-stderr
+        stderr.to-string!
+        expected.stderr
         "stderr matches"
 
     t.end!
@@ -55,8 +55,8 @@ txm-expect do
       hi
 
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # 1
   ok 1 should be equal
@@ -70,7 +70,6 @@ txm-expect do
 
   """
 
-
 txm-expect do
   "same line comments, some irrelevant"
   """
@@ -83,8 +82,8 @@ txm-expect do
       hi
 
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # 1
   ok 1 should be equal
@@ -110,9 +109,9 @@ txm-expect do
       hi
 
   """
-  1
-  "" # No stdout
-  "Input and output `1` matched, but no program given yet\n"
+  exit: 1
+  stdout: ""
+  stderr: "Input and output `1` matched, but no program given yet\n"
 
 txm-expect do
   "input without matching output"
@@ -122,9 +121,9 @@ txm-expect do
 
       hi
   """
-  1
-  "" # No stdout
-  "No matching output for input `1`\n"
+  exit: 1
+  stdout: ""
+  stderr: "No matching output for input `1`\n"
 
 txm-expect do
   "output without matching input"
@@ -134,9 +133,9 @@ txm-expect do
 
       hi
   """
-  1
-  "" # No stdout
-  "No matching input for output `1`\n"
+  exit: 1
+  stdout: ""
+  stderr: "No matching input for output `1`\n"
 
 txm-expect do
   "redirection in program"
@@ -166,7 +165,7 @@ txm-expect do
   yo
   ```
   """
-  0
+  exit: 0
 
 txm-expect do
   "output defined before input"
@@ -181,8 +180,8 @@ txm-expect do
       hi
 
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # 1
   ok 1 should be equal
@@ -195,7 +194,7 @@ txm-expect do
 
 
   """
-  ""
+  stderr: ""
 
 txm-expect do
   "interleaved tests"
@@ -218,8 +217,8 @@ txm-expect do
       two
 
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # 1
   ok 1 should be equal
@@ -234,7 +233,7 @@ txm-expect do
 
 
   """
-  ""
+  stderr: ""
 
 txm-expect do
   "Multiple inputs with conflicting id"
@@ -257,9 +256,9 @@ txm-expect do
       two
 
   """
-  1
-  "" # no stdout
-  "Multiple inputs with name `1`\n"
+  exit: 1
+  stdout: ""
+  stderr: "Multiple inputs with name `1`\n"
 
 txm-expect do
   "Multiple outputs with conflicting id"
@@ -282,9 +281,9 @@ txm-expect do
       two
 
   """
-  1
-  "" # no stdout
-  "Multiple outputs with name `1`\n"
+  exit: 1
+  stdout: ""
+  stderr: "Multiple outputs with name `1`\n"
 
 txm-expect do
   "Long test name"
@@ -298,7 +297,7 @@ txm-expect do
 
       hi
   """
-  0
+  exit: 0
   """
   TAP version 13
   # something fairly long going in here
@@ -325,8 +324,8 @@ txm-expect do
 
       hi
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # 本当にいいんですか
   ok 1 should be equal
@@ -352,8 +351,8 @@ txm-expect do
 
       hi
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # spacing
   ok 1 should be equal
@@ -379,8 +378,8 @@ txm-expect do
 
       hi
   """
-  1
-  ""
+  exit: 1
+  stdout: ""
   "No matching output for input `big cat`\n"
 
 
@@ -396,8 +395,8 @@ txm-expect do
 
       hi
   """
-  0
-  """
+  exit: 0
+  stdout: """
   TAP version 13
   # --
   ok 1 should be equal
@@ -423,10 +422,9 @@ txm-expect do
 
       hi
   """
-  1  # exit code
-  '' # stdout
-  # stderr:
-  """
+  exit: 1  # exit code
+  stdout: ''
+  stderr: """
   Command failed: invalidcommand12341234
   /bin/sh: invalidcommand12341234: command not found
 
