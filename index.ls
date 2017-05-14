@@ -26,7 +26,7 @@ argv = (require \minimist) (process.argv.slice 2), { +boolean }
           exec program, cb
             ..stdin.end spec
 
-        if e then throw e
+        if e then die e.message
 
         queue.for-each (queued-test, index) ->
 
@@ -182,7 +182,7 @@ files = argv._
 if files.length is 0
   # Read from stdin
   process.stdin
-    ..on \error (e) -> die e
+    ..on \error (e) -> die e.message
     ..pipe concat (data) ->
       test-this data
 else

@@ -390,3 +390,25 @@ txm-expect do
 
 
   """
+
+txm-expect do
+  "failures' stderr is displayed"
+  """
+  <!-- !test program invalidcommand12341234 -->
+  <!-- !test in x -->
+
+      hi
+
+  <!-- !test out x -->
+
+      hi
+  """
+  1  # exit code
+  '' # stdout
+  # stderr:
+  """
+  Command failed: invalidcommand12341234
+  /bin/sh: invalidcommand12341234: command not found
+
+
+  """
