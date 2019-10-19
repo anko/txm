@@ -23,8 +23,15 @@ argv = (require \minimist) (process.argv.slice 2), { +boolean }
         async-map = if argv.series then async.map-series else async.map
 
         e, outputs <- async-map queue, ({ program, spec }, cb) ->
+          errored-out = false
           exec program, cb
-            ..stdin.end spec
+            ..stdin .on \error ->
+              if it.code is \EPIPE
+                void # do nothing
+              else throw it
+
+            unless errored-out
+              ..stdin.end spec
 
         if e then die e.message
 

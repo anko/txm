@@ -426,7 +426,7 @@ txm-expect do
   stdout: ''
   stderr: """
   Command failed: invalidcommand12341234
-  /bin/sh: invalidcommand12341234: command not found
+  /bin/sh: 1: invalidcommand12341234: not found
 
 
   """
