@@ -3,7 +3,8 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs unified remark-parse parse5 minimist async ]>
+require! <[ fs unified remark-parse minimist async ]>
+sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 
 argv = (require \minimist) (process.argv.slice 2), { +boolean }
@@ -57,8 +58,10 @@ die = (message) ->
 
 extract-html-comments = (input) ->
   comments = []
-  p = new parse5.SAXParser!
-    ..on \comment -> comments.push it
+  p = new sax-parser!
+    ..on \comment ->
+      # TODO use it.sourceCodeLocation for better error reporting?
+      comments.push it.text
     ..end input
   return comments
 
