@@ -38,7 +38,7 @@
     "minimist": "1.2.0",
     "parse5": "3.0.1",
     "prelude-ls": "1.1.1",
-    "remark-parse": "3.0.1",
+    "remark-parse": "7.0.2",
     "tape": "4.0.0",
     "tapsoneer": "0.1.0",
     "unified": "8.4.2"
