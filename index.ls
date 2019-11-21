@@ -3,11 +3,28 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs unified remark-parse minimist async ]>
+require! <[ fs unified remark-parse yargs async ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 
-argv = (require \minimist) (process.argv.slice 2), { +boolean }
+argv = do ->
+
+  # It hurts that I have to do this, but here we are.  When run with lsc
+  # (livescript interpreter), process.argv contains [node, lsc, index.ls].
+  # When run with node, it's just [node, index.js].  In other words, the number
+  # of things we have to slice off depends on what interpreter we're running,
+  # which is a heap of crap, but at least we can detect for it at runtime with
+  # process.argv.lsc, which contains just [index.ls] when run with lsc and
+  # doesn't exist if we're running with node.
+  argv-to-parse =
+    if process.argv.lsc?
+      # Slice off main file path
+      that.slice 1
+    else
+      # Slice off interpreter path and main file path
+      process.argv.slice 2
+
+  return yargs.parse argv-to-parse
 
 { queue-test, run-tests } =
   switch argv.format

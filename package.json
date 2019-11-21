@@ -35,15 +35,15 @@
   "dependencies": {
     "async": "3.1.0",
     "concat-stream": "2.0.0",
-    "minimist": "1.2.0",
     "parse5-sax-parser": "5.1.1",
     "prelude-ls": "1.1.2",
     "remark-parse": "7.0.2",
     "tape": "4.11.0",
     "tapsoneer": "0.1.0",
-    "unified": "8.4.2"
+    "unified": "8.4.2",
+    "yargs": "^15.0.2"
   },
   "devDependencies": {
-    "livescript": "1.4.0"
+    "livescript": "1.6.0"
   }
 }
