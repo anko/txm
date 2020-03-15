@@ -411,9 +411,9 @@ txm-expect do
   """
 
 txm-expect do
-  "failures' stderr is displayed"
+  "stderr is displayed when test program fails"
   """
-  <!-- !test program invalidcommand12341234 -->
+  <!-- !test program >&2 echo nope; exit 1 -->
   <!-- !test in x -->
 
       hi
@@ -425,8 +425,8 @@ txm-expect do
   exit: 1  # exit code
   stdout: ''
   stderr: """
-  Command failed: invalidcommand12341234
-  /bin/sh: 1: invalidcommand12341234: not found
+  Command failed: >&2 echo nope; exit 1
+  nope
 
 
   """
