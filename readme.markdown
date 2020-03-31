@@ -2,9 +2,7 @@
 
 Test that your [Markdown][markdown] code examples actually work!
 
- 1. Write your usage examples like normal.
-
- 2. Annotate them with `!test` commands in HTML comments.
+ 1. Annotate your usage examples with `!test` commands in HTML comments.
 
     <!-- !test program ./index.ls -->
 
@@ -28,11 +26,15 @@ Test that your [Markdown][markdown] code examples actually work!
     [1]: https://nodejs.org/
     ```
 
- 3. ```
+ 2. `npm install tests-ex-markdown`.
+
+ 3. Run it on your Markdown file:
+
+    ```
     txm your-file.markdown
     ```
 
- 4. Receive [Test Anything Protocol][tap-spec] output.
+ 4. Get output (in [TAP format][tap-spec]).
 
     <!-- !test out simple -->
 
@@ -52,7 +54,9 @@ Test that your [Markdown][markdown] code examples actually work!
 The above example is itself tested with this module, so I have confidence that
 it is correct! :boom:
 
-## `txm`
+## API
+
+### The `txm` command line tool
 
     txm [--series] [filename]
 
@@ -60,11 +64,11 @@ Tests may run in parallel by default.  If your tests need to be run
 sequentially, pass `--series`.
 
 If a `filename` is provided, `txm` parses it as Markdown and executes the tests
-specified in it.
+specified in it.  Otherwise, it reads from `stdin`.
 
-## Annotations
+### Annotations
 
-### `!test in` and `!test out`
+#### `!test in` and `!test out`
 
 The next code block after a `!test in <name>` or `!test out <name>` command is
 read as a test input.  The `<name>` parts are used to match them.  The `<name>`
@@ -73,7 +77,7 @@ can be any text.
 The input and output code blocks can be anywhere in the file, as long as they
 can be matched by name.  `txm` will fail loudly if it cannot match one.
 
-### `!test program`
+#### `!test program`
 
 In `!test program <program>`, the `<program>` part will be run as a shell
 command for any following matching input and outputs.
@@ -86,7 +90,7 @@ before your first test.  If you need to use a different program for some set of
 tests, just declare that before the next test.  When an `in` and `out` block
 are matched, the last encountered `program` command is used.
 
-### Hyphen quirk
+#### Hyphen quirk
 
 2 consecutive hyphens (`--`) inside HTML comments are [not allowed by the HTML
 spec][html-comments-spec].  Thankfully, `txm` lets you escape them: `\-` means
