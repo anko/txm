@@ -1,146 +1,113 @@
-# tests-ex-markdown
+# tests-ex-markdown [![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
 
-[![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1]
-[![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2]
-[![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
+Test that your [Markdown][markdown] code examples actually work!
 
-Run your [markdown][4] code examples as unit tests.
+ 1. Write your usage examples like normal.
 
-Yes, the name is dumb wordplay on "[*deus ex machina*][5]".
+ 2. Annotate them with `!test` commands in HTML comments.
 
-## Use
+    <!-- !test program ./index.ls -->
 
-Write code usage examples in markdown as you usually would, but annotate them
-with `!test` commands within HTML comments.  Define what **program** tests
-should run with, what to pass as **input** and what **output** to expect:
+    <!-- !test in simple -->
 
-<!-- !test program ./index.ls -->
+    ```md
+    <!-- !test program node -->
 
-<!-- !test in simple -->
+    Here's how to print to the console in [Node.js][1]:
 
-```md
-<!-- !test program node -->
+    <!-- !test in simple example -->
 
-Here's how to print a line with [newline][1] in [Node.js][2]:
+        console.log("hi");
 
-<!-- !test in simple example -->
+    It will print this:
 
-    console.log("hi");
+    <!-- !test out simple example -->
 
-It will print this:
+        hi
 
-<!-- !test out simple example -->
+    [1]: https://nodejs.org/
+    ```
 
-    hi
+ 3. ```
+    txm your-file.markdown
+    ```
 
-[1]: http://en.wikipedia.org/wiki/Newline
-[2]: https://nodejs.org/
-```
+ 4. Receive [Test Anything Protocol][tap-spec] output.
 
-Run:
+    <!-- !test out simple -->
 
-    txm whatever.markdown
+    ```
+    TAP version 13
+    # simple example
+    ok 1 should be equal
 
-(Or write the Markdown to `stdin`.)
+    1..1
+    # tests 1
+    # pass  1
 
-Receive [Test Anything Protocol version 13][6] output.
+    # ok
 
-<!-- !test out simple -->
+    ```
 
-```
-TAP version 13
-# simple example
-ok 1 should be equal
+The above example is itself tested with this module, so I have confidence that
+it is correct! :boom:
 
-1..1
-# tests 1
-# pass  1
+## `txm`
 
-# ok
+    txm [--series] [filename]
 
-```
+Tests may run in parallel by default.  If your tests need to be run
+sequentially, pass `--series`.
 
-Tests run in parallel by default.
+If a `filename` is provided, `txm` parses it as Markdown and executes the tests
+specified in it.
 
-The comments are omitted when the Markdown is rendered (like on Github).  This
-file is itself a unit test for this module. :)
+## Annotations
 
-## How it works
+### `!test in` and `!test out`
 
-### Input/output commands
+The next code block after a `!test in <name>` or `!test out <name>` command is
+read as a test input.  The `<name>` parts are used to match them.  The `<name>`
+can be any text.
 
-The Markdown file is parsed sequentially.  Only code blocks and HTML comments
-starting "!test" are read. When an `in` command is read, the next code block
-will be read as a test input.  When an `out` command is read, it will be read
-as expected output.
+The input and output code blocks can be anywhere in the file, as long as they
+can be matched by name.  `txm` will fail loudly if it cannot match one.
 
-Each `in`/`out` command has an associated identifier that associates them as
-pairs.  These can be any string.  These exist to let you put matching inputs
-and outputs in any order you like anywhere in the file.
+### `!test program`
 
-### The program command
+In `!test program <program>`, the `<program>` part will be run as a shell
+command for any following matching input and outputs.
 
-The `program` command defines the program the input is passed to, which is then
-expected to produce the given output.  (That's [standard input and output][7].)
+The `<program>` can contain arbitrary characters, including spaces and
+newlines, so feel free.
 
-Whenever a pair of input/output commands get matched, the last encountered
-program command is used.  (So you can just have the program command once if
-your tests all run on the same program.)
+If you only mean to use one test program, you only have to declare it once,
+before your first test.  If you need to use a different program for some set of
+tests, just declare that before the next test.  When an `in` and `out` block
+are matched, the last encountered `program` command is used.
 
-Some tips for writing these correctly:
+### Hyphen quirk
 
-#### Escape double hyphens (`--`)
-
-They're [illegal in HTML comments][8], so txm provides a way to escape them:
-`\-` means the same as a hyphen.  For a literal backslash, write `\\`.
-
-#### Modify input with shell commands
-
-The program is run as a shell command, so it can contain arbitrary
-[redirection][9].  You can use this to prepend obvious things to the input to
-reduce redundancy in your example code (e.g. using `sed` to drop in a line of
-`var m = require("mymodule");`) or to trim off a trailing newline from the
-output (using `head -c -1`) to match the expected output, or even [burrito][10]
-it for crazy code instrumentation.
-
-### Parallelism
-
-By default, all tests run in parallel.  Their order in the output is constant
-though; it's the order they were fully read.
-
-If you want your tests to run in series (each waiting for the next to finish),
-pass a `--series` flag to `txm`.
-
-## Why
-
-Usage examples should remain up-to-date with the rest of the code.  I wanted an
-automatic solution that would allow code examples written in any language to be
-tested this way.
-
-Comment annotations were chosen because they're easy to plug into an existing
-file.  I didn't want to introduce a build step for readme files, because that
-could cause a [chicken-and-egg dilemma][11]—you might need the readme file to
-learn how to build the readme file!
+2 consecutive hyphens (`--`) inside HTML comments are [not allowed by the HTML
+spec][html-comments-spec].  Thankfully, `txm` lets you escape them: `\-` means
+the same as a hyphen.  To write a backslash, write `\\`.
 
 ## Similar libraries
 
-This module is very [shell][12]-centric.  If you'd prefer something more
-JavaScript-focused, you might like
+This module assumes you want to run each test as a [command-line][shell] program.
+If you'd prefer something more JavaScript-focused, you might like @pjeby's
+[mockdown][mockdown], or @sidorares' [mocha.md][mochamd].
 
--   @pjeby's [mockdown][13], or
--   @sidorares' [mocha.md][14].
+## License
+
+[ISC](LICENSE)
 
 [1]: https://www.npmjs.com/package/tests-ex-markdown
 [2]: https://travis-ci.org/anko/tests-ex-markdown
 [3]: https://david-dm.org/anko/tests-ex-markdown
-[4]: http://daringfireball.net/projects/markdown/syntax
-[5]: http://en.wikipedia.org/wiki/Deus_ex_machina
-[6]: https://testanything.org/tap-version-13-specification.html
-[7]: http://en.wikipedia.org/wiki/Standard_streams
-[8]: http://www.w3.org/TR/REC-xml/#sec-comments
-[9]: http://en.wikipedia.org/wiki/Redirection_(computing)
-[10]: https://github.com/substack/node-burrito
-[11]: http://en.wikipedia.org/wiki/Chicken_or_the_egg
-[12]: https://en.wikipedia.org/wiki/Shell_(computing)
-[13]: https://github.com/pjeby/mockdown
-[14]: https://github.com/sidorares/mocha.md
+[markdown]: http://daringfireball.net/projects/markdown/syntax
+[tap-spec]: https://testanything.org/tap-version-13-specification.html
+[html-comments-spec]: http://www.w3.org/TR/REC-xml/#sec-comments
+[shell]: https://en.wikipedia.org/wiki/Shell_(computing)
+[mockdown]: https://github.com/pjeby/mockdown
+[mochamd]: https://github.com/sidorares/mocha.md
