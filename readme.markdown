@@ -14,23 +14,18 @@ Write code usage examples in markdown as you usually would, but annotate them
 with `!test` commands within HTML comments.  Define what **program** tests
 should run with, what to pass as **input** and what **output** to expect:
 
-<!-- !test program
-# Write to temporary file, ignore TAP's last newlines
-F=$(mktemp); cat > "$F";
-./index.ls $F | head -c -2;
-rm -f "$F"
--->
+<!-- !test program ./index.ls -->
 
 <!-- !test in simple -->
 
 ```md
 <!-- !test program node -->
 
-Here's how to print without a trailing [newline][1] in [Node.js][2]:
+Here's how to print a line with [newline][1] in [Node.js][2]:
 
 <!-- !test in simple example -->
 
-    process.stdout.write("hi");
+    console.log("hi");
 
 It will print this:
 
@@ -52,15 +47,18 @@ Receive [Test Anything Protocol version 13][6] output.
 
 <!-- !test out simple -->
 
-    TAP version 13
-    # simple example
-    ok 1 should be equal
+```
+TAP version 13
+# simple example
+ok 1 should be equal
 
-    1..1
-    # tests 1
-    # pass  1
+1..1
+# tests 1
+# pass  1
 
-    # ok
+# ok
+
+```
 
 Tests run in parallel by default.
 

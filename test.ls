@@ -146,8 +146,7 @@ txm-expect do
 
   <!-- !test program
   sed '1s/^/console.log("hi");/' \\
-  | node \\
-  | head -c -1
+  | node
   -->
 
   <!-- !test in 1 -->

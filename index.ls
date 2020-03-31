@@ -3,7 +3,7 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs unified remark-parse yargs async ]>
+require! <[ fs os unified remark-parse yargs async ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 
@@ -133,6 +133,15 @@ test-this = (contents) ->
 
     else if node.type is \code
 
+      # Add a newline, because it's typical for the console output of any
+      # command to end with a newline.
+      #
+      # In the rare cases that the test command output *doesn't* terminate with
+      # a newline, it's trivial for users to put an "echo" command after it.
+      # It is less trivial to trim the trailing newline from the output of
+      # every normal command!
+      text-content = node.value + os.EOL
+
       if state.spec-name
 
         name = state.spec-name
@@ -141,7 +150,7 @@ test-this = (contents) ->
         if state.specs[name]
           die "Multiple inputs with name `#name`"
 
-        state.specs[name] = node.value
+        state.specs[name] = text-content
 
 
         if state.results[name] # corresponding result has been found
@@ -165,7 +174,7 @@ test-this = (contents) ->
         if state.results[name]
           die "Multiple outputs with name `#name`"
 
-        state.results[name] = node.value
+        state.results[name] = text-content
 
         if state.specs[name] # corresponding spec has been found
           if not state.program
