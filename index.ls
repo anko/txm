@@ -3,7 +3,7 @@
 # or rest results.  Run the tests and check that their outputs match the
 # results.
 
-require! <[ fs os unified remark-parse yargs async ]>
+require! <[ fs os unified remark-parse yargs async chalk ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 
@@ -38,15 +38,22 @@ argv = do ->
     run-tests : ->
       try
 
+        console.log chalk.dim "TAP version 13"
+
+        if queue.length is 0
+          console.log chalk.yellow "0..0"
+          console.log chalk.yellow "# no tests!"
+          process.exit!
+
+        console.log chalk.dim "1..#{queue.length}"
+
         async-map = if argv.series then async.map-series else async.map
 
-        e, outputs <- async-map queue, ({ name, program, spec }, cb) ->
+        e, run-results <- async-map queue, ({ name, program, spec }, cb) ->
           errored-out = false
-          result-callback = (e, output) ->
-            unless e then cb ...
-            else
-              e.message = "Error in '#name':\n#{e.message}"
-              cb e
+          result-callback = (e, stdout) ->
+            unless e then cb null, { output: stdout.to-string!, ran-successfully: yes }
+            else cb null { output: e.message, ran-successfully: no }
           exec program, result-callback
             ..stdin .on \error ->
               if it.code is \EPIPE
@@ -58,16 +65,46 @@ argv = do ->
 
         if e then die e.message
 
+        successes = 0
+        failures = 0
         queue.for-each (queued-test, index) ->
 
-          output = outputs[index]
+          run-result = run-results[index]
 
-          test queued-test.name, (t) ->
-            t.equals do
-              output.to-string!
-              queued-test.result
-            t.end!
+          test-number = index + 1
 
+          indent = (n, text) ->
+            spaces = " " * n
+            lines = text.split os.EOL .map -> if it.length then spaces + it else it
+            lines.join os.EOL
+
+          if run-result.ran-successfully
+            if run-result.output === queued-test.result
+              ++successes
+              console.log "#{chalk.green "ok"} #{chalk.dim test-number} #{queued-test.name}"
+            else
+              ++failures
+              console.log "#{chalk.red.inverse "not ok"} #{chalk.red "#test-number"} #{queued-test.name}#{chalk.dim ": output mismatch"}"
+              console.log "  #{chalk.dim "---"}"
+              console.log "  #{chalk.blue "expected"}:\n#{indent 4 queued-test.result}"
+              console.log "  #{chalk.blue "actual"}:\n#{indent 4 run-result.output}"
+              console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
+              console.log "  #{chalk.dim "---"}"
+          else
+            ++failures
+            console.log "#{chalk.red "not ok"} #test-number #{queued-test.name}#{chalk.dim ": program exited with error"}"
+            console.log "  #{chalk.dim "---"}"
+            console.log "  #{chalk.blue "stderr"}:\n#{indent 4 run-result.output}"
+            console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
+            console.log "  #{chalk.dim "---"}"
+
+        console.log!
+        colour = if failures is 0 then chalk.green else chalk.red
+        console.log colour "# #successes/#{queue.length} passed"
+        if failures is 0
+          console.log colour.inverse "# OK"
+        else
+          console.log colour.inverse "# FAILED #failures"
       catch e
         die e
 

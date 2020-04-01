@@ -46,11 +46,11 @@ txm-expect do
   "simple cat passthrough"
   """
   <!-- !test program cat -->
-  <!-- !test in 1 -->
+  <!-- !test in test name -->
 
       hi
 
-  <!-- !test out 1 -->
+  <!-- !test out test name -->
 
       hi
 
@@ -58,26 +58,22 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # 1
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 test name
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
 
 txm-expect do
   "same line comments, some irrelevant"
   """
-  <!-- !test program cat --><!-- !test in 1 --><!-- something else -->
+  <!-- !test program cat --><!-- !test in test name --><!-- something else -->
 
       hi
 
-  <!-- !test out 1 --><!-- hello! -->
+  <!-- !test out test name --><!-- hello! -->
 
       hi
 
@@ -85,15 +81,11 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # 1
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 test name
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
 
@@ -170,11 +162,11 @@ txm-expect do
   "output defined before input"
   """
   <!-- !test program cat -->
-  <!-- !test out 1 -->
+  <!-- !test out test name -->
 
       hi
 
-  <!-- !test in 1 -->
+  <!-- !test in test name -->
 
       hi
 
@@ -182,15 +174,11 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # 1
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 test name
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
   stderr: ""
@@ -199,19 +187,19 @@ txm-expect do
   "interleaved tests"
   """
   <!-- !test program cat -->
-  <!-- !test in 1 -->
+  <!-- !test in test one -->
 
       one
 
-  <!-- !test in 2 -->
+  <!-- !test in test two -->
 
       two
 
-  <!-- !test out 1 -->
+  <!-- !test out test one -->
 
       one
 
-  <!-- !test out 2 -->
+  <!-- !test out test two -->
 
       two
 
@@ -219,17 +207,12 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # 1
-  ok 1 should be equal
-  # 2
-  ok 2 should be equal
-
   1..2
-  # tests 2
-  # pass  2
+  ok 1 test one
+  ok 2 test two
 
-  # ok
-
+  # 2/2 passed
+  # OK
 
   """
   stderr: ""
@@ -326,15 +309,11 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # 本当にいいんですか
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 本当にいいんですか
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
 
@@ -353,15 +332,11 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # spacing
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 spacing
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
 
@@ -397,20 +372,16 @@ txm-expect do
   exit: 0
   stdout: """
   TAP version 13
-  # --
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 --
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
 
 txm-expect do
-  "stderr is displayed when test program fails"
+  "tests continue when test program fails"
   """
   <!-- !test program >&2 echo nope; exit 1 -->
   <!-- !test in x -->
@@ -420,13 +391,40 @@ txm-expect do
   <!-- !test out x -->
 
       hi
-  """
-  exit: 1  # exit code
-  stdout: ''
-  stderr: """
-  Error in 'x':
-  Command failed: >&2 echo nope; exit 1
-  nope
 
+  <!-- !test in y -->
+
+      hi
+
+  <!-- !test out y -->
+
+      hi
+  """
+  exit: 0
+  stdout: """
+  TAP version 13
+  1..2
+  not ok 1 x: program exited with error
+    ---
+    stderr:
+      Command failed: >&2 echo nope; exit 1
+      nope
+
+    program:
+      >&2 echo nope; exit 1
+    ---
+  not ok 2 y: program exited with error
+    ---
+    stderr:
+      Command failed: >&2 echo nope; exit 1
+      nope
+
+    program:
+      >&2 echo nope; exit 1
+    ---
+
+  # 0/2 passed
+  # FAILED 2
 
   """
+  stderr: ''

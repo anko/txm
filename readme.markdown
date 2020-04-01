@@ -6,7 +6,7 @@ Test that your [Markdown][markdown] code examples actually work!
 
     <!-- !test program ./index.ls -->
 
-    <!-- !test in simple -->
+    <!-- !test in example -->
 
     ```md
     <!-- !test program node -->
@@ -36,19 +36,15 @@ Test that your [Markdown][markdown] code examples actually work!
 
  4. Get output (in [TAP format][tap-spec]).
 
-    <!-- !test out simple -->
+    <!-- !test out example -->
 
     ```
     TAP version 13
-    # simple example
-    ok 1 should be equal
-
     1..1
-    # tests 1
-    # pass  1
+    ok 1 simple example
 
-    # ok
-
+    # 1/1 passed
+    # OK
     ```
 
 The above example is itself tested with this module, so I have confidence that

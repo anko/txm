@@ -34,6 +34,7 @@
   ],
   "dependencies": {
     "async": "3.2.0",
+    "chalk": "^3.0.0",
     "concat-stream": "2.0.0",
     "parse5-sax-parser": "5.1.1",
     "prelude-ls": "1.1.2",
