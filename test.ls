@@ -424,6 +424,7 @@ txm-expect do
   exit: 1  # exit code
   stdout: ''
   stderr: """
+  Error in 'x':
   Command failed: >&2 echo nope; exit 1
   nope
 

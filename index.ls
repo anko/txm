@@ -40,9 +40,14 @@ argv = do ->
 
         async-map = if argv.series then async.map-series else async.map
 
-        e, outputs <- async-map queue, ({ program, spec }, cb) ->
+        e, outputs <- async-map queue, ({ name, program, spec }, cb) ->
           errored-out = false
-          exec program, cb
+          result-callback = (e, output) ->
+            unless e then cb ...
+            else
+              e.message = "Error in '#name':\n#{e.message}"
+              cb e
+          exec program, result-callback
             ..stdin .on \error ->
               if it.code is \EPIPE
                 void # do nothing
