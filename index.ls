@@ -1,7 +1,6 @@
 #!/usr/bin/env lsc
-# Parse a markdown file and check for code blocks that are marked as test specs
-# or rest results.  Run the tests and check that their outputs match the
-# results.
+# Parse a markdown file and check for code blocks that are marked as test
+# inputs or outputs.  Run the tests and check their inputs and outputs match.
 
 require! <[ fs os unified remark-parse yargs async chalk ]>
 sax-parser = require \parse5-sax-parser
@@ -49,7 +48,7 @@ argv = do ->
 
         async-map = if argv.series then async.map-series else async.map
 
-        e, run-results <- async-map queue, ({ name, program, spec }, cb) ->
+        e, run-results <- async-map queue, ({ name, program, input }, cb) ->
           errored-out = false
           result-callback = (e, stdout) ->
             unless e then cb null, { output: stdout.to-string!, ran-successfully: yes }
@@ -61,7 +60,7 @@ argv = do ->
               else throw it
 
             unless errored-out
-              ..stdin.end spec
+              ..stdin.end input
 
         if e then die e.message
 
@@ -79,14 +78,14 @@ argv = do ->
             lines.join os.EOL
 
           if run-result.ran-successfully
-            if run-result.output === queued-test.result
+            if run-result.output === queued-test.output
               ++successes
               console.log "#{chalk.green "ok"} #{chalk.dim test-number} #{queued-test.name}"
             else
               ++failures
               console.log "#{chalk.red.inverse "not ok"} #{chalk.red "#test-number"} #{queued-test.name}#{chalk.dim ": output mismatch"}"
               console.log "  #{chalk.dim "---"}"
-              console.log "  #{chalk.blue "expected"}:\n#{indent 4 queued-test.result}"
+              console.log "  #{chalk.blue "expected"}:\n#{indent 4 queued-test.output}"
               console.log "  #{chalk.blue "actual"}:\n#{indent 4 run-result.output}"
               console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
               console.log "  #{chalk.dim "---"}"
@@ -133,14 +132,14 @@ test-this = (contents) ->
 
   state =
     program     : null
-    spec-name   : null
-    result-name : null
-    specs       : {}
-    results     : {}
+    input-name  : null
+    output-name : null
+    inputs      : {}
+    outputs     : {}
 
-  die-if-have-spec-or-result = ->
-    if state.spec-name? or state.result-name?
-      die "Consecutive spec or result commands"
+  die-if-have-input-or-output = ->
+    if state.input-name? or state.output-name?
+      die "Consecutive in or out commands"
 
   visit = (node) ->
     if node.type is \html
@@ -160,8 +159,8 @@ test-this = (contents) ->
 
           actions =
             program : -> state.program := it
-            in      : -> die-if-have-spec-or-result! ; state.spec-name   := it
-            out     : -> die-if-have-spec-or-result! ; state.result-name := it
+            in      : -> die-if-have-input-or-output! ; state.input-name   := it
+            out     : -> die-if-have-input-or-output! ; state.output-name := it
 
           command-words = command .split /\s+/
           first-word    = first command-words
@@ -185,49 +184,49 @@ test-this = (contents) ->
       # every normal command!
       text-content = node.value + os.EOL
 
-      if state.spec-name
+      if state.input-name
 
-        name = state.spec-name
-        state.spec-name := null
+        name = state.input-name
+        state.input-name := null
 
-        if state.specs[name]
+        if state.inputs[name]
           die "Multiple inputs with name `#name`"
 
-        state.specs[name] = text-content
+        state.inputs[name] = text-content
 
 
-        if state.results[name] # corresponding result has been found
+        if state.outputs[name] # corresponding output has been found
           if not state.program
             die "Input and output `#name` matched, but no program given yet"
           return [
             {
-              name      : name
-              program   : state.program
-              spec      : state.specs[name]
-              result    : state.results[name]
+              name    : name
+              program : state.program
+              input   : state.inputs[name]
+              output  : state.outputs[name]
             }
           ]
 
 
-      else if state.result-name
+      else if state.output-name
 
-        name = state.result-name
-        state.result-name := null
+        name = state.output-name
+        state.output-name := null
 
-        if state.results[name]
+        if state.outputs[name]
           die "Multiple outputs with name `#name`"
 
-        state.results[name] = text-content
+        state.outputs[name] = text-content
 
-        if state.specs[name] # corresponding spec has been found
+        if state.inputs[name] # corresponding input has been found
           if not state.program
             die "Input and output `#name` matched, but no program given yet"
           return [
             {
-              name      : name
-              program   : state.program
-              spec      : state.specs[name]
-              result    : state.results[name]
+              name    : name
+              program : state.program
+              input   : state.inputs[name]
+              output  : state.outputs[name]
             }
           ]
 
@@ -244,11 +243,11 @@ test-this = (contents) ->
 
   # Inspect state as it was left, to check for inputs and outputs that weren't
   # matched.
-  state.specs |> keys |> each (k) ->
-    if not state.results[k]
+  state.inputs |> keys |> each (k) ->
+    if not state.outputs[k]
       die "No matching output for input `#k`"
-  state.results |> keys |> each (k) ->
-    if not state.specs[k]
+  state.outputs |> keys |> each (k) ->
+    if not state.inputs[k]
       die "No matching input for output `#k`"
 
 
