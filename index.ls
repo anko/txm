@@ -105,6 +105,7 @@ argv = do ->
           console.log colour.inverse "# OK"
         else
           console.log colour.inverse "# FAILED #failures"
+          process.exit 2
       catch e
         die e
 

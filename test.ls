@@ -400,7 +400,7 @@ txm-expect do
 
       hi
   """
-  exit: 0
+  exit: 2
   stdout: """
   TAP version 13
   1..2
