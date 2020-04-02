@@ -193,9 +193,7 @@ die = (message) ->
 extract-html-comments = (input) ->
   comments = []
   p = new sax-parser!
-    ..on \comment ->
-      # TODO use it.sourceCodeLocation for better error reporting?
-      comments.push it.text
+    ..on \comment -> comments.push it.text
     ..end input
   return comments
 
