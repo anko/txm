@@ -85,7 +85,8 @@ argv = do ->
 
         fail = (index, name, failure-reason, properties) ->
           ++failures
-          text = "#{chalk.red.inverse "not ok"} #{chalk.dim (index + 1)} #name#{chalk.dim ": #failure-reason"}"
+          text = "#{chalk.red.inverse "not ok"} #{chalk.dim (index + 1)}"
+          text += " #name#{chalk.dim ": #failure-reason"}"
           if properties
             text += "\n  #{chalk.dim "---"}"
             for key, value of properties
@@ -95,7 +96,7 @@ argv = do ->
 
 
 
-        make-position-text = (pos) ->
+        position-text = (pos) ->
           if pos.start is pos.end then "line #{pos.start}"
           else "lines #{pos.start}-#{pos.end}"
 
@@ -110,14 +111,14 @@ argv = do ->
                   expected: test.output
                   actual: stdout
                   program: test.program
-                  "input location in file": make-position-text test.input-position
-                  "output location in file": make-position-text test.output-position
+                  "input location in file": position-text test.input-position
+                  "output location in file": position-text test.output-position
             else
               fail index, test.name, "program exited with error",
                 stderr: e.message
                 program: test.program
-                "input location in file": make-position-text test.input-position
-                "output location in file": make-position-text test.output-position
+                "input location in file": position-text test.input-position
+                "output location in file": position-text test.output-position
             cb!
 
           exec test.program, result-callback
