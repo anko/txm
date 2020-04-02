@@ -67,6 +67,44 @@ txm-expect do
   """
 
 txm-expect do
+  "failing test"
+  """
+  <!-- !test program cat -->
+  <!-- !test in test name -->
+
+      hi
+
+  <!-- !test out test name -->
+
+      hello
+
+  """
+  exit: 2
+  stdout: """
+  TAP version 13
+  1..1
+  not ok 1 test name: output mismatch
+    ---
+    expected:
+      hello
+
+    actual:
+      hi
+
+    program:
+      cat
+    input location in file:
+      line 4
+    output location in file:
+      line 8
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
   "same line comments, some irrelevant"
   """
   <!-- !test program cat --><!-- !test in test name --><!-- something else -->
@@ -395,10 +433,12 @@ txm-expect do
   <!-- !test in y -->
 
       hi
+      there
 
   <!-- !test out y -->
 
       hi
+      there
   """
   exit: 2
   stdout: """
@@ -412,6 +452,10 @@ txm-expect do
 
     program:
       >&2 echo nope; exit 1
+    input location in file:
+      line 4
+    output location in file:
+      line 8
     ---
   not ok 2 y: program exited with error
     ---
@@ -421,6 +465,10 @@ txm-expect do
 
     program:
       >&2 echo nope; exit 1
+    input location in file:
+      lines 12-13
+    output location in file:
+      lines 17-18
     ---
 
   # 0/2 passed

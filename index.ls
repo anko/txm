@@ -77,24 +77,40 @@ argv = do ->
             lines = text.split os.EOL .map -> if it.length then spaces + it else it
             lines.join os.EOL
 
+          print-positions = ->
+            input-position = queued-test.input-position
+            output-position = queued-test.output-position
+            console.log "  #{chalk.blue "input location in file"}:"
+            if input-position.start is input-position.end
+              console.log indent 4 "line #{input-position.start}"
+            else
+              console.log indent 4 "lines #{input-position.start}-#{input-position.end}"
+            console.log "  #{chalk.blue "output location in file"}:"
+            if output-position.start is output-position.end
+              console.log indent 4 "line #{output-position.start}"
+            else
+              console.log indent 4 "lines #{output-position.start}-#{output-position.end}"
+
           if run-result.ran-successfully
             if run-result.output === queued-test.output
               ++successes
               console.log "#{chalk.green "ok"} #{chalk.dim test-number} #{queued-test.name}"
             else
               ++failures
-              console.log "#{chalk.red.inverse "not ok"} #{chalk.red "#test-number"} #{queued-test.name}#{chalk.dim ": output mismatch"}"
+              console.log "#{chalk.red.inverse "not ok"} #{chalk.dim "#test-number"} #{queued-test.name}#{chalk.dim ": output mismatch"}"
               console.log "  #{chalk.dim "---"}"
               console.log "  #{chalk.blue "expected"}:\n#{indent 4 queued-test.output}"
               console.log "  #{chalk.blue "actual"}:\n#{indent 4 run-result.output}"
               console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
+              print-positions!
               console.log "  #{chalk.dim "---"}"
           else
             ++failures
-            console.log "#{chalk.red "not ok"} #test-number #{queued-test.name}#{chalk.dim ": program exited with error"}"
+            console.log "#{chalk.red.inverse "not ok"} #{chalk.dim "#test-number"} #{queued-test.name}#{chalk.dim ": program exited with error"}"
             console.log "  #{chalk.dim "---"}"
             console.log "  #{chalk.blue "stderr"}:\n#{indent 4 run-result.output}"
             console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
+            print-positions!
             console.log "  #{chalk.dim "---"}"
 
         console.log!
@@ -136,6 +152,8 @@ test-this = (contents) ->
     output-name : null
     inputs      : {}
     outputs     : {}
+    input-positions  : {}
+    output-positions : {}
 
   die-if-have-input-or-output = ->
     if state.input-name? or state.output-name?
@@ -193,6 +211,9 @@ test-this = (contents) ->
           die "Multiple inputs with name `#name`"
 
         state.inputs[name] = text-content
+        state.input-positions[name] =
+          start: node.position.start.line
+          end: node.position.end.line
 
 
         if state.outputs[name] # corresponding output has been found
@@ -204,6 +225,8 @@ test-this = (contents) ->
               program : state.program
               input   : state.inputs[name]
               output  : state.outputs[name]
+              input-position  : state.input-positions[name]
+              output-position : state.output-positions[name]
             }
           ]
 
@@ -217,6 +240,9 @@ test-this = (contents) ->
           die "Multiple outputs with name `#name`"
 
         state.outputs[name] = text-content
+        state.output-positions[name] =
+          start: node.position.start.line
+          end: node.position.end.line
 
         if state.inputs[name] # corresponding input has been found
           if not state.program
@@ -227,6 +253,8 @@ test-this = (contents) ->
               program : state.program
               input   : state.inputs[name]
               output  : state.outputs[name]
+              input-position  : state.input-positions[name]
+              output-position : state.output-positions[name]
             }
           ]
 
