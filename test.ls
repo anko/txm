@@ -573,8 +573,9 @@ txm-expect do
     ---
     program:
       echo stdout hello; >&2 echo stderr hello; exit 1
+    exit status:
+      1
     stderr:
-      Command failed: echo stdout hello; >&2 echo stderr hello; exit 1
       stderr hello
 
     stdout:
@@ -589,8 +590,9 @@ txm-expect do
     ---
     program:
       echo stdout hello; >&2 echo stderr hello; exit 1
+    exit status:
+      1
     stderr:
-      Command failed: echo stdout hello; >&2 echo stderr hello; exit 1
       stderr hello
 
     stdout:

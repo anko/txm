@@ -132,7 +132,7 @@ parsing-error = (name, failure-reason, properties) ->
           try-to-say index, text
 
         e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
-          result-callback = (e, stdout) ->
+          result-callback = (e, stdout, stderr) ->
 
             unless e
               if stdout is test.output.text
@@ -147,7 +147,8 @@ parsing-error = (name, failure-reason, properties) ->
             else
               fail index, test.name, "program exited with error",
                 program: test.program.code
-                stderr: e.message
+                "exit status": e.code
+                stderr: stderr
                 stdout: stdout
                 "input location in file": format-position test.input.position
                 "output location in file": format-position test.output.position
