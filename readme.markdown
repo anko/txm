@@ -1,27 +1,29 @@
 # tests-ex-markdown [![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
 
-A tool to easily test that your [Markdown][markdown] code examples actually
-work!
+A tool for testing that your [Markdown][markdown] code examples actually work!
 
-It shows you useful information to understand test failures, including—
+Features:
 
- - coloured output (when outputting to a terminal),
- - colour-coded diffs,
- - line numbers of where errors occurred,
- - data about how your test program failed (exit code, stdout, stderr)
-
-Works well on its own, but is also compatible with [tools that consume
-TAP](https://github.com/sindresorhus/awesome-tap).
-
+ - **language-agnostic**: you choose how your example code is run, so this
+   works with any tool or programming language
+ - **clear diagnostics** (diffs, line numbers, stdout, stderr, exit code, …)
+ - **non-intrustive** uses HTML comments for annotations, so your rendered
+   document is unaffected
+ - **TAP output**: compatible with [other
+   tools](https://github.com/sindresorhus/awesome-tap) that consume
+   [TAP][tap-spec]
 
 ![example failure
 output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
 
+The examples in this readme are tested the same way; [see the Markdown
+source](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)!
+
+<!-- !test program ./index.ls -->
+
 ## Quickstart
 
  1. Annotate your usage examples with `!test` commands in HTML comments.
-
-    <!-- !test program ./index.ls -->
 
     <!-- !test in example -->
 
@@ -43,17 +45,27 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
     [1]: https://nodejs.org/
     ```
 
- 2. Install tests-ex-markdown:
+    Or if you develop for a different language, replace `node` with whatever
+    you want, in the `!test program` annotation.
 
-    ```bash
-    npm install tests-ex-markdown
-    ```
+ 2. Install and run tests-ex-markdown:
 
- 3. Call it it in your `package.json` `test` script:
+    - If you **are** a JavaScript developer—
 
-    ```bash
-    txm your-file.markdown
-    ```
+      1. `npm install tests-ex-markdown` in the root of the project which files
+         you want to test.
+      2. Add `txm your-file.markdown` to your `package.json` `test` script.
+      3. `npm test` as usual.
+
+    - If you **are not** a JavaScript developer—
+
+      1. [Install Node.js](https://nodejs.org/en/) if you don't have it yet.
+         (You can check if you have it by trying to run its command `node`.)
+      2. Install the `txm` command-line tool with `npm install -g
+         tests-ex-markdown`.  (To uninstall, `npm uninstall -g
+         tests-ex-markdown`.)
+      3. Run `txm your-file.markdown` on the command line whenever you want to
+         test a file.
 
  4. Get output in [TAP format][tap-spec]:
 
@@ -67,10 +79,6 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
     # 1/1 passed
     # OK
     ```
-
-The examples in this readme are tested the same way; [see the Markdown
-source](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)!
-:ok\_hand::sparkles:
 
 ## API
 
