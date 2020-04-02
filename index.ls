@@ -90,7 +90,6 @@ parsing-error = (name, failure-reason, properties) ->
   switch argv.format
   | \tap => fallthrough
   | otherwise =>
-    test = require \tape
 
     queue = []
 
