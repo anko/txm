@@ -34,14 +34,14 @@
   ],
   "dependencies": {
     "async": "3.2.0",
-    "chalk": "^3.0.0",
+    "chalk": "^4.0.0",
     "concat-stream": "2.0.0",
     "diff-match-patch": "1.0.4",
     "parse5-sax-parser": "5.1.1",
     "prelude-ls": "1.1.2",
-    "remark-parse": "7.0.2",
-    "unified": "8.4.2",
-    "yargs": "15.3.0"
+    "remark-parse": "^8.0.0",
+    "unified": "^9.0.0",
+    "yargs": "^15.3.1"
   },
   "devDependencies": {
     "livescript": "1.6.0",
