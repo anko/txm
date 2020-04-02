@@ -54,10 +54,11 @@ work!
     # OK
     ```
 
-The examples in this readme are tested the same way, so you can 
-:ok\_hand::sparkles:
+The examples in this readme are tested the same way; [see the Markdown
+source](https://github.com/sindresorhus/awesome-tap)!  :ok\_hand::sparkles:
 
-![example failure output](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
+![example failure
+output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
 
 It also shows you all sorts of useful information to understand why your test
 is failing, including—
