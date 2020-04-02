@@ -7,6 +7,7 @@ sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 { each, map, fold, unwords, keys, first } = require \prelude-ls
 concat = require \concat-stream
+dmp = new (require \diff-match-patch)!
 
 exit-code =
   SUCCESS: 0
@@ -71,7 +72,7 @@ success-text = (index, name) ->
   "#{chalk.green "ok"} #{chalk.dim index} #name"
 
 failure-text = (index, name, failure-reason, properties) ->
-  text = "#{chalk.red.inverse "not ok"} #{chalk.dim index}"
+  text = "#{chalk.red "not ok"} #{chalk.dim index}"
   text += " #name#{chalk.dim ": #failure-reason"}"
   if properties
     text += "\n" + format-properties properties, 1
@@ -148,9 +149,49 @@ parsing-error = (name, failure-reason, properties) ->
               if stdout is test.output.text
                 succeed index, test.name
               else
+
+                { expected, actual } = do ->
+                  if not process.stdout.isTTY
+                    return
+                      expected: test.output.text
+                      actual: stdout
+                  else
+                    # We are outputting to a terminal, so it's going to be seen
+                    # by a human.  Let's do a diff, and helpfully highlight
+                    # parts of the expected and actual output values, to make
+                    # it easier for the human to spot differences.
+
+                    diff = dmp.diff_main test.output.text, stdout
+                    dmp.diff_cleanupSemantic diff
+
+                    with-visible-newlines = ->
+                      it.replace (new RegExp os.EOL, \g), (x) -> "↵#x"
+
+                    expected-with-highlights = diff.reduce do
+                      (previous, [change, text]) ->
+                        switch change
+                        | 0  => previous + text
+                        | -1 =>
+                          text = with-visible-newlines text
+                          previous + chalk.red.inverse.strikethrough text
+                        | _  => previous
+                      ""
+                    actual-with-highlights = diff.reduce do
+                      (previous, [change, text]) ->
+                        switch change
+                        | 0 => previous + text
+                        | 1 =>
+                          text = with-visible-newlines text
+                          previous + chalk.green.inverse text
+                        | _ => previous
+                      ""
+                    return
+                      expected: expected-with-highlights
+                      actual: actual-with-highlights
+
                 fail index, test.name, "output mismatch",
-                  expected: test.output.text
-                  actual: stdout
+                  expected: expected
+                  actual: actual
                   program: test.program.code
                   "input location": format-position test.input.position
                   "output location": format-position test.output.position

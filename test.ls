@@ -89,6 +89,7 @@ txm-expect do
   <!-- !test out test name -->
 
       hello
+      there
 
   """
   exit: 1
@@ -99,6 +100,7 @@ txm-expect do
     ---
     expected: |
       hello
+      there
 
     actual: |
       hi
@@ -108,7 +110,7 @@ txm-expect do
     input location: |
       line 4
     output location: |
-      line 8
+      lines 8-9
     ---
 
   # 0/1 passed
