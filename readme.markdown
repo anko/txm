@@ -49,13 +49,13 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
     npm install tests-ex-markdown
     ```
 
- 3. Run it on your Markdown file:
+ 3. Call it it in your `package.json` `test` script:
 
     ```bash
     txm your-file.markdown
     ```
 
- 4. Get output in [TAP format][tap-spec].
+ 4. Get output in [TAP format][tap-spec]:
 
     <!-- !test out example -->
 
