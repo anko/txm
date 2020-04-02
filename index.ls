@@ -6,6 +6,12 @@ require! <[ fs os unified remark-parse yargs async chalk ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 
+exit-code =
+  SUCCESS: 0
+  TEST_FAILURE: 1
+  FORMAT_ERROR: 2
+  INTERNAL_ERROR: 3
+
 argv = do ->
 
   # It hurts that I have to do this, but here we are.  When run with lsc
@@ -25,6 +31,45 @@ argv = do ->
 
   return yargs.parse argv-to-parse
 
+
+format-position = (position) ->
+  pos = # extract just the line information
+    start: position.start.line
+    end: position.end.line
+  if pos.start is pos.end then "line #{pos.start}"
+  else "lines #{pos.start}-#{pos.end}"
+
+indent = (n, text) ->
+  spaces = " " * n
+  lines = text.split os.EOL .map -> if it.length then spaces + it else it
+  lines.join os.EOL
+
+format-properties = (properties) ->
+  text = "  #{chalk.dim "---"}"
+  for key, value of properties
+    text += "\n  #{chalk.blue key}:\n#{indent 4 value.to-string!}"
+  text += "\n  #{chalk.dim "---"}"
+  return text
+
+success-text = (index, name) ->
+  "#{chalk.green "ok"} #{chalk.dim index} #name"
+
+failure-text = (index, name, failure-reason, properties) ->
+  text = "#{chalk.red.inverse "not ok"} #{chalk.dim index}"
+  text += " #name#{chalk.dim ": #failure-reason"}"
+  if properties
+    text += "\n" + format-properties properties
+  return text
+
+parsing-error = (text, position) ->
+  console.log chalk.dim "0..0"
+  console.log "#{chalk.red.inverse "not ok"} #{chalk.dim 0} #text"
+  console.log format-properties { "location": format-position position }
+  console.log!
+  console.log chalk.red.inverse "# INVALID INPUT FORMAT"
+  process.exit exit-code.FORMAT_ERROR
+
+
 { queue-test, run-tests } =
   switch argv.format
   | \tap => fallthrough
@@ -37,12 +82,10 @@ argv = do ->
     run-tests : ->
       try
 
-        console.log chalk.dim "TAP version 13"
-
         if queue.length is 0
           console.log chalk.yellow "0..0"
-          console.log chalk.yellow "# no tests!"
-          process.exit!
+          console.log chalk.yellow "# no tests"
+          process.exit exit-code.SUCCESS
 
         console.log chalk.dim "1..#{queue.length}"
 
@@ -56,11 +99,6 @@ argv = do ->
         next-index-to-print = 0
         successes = 0
         failures = 0
-
-        indent = (n, text) ->
-          spaces = " " * n
-          lines = text.split os.EOL .map -> if it.length then spaces + it else it
-          lines.join os.EOL
 
         try-to-say = (index, text) ->
           if index is next-index-to-print
@@ -81,53 +119,42 @@ argv = do ->
 
         succeed = (index, name, properties) ->
           ++successes
-          try-to-say index, "#{chalk.green "ok"} #{chalk.dim (index + 1)} #name"
+          try-to-say index, success-text (index + 1), name
 
         fail = (index, name, failure-reason, properties) ->
           ++failures
-          text = "#{chalk.red.inverse "not ok"} #{chalk.dim (index + 1)}"
-          text += " #name#{chalk.dim ": #failure-reason"}"
-          if properties
-            text += "\n  #{chalk.dim "---"}"
-            for key, value of properties
-              text += "\n  #{chalk.blue key}:\n#{indent 4 value.to-string!}"
-            text += "\n  #{chalk.dim "---"}"
+          text = failure-text (index + 1), name, failure-reason, properties
           try-to-say index, text
-
-
-
-        position-text = (pos) ->
-          if pos.start is pos.end then "line #{pos.start}"
-          else "lines #{pos.start}-#{pos.end}"
 
         e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
           result-callback = (e, stdout) ->
 
             unless e
-              if stdout is test.output
+              if stdout is test.output.text
                 succeed index, test.name
               else
                 fail index, test.name, "output mismatch",
-                  expected: test.output
+                  expected: test.output.text
                   actual: stdout
-                  program: test.program
-                  "input location in file": position-text test.input-position
-                  "output location in file": position-text test.output-position
+                  program: test.program.code
+                  "input location in file": format-position test.input.position
+                  "output location in file": format-position test.output.position
             else
               fail index, test.name, "program exited with error",
+                program: test.program.code
                 stderr: e.message
-                program: test.program
-                "input location in file": position-text test.input-position
-                "output location in file": position-text test.output-position
+                stdout: stdout
+                "input location in file": format-position test.input.position
+                "output location in file": format-position test.output.position
             cb!
 
-          exec test.program, result-callback
+          exec test.program.code, result-callback
             ..stdin .on \error ->
               if it.code is \EPIPE
                 void # do nothing
               else throw it
 
-            ..stdin.end test.input
+            ..stdin.end test.input.text
 
         if e then die e.message
 
@@ -138,7 +165,7 @@ argv = do ->
           console.log colour.inverse "# OK"
         else
           console.log colour.inverse "# FAILED #failures"
-          process.exit 2
+          process.exit exit-code.TEST_FAILURE
       catch e
         die e
 
@@ -147,7 +174,7 @@ concat = require \concat-stream
 
 die = (message) ->
   console.error message
-  process.exit 1
+  process.exit exit-code.INTERNAL_ERROR
 
 extract-html-comments = (input) ->
   comments = []
@@ -164,18 +191,77 @@ unescape = (script) -> script.replace /\\(.)/g -> &1
 
 test-this = (contents) ->
 
-  state =
-    program     : null
-    input-name  : null
-    output-name : null
-    inputs      : {}
-    outputs     : {}
-    input-positions  : {}
-    output-positions : {}
+  console.log "TAP version 13"
 
-  die-if-have-input-or-output = ->
-    if state.input-name? or state.output-name?
-      die "Consecutive in or out commands"
+  incomplete-test-specs = {}
+  try-to-complete-test-spec = (name, property-name, value, program) !->
+    test-spec = if name not of incomplete-test-specs
+      { program }
+    else
+      incomplete-test-specs[name]
+    incomplete-test-specs[name] = test-spec
+
+    if property-name of test-spec
+      parsing-error do
+        "Duplicate '#name' #{property-name + \put}"
+        value.position
+
+    test-spec[property-name] = value
+
+    if test-spec.in? and test-spec.out?
+      complete-spec =
+        name: name
+        program: test-spec.program
+        input: test-spec.in
+        output: test-spec.out
+      delete incomplete-test-specs[name]
+      return complete-spec
+
+  state-machine =
+    waitingForProgramText: ->
+      got-text: !-> # ignore
+      got-command: (name, text, position) !->
+        switch name
+        | \program =>
+          state-machine.now = state-machine.waitingForAnyCommand do
+            program: { code: text, position: position }
+        | \in => fallthrough
+        | \out
+          parsing-error do
+            "Got '#name' command before first 'program' command"
+            position
+
+    waitingForAnyCommand: ({ program }) ->
+      got-text: !-> # Ignore
+      got-command: (name, text, position) !->
+        switch name
+        | \program =>
+          state-machine.now = state-machine.waitingForAnyCommand do
+            program: { code: text, position: position }
+        | \in  =>
+          state-machine.now = state-machine.waitingForInputText { program, name: text }
+        | \out =>
+          state-machine.now = state-machine.waitingForOutputText { program, name: text }
+
+    waitingForInputText: ({ program, name }) ->
+      got-text: (text, position) !->
+        state-machine.now = state-machine.waitingForAnyCommand { program }
+        return try-to-complete-test-spec name, \in, { text: text, position }, program
+      got-command: (name, text, position) !->
+        parsing-error do
+          "Unexpected command '#name #text' (expected input text)"
+          position
+
+    waitingForOutputText: ({ program, name }) ->
+      got-text: (text, position) !->
+        state-machine.now = state-machine.waitingForAnyCommand { program }
+        return try-to-complete-test-spec name, \out, { text: text, position }, program
+      got-command: (name, text, position) !->
+        parsing-error do
+          "Unexpected command '#name #text' (expected output text)"
+          position
+
+  state-machine.now = state-machine.waitingForProgramText!
 
   visit = (node) ->
     if node.type is \html
@@ -192,20 +278,18 @@ test-this = (contents) ->
         [ _, command ] = (comment .trim! .match re) || []
 
         if command
-
-          actions =
-            program : -> state.program := it
-            in      : -> die-if-have-input-or-output! ; state.input-name   := it
-            out     : -> die-if-have-input-or-output! ; state.output-name := it
-
           command-words = command .split /\s+/
           first-word    = first command-words
 
-          if actions[first-word]
+          if first-word in <[ program in out ]>
             rest = command |> (.slice first-word.length)
                            |> (.trim!)
                            |> unescape
-            that rest
+            state-machine.now.got-command first-word, rest, node.position
+          else
+            parsing-error do
+              "Unknown command type '#first-word'"
+              node.position
 
       return []
 
@@ -220,63 +304,10 @@ test-this = (contents) ->
       # every normal command!
       text-content = node.value + os.EOL
 
-      if state.input-name
+      maybe-test-spec = state-machine.now.got-text text-content, node.position
+      if maybe-test-spec then return [ maybe-test-spec ]
+      else return []
 
-        name = state.input-name
-        state.input-name := null
-
-        if state.inputs[name]
-          die "Multiple inputs with name `#name`"
-
-        state.inputs[name] = text-content
-        state.input-positions[name] =
-          start: node.position.start.line
-          end: node.position.end.line
-
-
-        if state.outputs[name] # corresponding output has been found
-          if not state.program
-            die "Input and output `#name` matched, but no program given yet"
-          return [
-            {
-              name    : name
-              program : state.program
-              input   : state.inputs[name]
-              output  : state.outputs[name]
-              input-position  : state.input-positions[name]
-              output-position : state.output-positions[name]
-            }
-          ]
-
-
-      else if state.output-name
-
-        name = state.output-name
-        state.output-name := null
-
-        if state.outputs[name]
-          die "Multiple outputs with name `#name`"
-
-        state.outputs[name] = text-content
-        state.output-positions[name] =
-          start: node.position.start.line
-          end: node.position.end.line
-
-        if state.inputs[name] # corresponding input has been found
-          if not state.program
-            die "Input and output `#name` matched, but no program given yet"
-          return [
-            {
-              name    : name
-              program : state.program
-              input   : state.inputs[name]
-              output  : state.outputs[name]
-              input-position  : state.input-positions[name]
-              output-position : state.output-positions[name]
-            }
-          ]
-
-      return []
 
     else if \children of node
       node.children |> map visit |> fold (++), []
@@ -289,13 +320,16 @@ test-this = (contents) ->
 
   # Inspect state as it was left, to check for inputs and outputs that weren't
   # matched.
-  state.inputs |> keys |> each (k) ->
-    if not state.outputs[k]
-      die "No matching output for input `#k`"
-  state.outputs |> keys |> each (k) ->
-    if not state.inputs[k]
-      die "No matching input for output `#k`"
-
+  for name, properties of incomplete-test-specs
+    if properties.in and not properties.out
+      parsing-error do
+        "'#name' has no output"
+        properties.in.position
+    if properties.out and not properties.in
+      parsing-error do
+        "'#name' has no input"
+        properties.out.position
+    die "Unexpected state of incomplete test spec #name: #{JSON.stringify properties}"
 
   tests |> each queue-test
 

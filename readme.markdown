@@ -30,7 +30,7 @@ Test that your [Markdown][markdown] code examples actually work!
 
  3. Run it on your Markdown file:
 
-    ```
+    ```bash
     txm your-file.markdown
     ```
 
@@ -47,8 +47,8 @@ Test that your [Markdown][markdown] code examples actually work!
     # OK
     ```
 
-The above example is itself tested with this module, so I have confidence that
-it is correct! :boom:
+All the examples in this readme are tested with `txm`, so I know they are
+correct!  :boom:
 
 ## API
 
@@ -61,6 +61,10 @@ sequentially, pass `--series`.
 
 If a `filename` is provided, `txm` parses it as Markdown and executes the tests
 specified in it.  Otherwise, it reads from `stdin`.
+
+The `txm` process will `exit(0)` if all tests pass, and non-zero in all other
+cases.  It outputs valid TAP even if your specified test program fails, or if
+your format is wrong.
 
 ### Annotations
 

@@ -29,16 +29,28 @@ txm-expect = (name, md-string, expected={}) ->
         status
         expected.exit
         "exit code is #{expected.exit}"
+
     if expected.stdout?
       t.equals do
         stdout.to-string!
         expected.stdout
         "stdout matches"
+    else
+      t.equals do
+        stdout.to-string!
+        ""
+        "stdout empty"
+
     if expected.stderr?
       t.equals do
         stderr.to-string!
         expected.stderr
         "stderr matches"
+    else
+      t.equals do
+        stderr.to-string!
+        ""
+        "stderr empty"
 
     t.end!
 
@@ -79,7 +91,7 @@ txm-expect do
       hello
 
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
   1..1
@@ -139,9 +151,20 @@ txm-expect do
       hi
 
   """
-  exit: 1
-  stdout: ""
-  stderr: "Input and output `1` matched, but no program given yet\n"
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 Got 'in' command before first 'program' command
+    ---
+    location:
+      line 1
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
+  stderr: ""
 
 txm-expect do
   "input without matching output"
@@ -151,9 +174,19 @@ txm-expect do
 
       hi
   """
-  exit: 1
-  stdout: ""
-  stderr: "No matching output for input `1`\n"
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 '1' has no output
+    ---
+    location:
+      line 4
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
 
 txm-expect do
   "output without matching input"
@@ -163,9 +196,51 @@ txm-expect do
 
       hi
   """
-  exit: 1
-  stdout: ""
-  stderr: "No matching input for output `1`\n"
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 '1' has no input
+    ---
+    location:
+      line 4
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
+
+
+txm-expect do
+  "another output command before first resolves"
+  """
+  <!-- !test program cat -->
+  <!-- !test out 1 -->
+  <!-- !test out 2 -->
+
+      hi
+
+  <!-- !test in 1 -->
+
+      hi
+
+  <!-- !test in 2 -->
+
+      hi
+  """
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 Unexpected command 'out 2' (expected output text)
+    ---
+    location:
+      line 3
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
 
 txm-expect do
   "redirection in program"
@@ -195,6 +270,15 @@ txm-expect do
   ```
   """
   exit: 0
+  stdout: """
+  TAP version 13
+  1..1
+  ok 1 1
+
+  # 1/1 passed
+  # OK
+
+  """
 
 txm-expect do
   "output defined before input"
@@ -276,9 +360,19 @@ txm-expect do
       two
 
   """
-  exit: 1
-  stdout: ""
-  stderr: "Multiple inputs with name `1`\n"
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 Duplicate '1' input
+    ---
+    location:
+      line 8
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
 
 txm-expect do
   "Multiple outputs with conflicting id"
@@ -301,9 +395,19 @@ txm-expect do
       two
 
   """
-  exit: 1
-  stdout: ""
-  stderr: "Multiple outputs with name `1`\n"
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 Duplicate '1' output
+    ---
+    location:
+      line 8
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
 
 txm-expect do
   "Long test name"
@@ -318,17 +422,13 @@ txm-expect do
       hi
   """
   exit: 0
-  """
+  stdout: """
   TAP version 13
-  # something fairly long going in here
-  ok 1 should be equal
-
   1..1
-  # tests 1
-  # pass  1
+  ok 1 something fairly long going in here
 
-  # ok
-
+  # 1/1 passed
+  # OK
 
   """
 
@@ -390,9 +490,19 @@ txm-expect do
 
       hi
   """
-  exit: 1
-  stdout: ""
-  "No matching output for input `big cat`\n"
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 'big cat' has no output
+    ---
+    location:
+      line 4
+    ---
+
+  # INVALID INPUT FORMAT
+
+  """
 
 
 txm-expect do
@@ -421,7 +531,7 @@ txm-expect do
 txm-expect do
   "tests continue when test program fails"
   """
-  <!-- !test program >&2 echo nope; exit 1 -->
+  <!-- !test program echo stdout hello; >&2 echo stderr hello; exit 1 -->
   <!-- !test in x -->
 
       hi
@@ -440,18 +550,21 @@ txm-expect do
       hi
       there
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
   1..2
   not ok 1 x: program exited with error
     ---
-    stderr:
-      Command failed: >&2 echo nope; exit 1
-      nope
-
     program:
-      >&2 echo nope; exit 1
+      echo stdout hello; >&2 echo stderr hello; exit 1
+    stderr:
+      Command failed: echo stdout hello; >&2 echo stderr hello; exit 1
+      stderr hello
+
+    stdout:
+      stdout hello
+
     input location in file:
       line 4
     output location in file:
@@ -459,12 +572,15 @@ txm-expect do
     ---
   not ok 2 y: program exited with error
     ---
-    stderr:
-      Command failed: >&2 echo nope; exit 1
-      nope
-
     program:
-      >&2 echo nope; exit 1
+      echo stdout hello; >&2 echo stderr hello; exit 1
+    stderr:
+      Command failed: echo stdout hello; >&2 echo stderr hello; exit 1
+      stderr hello
+
+    stdout:
+      stdout hello
+
     input location in file:
       lines 12-13
     output location in file:
