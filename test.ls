@@ -55,6 +55,20 @@ txm-expect = (name, md-string, expected={}) ->
     t.end!
 
 txm-expect do
+  "no tests"
+  """
+  Some irrelevant Markdown text.
+  """
+  exit: 0
+  stdout: """
+  TAP version 13
+  1..0
+  # no tests
+  # For help, see https://github.com/anko/tests-ex-markdown
+
+  """
+
+txm-expect do
   "simple cat passthrough"
   """
   <!-- !test program cat -->

@@ -8,6 +8,7 @@ sax-parser = require \parse5-sax-parser
 { each, map, fold, unwords, keys, first } = require \prelude-ls
 concat = require \concat-stream
 dmp = new (require \diff-match-patch)!
+homepage-link = require \./package.json .homepage
 
 exit-code =
   SUCCESS: 0
@@ -87,8 +88,9 @@ run-tests = (queue) ->
   try
 
     if queue.length is 0
-      console.log chalk.yellow "0..0"
+      console.log chalk.yellow "1..0"
       console.log chalk.yellow "# no tests"
+      console.log chalk.dim "# For help, see #{homepage-link}"
       process.exit exit-code.SUCCESS
 
     console.log chalk.dim "1..#{queue.length}"
