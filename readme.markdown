@@ -3,6 +3,8 @@
 A tool to easily test that your [Markdown][markdown] code examples actually
 work!
 
+## Quickstart
+
  1. Annotate your usage examples with `!test` commands in HTML comments.
 
     <!-- !test program ./index.ls -->
@@ -52,8 +54,24 @@ work!
     # OK
     ```
 
-The examples in this readme are tested the same way, so I know they're correct!
+The examples in this readme are tested the same way, so you can 
 :ok\_hand::sparkles:
+
+![example failure output](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
+
+It also shows you all sorts of useful information to understand why your test
+is failing, including—
+
+ - coloured output (when outputting to a terminal),
+ - colour-coded diffs,
+ - line numbers of where errors occurred,
+ - data about how your test program failed (exit code, stdout, stderr)
+
+It plays nice with CI systems like
+[Travis](https://travis-ci.org/github/anko/tests-ex-markdown), and is
+compatible with [tools that consume
+TAP](https://github.com/sindresorhus/awesome-tap), though it also works well
+just on its own.
 
 ## API
 
@@ -100,11 +118,12 @@ are matched, the last encountered `program` command is used.
 spec][html-comments-spec].  Thankfully, `txm` lets you escape them: `\-` means
 the same as a hyphen.  To write a backslash, write `\\`.
 
-## Tips and tricks
+## FAQ
 
- - **If you want to test `stderr` output also**, prepend `2>&1` to your
-   command, to [redirect][shell-redirection-q] `stderr` to `stdout`.  (This is
-   a shell feature, not a `txm` feature.)
+ - **How do I test `stderr` output?**
+
+   Prepend `2>&1` to your command, to [redirect][shell-redirection-q] `stderr`
+   to `stdout`.  (This is a shell feature, not a `txm` feature.)
 
    <details><summary>Example</summary>
 
@@ -136,9 +155,10 @@ the same as a hyphen.  To write a backslash, write `\\`.
    > ```
    </details>
 
- - **If you want to test a program that exits with a non-zero status** (which
-   `txm` considers to have failed), put `|| true` after it to swallow the
-   non-zero exit code and proceed anyway.
+ - **How do I test a program that exits with a non-zero status?** (which `txm`
+   considers to have failed)
+
+   Put `|| true` after it to swallow the exit code.
 
    <details><summary>Example</summary>
 
