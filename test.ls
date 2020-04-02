@@ -97,17 +97,17 @@ txm-expect do
   1..1
   not ok 1 test name: output mismatch
     ---
-    expected:
+    expected: |
       hello
 
-    actual:
+    actual: |
       hi
 
-    program:
+    program: |
       cat
-    input location in file:
+    input location in file: |
       line 4
-    output location in file:
+    output location in file: |
       line 8
     ---
 
@@ -157,9 +157,9 @@ txm-expect do
   0..0
   not ok 0 1: 'in' command precedes first 'program' command
     ---
-    location:
+    location: |
       line 1
-    how to fix:
+    how to fix: |
       Declare a test program before the 'in 1' command at line 1,
       using <!-- !test program <TEST PROGRAM HERE> -->
     ---
@@ -183,9 +183,9 @@ txm-expect do
   0..0
   not ok 0 1: no output defined
     ---
-    location:
+    location: |
       line 4
-    how to fix:
+    how to fix: |
       Define an output for '1', using <!-- !test out 1 -->,
       followed by a code block.
     ---
@@ -208,9 +208,9 @@ txm-expect do
   0..0
   not ok 0 1: no input defined
     ---
-    location:
+    location: |
       line 4
-    how to fix:
+    how to fix: |
       Define an input for '1', using <!-- !test in 1 -->,
       followed by a code block.
     ---
@@ -243,9 +243,9 @@ txm-expect do
   0..0
   not ok 0 'out 2': unexpected command (expected output text)
     ---
-    location:
+    location: |
       line 3
-    how to fix:
+    how to fix: |
       Check that your 'in' and 'out' commands are each followed by a block
       of code, not another test command.
     ---
@@ -378,7 +378,7 @@ txm-expect do
   0..0
   not ok 0 1: duplicate input
     ---
-    location:
+    location: |
       line 8
     ---
 
@@ -413,7 +413,7 @@ txm-expect do
   0..0
   not ok 0 1: duplicate output
     ---
-    location:
+    location: |
       line 8
     ---
 
@@ -508,9 +508,9 @@ txm-expect do
   0..0
   not ok 0 big cat: no output defined
     ---
-    location:
+    location: |
       line 4
-    how to fix:
+    how to fix: |
       Define an output for 'big cat', using <!-- !test out big cat -->,
       followed by a code block.
     ---
@@ -571,36 +571,34 @@ txm-expect do
   1..2
   not ok 1 x: program exited with error
     ---
-    program:
+    program: |
       echo stdout hello; >&2 echo stderr hello; exit 1
-    exit status:
-      1
-    stderr:
+    exit status: 1
+    stderr: |
       stderr hello
 
-    stdout:
+    stdout: |
       stdout hello
 
-    input location in file:
+    input location in file: |
       line 4
-    output location in file:
+    output location in file: |
       line 8
     ---
   not ok 2 y: program exited with error
     ---
-    program:
+    program: |
       echo stdout hello; >&2 echo stderr hello; exit 1
-    exit status:
-      1
-    stderr:
+    exit status: 1
+    stderr: |
       stderr hello
 
-    stdout:
+    stdout: |
       stdout hello
 
-    input location in file:
+    input location in file: |
       lines 12-13
-    output location in file:
+    output location in file: |
       lines 17-18
     ---
 
@@ -627,7 +625,7 @@ txm-expect do
   0..0
   not ok 0 'something': unknown command type
     ---
-    location:
+    location: |
       line 2
     supported commands:
       - in
@@ -636,5 +634,39 @@ txm-expect do
     ---
 
   # FAILED TO PARSE TESTS
+
+  """
+
+txm-expect do
+  "empty stdout and stderr are rendered in YAML as empty string"
+  """
+  <!-- !test program exit 1 -->
+  <!-- !test in my test -->
+
+      hi
+
+  <!-- !test out my test -->
+
+      hi
+  """
+  exit: 1
+  stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: program exited with error
+    ---
+    program: |
+      exit 1
+    exit status: 1
+    stderr: ''
+    stdout: ''
+    input location in file: |
+      line 4
+    output location in file: |
+      line 8
+    ---
+
+  # 0/1 passed
+  # FAILED 1
 
   """

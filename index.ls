@@ -49,10 +49,18 @@ format-properties = (properties, indent-level=0) ->
   text = indent indent-level, "#{chalk.dim "---"}"
   for key, value of properties
     text += "\n" + indent indent-level, "#{chalk.blue key}:"
-    if typeof! value is \Array
+    switch typeof! value
+    | \Array
       for v in value
         text += "\n" + indent (indent-level + 1), "- #{v.to-string!}"
-    else
+    | \Number
+      text += " " + value.to-string!
+    | \String
+      if value === ""
+        text += " ''"
+      else
+        text += " |\n" + indent (indent-level + 1), value
+    | otherwise
       text += "\n" + indent (indent-level + 1), value.to-string!
   text += "\n" + indent indent-level, "#{chalk.dim "---"}"
   return text
