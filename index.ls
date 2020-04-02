@@ -150,16 +150,16 @@ parsing-error = (name, failure-reason, properties) ->
                   expected: test.output.text
                   actual: stdout
                   program: test.program.code
-                  "input location in file": format-position test.input.position
-                  "output location in file": format-position test.output.position
+                  "input location": format-position test.input.position
+                  "output location": format-position test.output.position
             else
               fail index, test.name, "program exited with error",
                 program: test.program.code
                 "exit status": e.code
                 stderr: stderr
                 stdout: stdout
-                "input location in file": format-position test.input.position
-                "output location in file": format-position test.output.position
+                "input location": format-position test.input.position
+                "output location": format-position test.output.position
             cb!
 
           exec test.program.code, result-callback

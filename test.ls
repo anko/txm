@@ -105,9 +105,9 @@ txm-expect do
 
     program: |
       cat
-    input location in file: |
+    input location: |
       line 4
-    output location in file: |
+    output location: |
       line 8
     ---
 
@@ -580,9 +580,9 @@ txm-expect do
     stdout: |
       stdout hello
 
-    input location in file: |
+    input location: |
       line 4
-    output location in file: |
+    output location: |
       line 8
     ---
   not ok 2 y: program exited with error
@@ -596,9 +596,9 @@ txm-expect do
     stdout: |
       stdout hello
 
-    input location in file: |
+    input location: |
       lines 12-13
-    output location in file: |
+    output location: |
       lines 17-18
     ---
 
@@ -660,9 +660,9 @@ txm-expect do
     exit status: 1
     stderr: ''
     stdout: ''
-    input location in file: |
+    input location: |
       line 4
-    output location in file: |
+    output location: |
       line 8
     ---
 
