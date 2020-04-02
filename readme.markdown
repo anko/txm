@@ -3,6 +3,20 @@
 A tool to easily test that your [Markdown][markdown] code examples actually
 work!
 
+It shows you useful information to understand test failures, including—
+
+ - coloured output (when outputting to a terminal),
+ - colour-coded diffs,
+ - line numbers of where errors occurred,
+ - data about how your test program failed (exit code, stdout, stderr)
+
+Works well on its own, but is also compatible with [tools that consume
+TAP](https://github.com/sindresorhus/awesome-tap).
+
+
+![example failure
+output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
+
 ## Quickstart
 
  1. Annotate your usage examples with `!test` commands in HTML comments.
@@ -55,24 +69,8 @@ work!
     ```
 
 The examples in this readme are tested the same way; [see the Markdown
-source](https://github.com/sindresorhus/awesome-tap)!  :ok\_hand::sparkles:
-
-![example failure
-output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
-
-It also shows you all sorts of useful information to understand why your test
-is failing, including—
-
- - coloured output (when outputting to a terminal),
- - colour-coded diffs,
- - line numbers of where errors occurred,
- - data about how your test program failed (exit code, stdout, stderr)
-
-It plays nice with CI systems like
-[Travis](https://travis-ci.org/github/anko/tests-ex-markdown), and is
-compatible with [tools that consume
-TAP](https://github.com/sindresorhus/awesome-tap), though it also works well
-just on its own.
+source](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)!
+:ok\_hand::sparkles:
 
 ## API
 
