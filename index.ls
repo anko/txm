@@ -46,72 +46,89 @@ argv = do ->
 
         console.log chalk.dim "1..#{queue.length}"
 
-        async-map = if argv.series then async.map-series else async.map
+        # The parallel processing strategy here is to run multiple tests in
+        # parallel (so their results may arrive in arbitrary order) but only
+        # print each one's results when all tests before that one's index have
+        # been printed.
 
-        e, run-results <- async-map queue, ({ name, program, input }, cb) ->
-          errored-out = false
+        parallelism = if argv.series then 1 else os.cpus().length
+        prints-waiting = []
+        next-index-to-print = 0
+        successes = 0
+        failures = 0
+
+        indent = (n, text) ->
+          spaces = " " * n
+          lines = text.split os.EOL .map -> if it.length then spaces + it else it
+          lines.join os.EOL
+
+        try-to-say = (index, text) ->
+          if index is next-index-to-print
+            # Everything before this index has been printed.  We can print
+            # immediately.
+            console.log text
+
+            ++next-index-to-print
+
+            # Let's also check if the text for the next index has arrived, and
+            # if so, print that too.
+            if prints-waiting[next-index-to-print]
+              try-to-say next-index-to-print, that
+          else
+            # Otherwise, wait patiently in line until the indexes before us get
+            # their turns.  They will call us when it's our turn.
+            prints-waiting[index] = text
+
+        succeed = (index, name, properties) ->
+          ++successes
+          try-to-say index, "#{chalk.green "ok"} #{chalk.dim (index + 1)} #name"
+
+        fail = (index, name, failure-reason, properties) ->
+          ++failures
+          text = "#{chalk.red.inverse "not ok"} #{chalk.dim (index + 1)} #name#{chalk.dim ": #failure-reason"}"
+          if properties
+            text += "\n  #{chalk.dim "---"}"
+            for key, value of properties
+              text += "\n  #{chalk.blue key}:\n#{indent 4 value.to-string!}"
+            text += "\n  #{chalk.dim "---"}"
+          try-to-say index, text
+
+
+
+        make-position-text = (pos) ->
+          if pos.start is pos.end then "line #{pos.start}"
+          else "lines #{pos.start}-#{pos.end}"
+
+        e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
           result-callback = (e, stdout) ->
-            unless e then cb null, { output: stdout.to-string!, ran-successfully: yes }
-            else cb null { output: e.message, ran-successfully: no }
-          exec program, result-callback
+
+            unless e
+              if stdout is test.output
+                succeed index, test.name
+              else
+                fail index, test.name, "output mismatch",
+                  expected: test.output
+                  actual: stdout
+                  program: test.program
+                  "input location in file": make-position-text test.input-position
+                  "output location in file": make-position-text test.output-position
+            else
+              fail index, test.name, "program exited with error",
+                stderr: e.message
+                program: test.program
+                "input location in file": make-position-text test.input-position
+                "output location in file": make-position-text test.output-position
+            cb!
+
+          exec test.program, result-callback
             ..stdin .on \error ->
               if it.code is \EPIPE
                 void # do nothing
               else throw it
 
-            unless errored-out
-              ..stdin.end input
+            ..stdin.end test.input
 
         if e then die e.message
-
-        successes = 0
-        failures = 0
-        queue.for-each (queued-test, index) ->
-
-          run-result = run-results[index]
-
-          test-number = index + 1
-
-          indent = (n, text) ->
-            spaces = " " * n
-            lines = text.split os.EOL .map -> if it.length then spaces + it else it
-            lines.join os.EOL
-
-          print-positions = ->
-            input-position = queued-test.input-position
-            output-position = queued-test.output-position
-            console.log "  #{chalk.blue "input location in file"}:"
-            if input-position.start is input-position.end
-              console.log indent 4 "line #{input-position.start}"
-            else
-              console.log indent 4 "lines #{input-position.start}-#{input-position.end}"
-            console.log "  #{chalk.blue "output location in file"}:"
-            if output-position.start is output-position.end
-              console.log indent 4 "line #{output-position.start}"
-            else
-              console.log indent 4 "lines #{output-position.start}-#{output-position.end}"
-
-          if run-result.ran-successfully
-            if run-result.output === queued-test.output
-              ++successes
-              console.log "#{chalk.green "ok"} #{chalk.dim test-number} #{queued-test.name}"
-            else
-              ++failures
-              console.log "#{chalk.red.inverse "not ok"} #{chalk.dim "#test-number"} #{queued-test.name}#{chalk.dim ": output mismatch"}"
-              console.log "  #{chalk.dim "---"}"
-              console.log "  #{chalk.blue "expected"}:\n#{indent 4 queued-test.output}"
-              console.log "  #{chalk.blue "actual"}:\n#{indent 4 run-result.output}"
-              console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
-              print-positions!
-              console.log "  #{chalk.dim "---"}"
-          else
-            ++failures
-            console.log "#{chalk.red.inverse "not ok"} #{chalk.dim "#test-number"} #{queued-test.name}#{chalk.dim ": program exited with error"}"
-            console.log "  #{chalk.dim "---"}"
-            console.log "  #{chalk.blue "stderr"}:\n#{indent 4 run-result.output}"
-            console.log "  #{chalk.blue "program"}:\n#{indent 4 queued-test.program}"
-            print-positions!
-            console.log "  #{chalk.dim "---"}"
 
         console.log!
         colour = if failures is 0 then chalk.green else chalk.red
