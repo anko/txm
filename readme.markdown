@@ -1,6 +1,7 @@
 # tests-ex-markdown [![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
 
-Test that your [Markdown][markdown] code examples actually work!
+A tool to easily test that your [Markdown][markdown] code examples actually
+work!
 
  1. Annotate your usage examples with `!test` commands in HTML comments.
 
@@ -8,7 +9,7 @@ Test that your [Markdown][markdown] code examples actually work!
 
     <!-- !test in example -->
 
-    ```md
+    ```markdown
     <!-- !test program node -->
 
     Here's how to print to the console in [Node.js][1]:
@@ -26,7 +27,11 @@ Test that your [Markdown][markdown] code examples actually work!
     [1]: https://nodejs.org/
     ```
 
- 2. `npm install tests-ex-markdown`.
+ 2. Install tests-ex-markdown:
+
+    ```bash
+    npm install tests-ex-markdown
+    ```
 
  3. Run it on your Markdown file:
 
@@ -34,7 +39,7 @@ Test that your [Markdown][markdown] code examples actually work!
     txm your-file.markdown
     ```
 
- 4. Get output (in [TAP format][tap-spec]).
+ 4. Get output in [TAP format][tap-spec].
 
     <!-- !test out example -->
 
@@ -47,8 +52,8 @@ Test that your [Markdown][markdown] code examples actually work!
     # OK
     ```
 
-All the examples in this readme are tested with `txm`, so I know they are
-correct!  :boom:
+The examples in this readme are tested the same way, so I know they're correct!
+:ok\_hand::sparkles:
 
 ## API
 
@@ -56,15 +61,14 @@ correct!  :boom:
 
     txm [--series] [filename]
 
-Tests may run in parallel by default.  If your tests need to be run
-sequentially, pass `--series`.
+Tests run in parallel.  If you want sequential, pass `--series`.
 
-If a `filename` is provided, `txm` parses it as Markdown and executes the tests
-specified in it.  Otherwise, it reads from `stdin`.
+If a `filename` is provided, `txm` parses it as Markdown and runs the tests
+specified in it.  Otherwise, `txm` reads `stdin`.
 
-The `txm` process will `exit(0)` if all tests pass, and non-zero in all other
-cases.  It outputs valid TAP even if your specified test program fails, or if
-your format is wrong.
+The `txm` process will `exit` with a `0` status if all tests pass, and non-zero
+in all other cases.  It outputs valid TAP even if your specified test program
+fails, or if your format is wrong.
 
 ### Annotations
 
@@ -96,11 +100,74 @@ are matched, the last encountered `program` command is used.
 spec][html-comments-spec].  Thankfully, `txm` lets you escape them: `\-` means
 the same as a hyphen.  To write a backslash, write `\\`.
 
-## Similar libraries
+## Tips and tricks
 
-This module assumes you want to run each test as a [command-line][shell] program.
-If you'd prefer something more JavaScript-focused, you might like @pjeby's
-[mockdown][mockdown], or @sidorares' [mocha.md][mochamd].
+ - **If you want to test `stderr` output also**, prepend `2>&1` to your
+   command, to [redirect][shell-redirection-q] `stderr` to `stdout`.  (This is
+   a shell feature, not a `txm` feature.)
+
+   <details><summary>Example</summary>
+
+   <!-- !test in redirect stderr -->
+
+   ```md
+   <!-- !test program 2>&1 node -->
+
+   <!-- !test in print to both stdout and stderr -->
+
+       console.error("This goes to stderr!")
+       console.log("This goes to stdout!")
+
+   <!-- !test out print to both stdout and stderr -->
+
+       This goes to stderr!
+       This goes to stdout!
+   ```
+
+   <!-- !test out redirect stderr -->
+
+   > ```
+   > TAP version 13
+   > 1..1
+   > ok 1 print to both stdout and stderr
+   >
+   > # 1/1 passed
+   > # OK
+   > ```
+   </details>
+
+ - **If you want to test a program that exits with a non-zero status** (which
+   `txm` considers to have failed), put `|| true` after it to swallow the
+   non-zero exit code and proceed anyway.
+
+   <details><summary>Example</summary>
+
+   <!-- !test in redirect stderr -->
+
+   ```md
+   <!-- !test program node || true -->
+
+   <!-- !test in don't fail -->
+
+       console.log("Hi before throw!")
+       throw new Error("AAAAAA!")
+
+   <!-- !test out don't fail -->
+
+       Hi before throw!
+   ```
+
+   <!-- !test out redirect stderr -->
+
+   > ```
+   > TAP version 13
+   > 1..1
+   > ok 1 don't fail
+   >
+   > # 1/1 passed
+   > # OK
+   > ```
+   </details>
 
 ## License
 
@@ -112,6 +179,4 @@ If you'd prefer something more JavaScript-focused, you might like @pjeby's
 [markdown]: http://daringfireball.net/projects/markdown/syntax
 [tap-spec]: https://testanything.org/tap-version-13-specification.html
 [html-comments-spec]: http://www.w3.org/TR/REC-xml/#sec-comments
-[shell]: https://en.wikipedia.org/wiki/Shell_(computing)
-[mockdown]: https://github.com/pjeby/mockdown
-[mochamd]: https://github.com/sidorares/mocha.md
+[shell-redirection-q]: https://superuser.com/questions/1179844/what-does-dev-null-21-true-mean-in-linux
