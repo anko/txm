@@ -40,15 +40,21 @@ format-position = (position) ->
   else "lines #{pos.start}-#{pos.end}"
 
 indent = (n, text) ->
-  spaces = " " * n
+  spaces = "  " * n
   lines = text.split os.EOL .map -> if it.length then spaces + it else it
   lines.join os.EOL
 
-format-properties = (properties) ->
-  text = "  #{chalk.dim "---"}"
+format-properties = (properties, indent-level=0) ->
+
+  text = indent indent-level, "#{chalk.dim "---"}"
   for key, value of properties
-    text += "\n  #{chalk.blue key}:\n#{indent 4 value.to-string!}"
-  text += "\n  #{chalk.dim "---"}"
+    text += "\n" + indent indent-level, "#{chalk.blue key}:"
+    if typeof! value is \Array
+      for v in value
+        text += "\n" + indent (indent-level + 1), "- #{v.to-string!}"
+    else
+      text += "\n" + indent (indent-level + 1), value.to-string!
+  text += "\n" + indent indent-level, "#{chalk.dim "---"}"
   return text
 
 success-text = (index, name) ->
@@ -58,15 +64,14 @@ failure-text = (index, name, failure-reason, properties) ->
   text = "#{chalk.red.inverse "not ok"} #{chalk.dim index}"
   text += " #name#{chalk.dim ": #failure-reason"}"
   if properties
-    text += "\n" + format-properties properties
+    text += "\n" + format-properties properties, 1
   return text
 
-parsing-error = (text, position) ->
+parsing-error = (name, failure-reason, properties) ->
   console.log chalk.dim "0..0"
-  console.log "#{chalk.red.inverse "not ok"} #{chalk.dim 0} #text"
-  console.log format-properties { "location": format-position position }
+  console.log failure-text 0 name, failure-reason, properties
   console.log!
-  console.log chalk.red.inverse "# INVALID INPUT FORMAT"
+  console.log chalk.red.inverse "# FAILED TO PARSE TESTS"
   process.exit exit-code.FORMAT_ERROR
 
 
@@ -202,9 +207,8 @@ test-this = (contents) ->
     incomplete-test-specs[name] = test-spec
 
     if property-name of test-spec
-      parsing-error do
-        "Duplicate '#name' #{property-name + \put}"
-        value.position
+      parsing-error name, "duplicate #{property-name + \put}",
+        { location: format-position value.position }
 
     test-spec[property-name] = value
 
@@ -227,9 +231,11 @@ test-this = (contents) ->
             program: { code: text, position: position }
         | \in => fallthrough
         | \out
-          parsing-error do
-            "Got '#name' command before first 'program' command"
-            position
+          parsing-error text, "'#name' command precedes first 'program' command", do
+            location: format-position position
+            "how to fix": """
+            Declare a test program before the '#name #text' command at #{format-position position},
+            using <!-- !test program <TEST PROGRAM HERE> -->"""
 
     waitingForAnyCommand: ({ program }) ->
       got-text: !-> # Ignore
@@ -248,18 +254,24 @@ test-this = (contents) ->
         state-machine.now = state-machine.waitingForAnyCommand { program }
         return try-to-complete-test-spec name, \in, { text: text, position }, program
       got-command: (name, text, position) !->
-        parsing-error do
-          "Unexpected command '#name #text' (expected input text)"
-          position
+        parsing-error "'#name #text'", "unexpected command (expected input text)", do
+          location: format-position position
+          "how to fix": """
+          Check that your 'in' and 'out' commands are each followed by a block
+          of code, not another test command.
+          """
 
     waitingForOutputText: ({ program, name }) ->
       got-text: (text, position) !->
         state-machine.now = state-machine.waitingForAnyCommand { program }
         return try-to-complete-test-spec name, \out, { text: text, position }, program
       got-command: (name, text, position) !->
-        parsing-error do
-          "Unexpected command '#name #text' (expected output text)"
-          position
+        parsing-error "'#name #text'", "unexpected command (expected output text)", do
+          location: format-position position
+          "how to fix": """
+          Check that your 'in' and 'out' commands are each followed by a block
+          of code, not another test command.
+          """
 
   state-machine.now = state-machine.waitingForProgramText!
 
@@ -287,9 +299,9 @@ test-this = (contents) ->
                            |> unescape
             state-machine.now.got-command first-word, rest, node.position
           else
-            parsing-error do
-              "Unknown command type '#first-word'"
-              node.position
+            parsing-error "'#first-word'", "unknown command type", do
+              location: format-position node.position
+              "supported commands": <[ in out program ]>
 
       return []
 
@@ -322,13 +334,19 @@ test-this = (contents) ->
   # matched.
   for name, properties of incomplete-test-specs
     if properties.in and not properties.out
-      parsing-error do
-        "'#name' has no output"
-        properties.in.position
+      parsing-error name, "no output defined", do
+        location: format-position properties.in.position
+        "how to fix": """
+        Define an output for '#name', using <!-- !test out #name -->,
+        followed by a code block.
+        """
     if properties.out and not properties.in
-      parsing-error do
-        "'#name' has no input"
-        properties.out.position
+      parsing-error name, "no input defined", do
+        location: format-position properties.out.position
+        "how to fix": """
+        Define an input for '#name', using <!-- !test in #name -->,
+        followed by a code block.
+        """
     die "Unexpected state of incomplete test spec #name: #{JSON.stringify properties}"
 
   tests |> each queue-test

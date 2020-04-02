@@ -155,13 +155,16 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 Got 'in' command before first 'program' command
+  not ok 0 1: 'in' command precedes first 'program' command
     ---
     location:
       line 1
+    how to fix:
+      Declare a test program before the 'in 1' command at line 1,
+      using <!-- !test program <TEST PROGRAM HERE> -->
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
   stderr: ""
@@ -178,13 +181,16 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 '1' has no output
+  not ok 0 1: no output defined
     ---
     location:
       line 4
+    how to fix:
+      Define an output for '1', using <!-- !test out 1 -->,
+      followed by a code block.
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
 
@@ -200,13 +206,16 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 '1' has no input
+  not ok 0 1: no input defined
     ---
     location:
       line 4
+    how to fix:
+      Define an input for '1', using <!-- !test in 1 -->,
+      followed by a code block.
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
 
@@ -232,13 +241,16 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 Unexpected command 'out 2' (expected output text)
+  not ok 0 'out 2': unexpected command (expected output text)
     ---
     location:
       line 3
+    how to fix:
+      Check that your 'in' and 'out' commands are each followed by a block
+      of code, not another test command.
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
 
@@ -364,13 +376,13 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 Duplicate '1' input
+  not ok 0 1: duplicate input
     ---
     location:
       line 8
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
 
@@ -399,13 +411,13 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 Duplicate '1' output
+  not ok 0 1: duplicate output
     ---
     location:
       line 8
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
 
@@ -494,13 +506,16 @@ txm-expect do
   stdout: """
   TAP version 13
   0..0
-  not ok 0 'big cat' has no output
+  not ok 0 big cat: no output defined
     ---
     location:
       line 4
+    how to fix:
+      Define an output for 'big cat', using <!-- !test out big cat -->,
+      followed by a code block.
     ---
 
-  # INVALID INPUT FORMAT
+  # FAILED TO PARSE TESTS
 
   """
 
@@ -591,4 +606,33 @@ txm-expect do
   # FAILED 2
 
   """
-  stderr: ''
+
+txm-expect do
+  "unknown command"
+  """
+  <!-- !test program cat -->
+  <!-- !test something x -->
+
+      hi
+
+  <!-- !test out x -->
+
+      hi
+  """
+  exit: 2
+  stdout: """
+  TAP version 13
+  0..0
+  not ok 0 'something': unknown command type
+    ---
+    location:
+      line 2
+    supported commands:
+      - in
+      - out
+      - program
+    ---
+
+  # FAILED TO PARSE TESTS
+
+  """
