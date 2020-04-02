@@ -36,7 +36,7 @@ argv = do ->
 
 
 format-position = (position) ->
-  pos = # extract just the line information
+  pos =
     start: position.start.line
     end: position.end.line
   if pos.start is pos.end then "line #{pos.start}"
@@ -53,17 +53,15 @@ format-properties = (properties, indent-level=0) ->
   for key, value of properties
     text += "\n" + indent indent-level, "#{chalk.blue key}:"
     switch typeof! value
-    | \Array
+    case \Array
       for v in value
         text += "\n" + indent (indent-level + 1), "- #{v.to-string!}"
-    | \Number
+    case \Number
       text += " " + value.to-string!
-    | \String
-      if value === ""
-        text += " ''"
-      else
-        text += " |\n" + indent (indent-level + 1), value
-    | otherwise
+    case \String
+      if value === "" then text += " ''"
+      else text += " |\n" + indent (indent-level + 1), value
+    default
       text += "\n" + indent (indent-level + 1), value.to-string!
   text += "\n" + indent indent-level, "#{chalk.dim "---"}"
   return text
@@ -85,147 +83,140 @@ parsing-error = (name, failure-reason, properties) ->
   console.log chalk.red.inverse "# FAILED TO PARSE TESTS"
   process.exit exit-code.FORMAT_ERROR
 
+run-tests = (queue) ->
+  try
 
-{ queue-test, run-tests } =
-  switch argv.format
-  | \tap => fallthrough
-  | otherwise =>
+    if queue.length is 0
+      console.log chalk.yellow "0..0"
+      console.log chalk.yellow "# no tests"
+      process.exit exit-code.SUCCESS
 
-    queue = []
+    console.log chalk.dim "1..#{queue.length}"
 
-    queue-test : -> queue.push it
-    run-tests : ->
-      try
+    # The parallel processing strategy here is to run multiple tests in
+    # parallel (so their results may arrive in arbitrary order) but only
+    # print each one's results when all tests before that one's index have
+    # been printed.
 
-        if queue.length is 0
-          console.log chalk.yellow "0..0"
-          console.log chalk.yellow "# no tests"
-          process.exit exit-code.SUCCESS
+    parallelism = if argv.series then 1 else os.cpus().length
+    prints-waiting = []
+    next-index-to-print = 0
+    successes = 0
+    failures = 0
 
-        console.log chalk.dim "1..#{queue.length}"
+    try-to-say = (index, text) ->
+      if index is next-index-to-print
+        # Everything before this index has been printed.  We can print
+        # immediately.
+        console.log text
 
-        # The parallel processing strategy here is to run multiple tests in
-        # parallel (so their results may arrive in arbitrary order) but only
-        # print each one's results when all tests before that one's index have
-        # been printed.
+        ++next-index-to-print
 
-        parallelism = if argv.series then 1 else os.cpus().length
-        prints-waiting = []
-        next-index-to-print = 0
-        successes = 0
-        failures = 0
+        # Let's also check if the text for the next index has arrived, and
+        # if so, print that too.
+        if prints-waiting[next-index-to-print]
+          try-to-say next-index-to-print, that
+      else
+        # Otherwise, wait patiently in line until the indexes before us get
+        # their turns.  They will call us when it's our turn.
+        prints-waiting[index] = text
 
-        try-to-say = (index, text) ->
-          if index is next-index-to-print
-            # Everything before this index has been printed.  We can print
-            # immediately.
-            console.log text
+    succeed = (index, name, properties) ->
+      ++successes
+      try-to-say index, success-text (index + 1), name
 
-            ++next-index-to-print
+    fail = (index, name, failure-reason, properties) ->
+      ++failures
+      text = failure-text (index + 1), name, failure-reason, properties
+      try-to-say index, text
 
-            # Let's also check if the text for the next index has arrived, and
-            # if so, print that too.
-            if prints-waiting[next-index-to-print]
-              try-to-say next-index-to-print, that
+    e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
+      result-callback = (e, stdout, stderr) ->
+
+        unless e
+          if stdout is test.output.text
+            succeed index, test.name
           else
-            # Otherwise, wait patiently in line until the indexes before us get
-            # their turns.  They will call us when it's our turn.
-            prints-waiting[index] = text
 
-        succeed = (index, name, properties) ->
-          ++successes
-          try-to-say index, success-text (index + 1), name
-
-        fail = (index, name, failure-reason, properties) ->
-          ++failures
-          text = failure-text (index + 1), name, failure-reason, properties
-          try-to-say index, text
-
-        e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
-          result-callback = (e, stdout, stderr) ->
-
-            unless e
-              if stdout is test.output.text
-                succeed index, test.name
+            { expected, actual } = do ->
+              if not process.stdout.isTTY
+                return
+                  expected: test.output.text
+                  actual: stdout
               else
+                # We are outputting to a terminal, so it's going to be seen
+                # by a human.  Let's do a diff, and helpfully highlight
+                # parts of the expected and actual output values, to make
+                # it easier for the human to spot differences.
 
-                { expected, actual } = do ->
-                  if not process.stdout.isTTY
-                    return
-                      expected: test.output.text
-                      actual: stdout
-                  else
-                    # We are outputting to a terminal, so it's going to be seen
-                    # by a human.  Let's do a diff, and helpfully highlight
-                    # parts of the expected and actual output values, to make
-                    # it easier for the human to spot differences.
+                diff = dmp.diff_main test.output.text, stdout
+                dmp.diff_cleanupSemantic diff
 
-                    diff = dmp.diff_main test.output.text, stdout
-                    dmp.diff_cleanupSemantic diff
+                with-visible-newlines = ->
+                  it.replace (new RegExp os.EOL, \g), (x) -> "↵#x"
 
-                    with-visible-newlines = ->
-                      it.replace (new RegExp os.EOL, \g), (x) -> "↵#x"
+                expected-with-highlights = diff.reduce do
+                  (previous, [change, text]) ->
+                    switch change
+                    | 0  => previous + text
+                    | -1 =>
+                      text = with-visible-newlines text
+                      previous + chalk.red.inverse.strikethrough text
+                    | _  => previous
+                  ""
+                actual-with-highlights = diff.reduce do
+                  (previous, [change, text]) ->
+                    switch change
+                    | 0 => previous + text
+                    | 1 =>
+                      text = with-visible-newlines text
+                      previous + chalk.green.inverse text
+                    | _ => previous
+                  ""
+                return
+                  expected: expected-with-highlights
+                  actual: actual-with-highlights
 
-                    expected-with-highlights = diff.reduce do
-                      (previous, [change, text]) ->
-                        switch change
-                        | 0  => previous + text
-                        | -1 =>
-                          text = with-visible-newlines text
-                          previous + chalk.red.inverse.strikethrough text
-                        | _  => previous
-                      ""
-                    actual-with-highlights = diff.reduce do
-                      (previous, [change, text]) ->
-                        switch change
-                        | 0 => previous + text
-                        | 1 =>
-                          text = with-visible-newlines text
-                          previous + chalk.green.inverse text
-                        | _ => previous
-                      ""
-                    return
-                      expected: expected-with-highlights
-                      actual: actual-with-highlights
-
-                fail index, test.name, "output mismatch",
-                  expected: expected
-                  actual: actual
-                  program: test.program.code
-                  "input location": format-position test.input.position
-                  "output location": format-position test.output.position
-            else
-              fail index, test.name, "program exited with error",
-                program: test.program.code
-                "exit status": e.code
-                stderr: stderr
-                stdout: stdout
-                "input location": format-position test.input.position
-                "output location": format-position test.output.position
-            cb!
-
-          exec test.program.code, result-callback
-            ..stdin .on \error ->
-              if it.code is \EPIPE
-                void # do nothing
-              else throw it
-
-            ..stdin.end test.input.text
-
-        if e then die e.message
-
-        console.log!
-        colour = if failures is 0 then chalk.green else chalk.red
-        console.log colour "# #successes/#{queue.length} passed"
-        if failures is 0
-          console.log colour.inverse "# OK"
+            fail index, test.name, "output mismatch",
+              expected: expected
+              actual: actual
+              program: test.program.code
+              "input location": format-position test.input.position
+              "output location": format-position test.output.position
         else
-          console.log colour.inverse "# FAILED #failures"
-          process.exit exit-code.TEST_FAILURE
-      catch e
-        die e
+          fail index, test.name, "program exited with error",
+            program: test.program.code
+            "exit status": e.code
+            stderr: stderr
+            stdout: stdout
+            "input location": format-position test.input.position
+            "output location": format-position test.output.position
+        cb!
+
+      exec test.program.code, result-callback
+        ..stdin .on \error ->
+          if it.code is \EPIPE
+            void # do nothing
+          else throw it
+
+        ..stdin.end test.input.text
+
+    if e then die e.message
+
+    console.log!
+    colour = if failures is 0 then chalk.green else chalk.red
+    console.log colour "# #successes/#{queue.length} passed"
+    if failures is 0
+      console.log colour.inverse "# OK"
+    else
+      console.log colour.inverse "# FAILED #failures"
+      process.exit exit-code.TEST_FAILURE
+  catch e
+    die e
 
 die = (message) ->
+  # For fatal errors.  We should try when possible to fail via parsing-error,
+  # so that the error output is still valid TAP.
   console.error message
   process.exit exit-code.INTERNAL_ERROR
 
@@ -244,6 +235,13 @@ test-this = (contents) ->
 
   console.log "TAP version 13"
 
+  /*
+    A test spec is a set of program, input, and expected output.  We maintain a
+    collection of the incomplete ones indexed by name (unique identifier
+    decided by the user).  Whenever new information is available for the test
+    spec corresponding to a name, we add that information, and when it's
+    complete, delete it from the incomplete list and queue it for running.
+  */
   incomplete-test-specs = {}
   try-to-complete-test-spec = (name, property-name, value, program) !->
     test-spec = if name not of incomplete-test-specs
@@ -267,6 +265,16 @@ test-this = (contents) ->
       delete incomplete-test-specs[name]
       return complete-spec
 
+  /*
+    This state machine describes the state that the parser is in.  The 'now'
+    property holds its current state.  States are represented by constructor
+    functions take parameters, through which data is passed when transitioning
+    between states.
+
+    Each state can react to texts (i.e. code blocks) or commands (i.e. HTML
+    comments containing "!test" commands) in whatever way is appropriate for
+    that state.
+  */
   state-machine =
     waitingForProgramText: ->
       got-text: !-> # ignore
@@ -319,6 +327,8 @@ test-this = (contents) ->
           of code, not another test command.
           """
 
+  # Initial state:  We don't know what program to assign to new tests, so we
+  # expect to see that first.
   state-machine.now = state-machine.waitingForProgramText!
 
   visit = (node) ->
@@ -376,8 +386,8 @@ test-this = (contents) ->
     .parse contents
   tests = visit mdast-syntax-tree
 
-  # Inspect state as it was left, to check for inputs and outputs that weren't
-  # matched.
+  # Any incomplete test specs being left over implies some inputs or outputs
+  # couldn't be matched, which we should report as a parse error.
   for name, properties of incomplete-test-specs
     if properties.in and not properties.out
       parsing-error name, "no output defined", do
@@ -393,11 +403,13 @@ test-this = (contents) ->
         Define an input for '#name', using <!-- !test in #name -->,
         followed by a code block.
         """
+
+    # This fallthrough case shouldn't happen, because to even be in the
+    # incomplete-text-specs structure, either an input or output for that name
+    # must have been found.
     die "Unexpected state of incomplete test spec #name: #{JSON.stringify properties}"
 
-  tests |> each queue-test
-
-  run-tests!
+  run-tests tests
 
 files = argv._
 
