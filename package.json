@@ -39,12 +39,11 @@
     "parse5-sax-parser": "5.1.1",
     "prelude-ls": "1.1.2",
     "remark-parse": "7.0.2",
-    "tape": "4.13.2",
-    "tapsoneer": "0.1.0",
     "unified": "8.4.2",
     "yargs": "15.3.0"
   },
   "devDependencies": {
-    "livescript": "1.6.0"
+    "livescript": "1.6.0",
+    "tape": "4.13.2"
   }
 }

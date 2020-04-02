@@ -5,6 +5,8 @@
 require! <[ fs os unified remark-parse yargs async chalk ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
+{ each, map, fold, unwords, keys, first } = require \prelude-ls
+concat = require \concat-stream
 
 exit-code =
   SUCCESS: 0
@@ -182,9 +184,6 @@ parsing-error = (name, failure-reason, properties) ->
           process.exit exit-code.TEST_FAILURE
       catch e
         die e
-
-{ each, map, fold, unwords, keys, first } = require \prelude-ls
-concat = require \concat-stream
 
 die = (message) ->
   console.error message
