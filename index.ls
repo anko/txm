@@ -340,9 +340,14 @@ extract-html-comments = (input) ->
     ..end input
   return comments
 
-# Consecutive dashes are illegal inside HTML comments, so let's allow them to
-# be escaped in the "program" command.
-unescape = (script) -> script.replace /\\(.)/g -> &1
+/*
+  Consecutive dashes ("--") are illegal inside HTML comments, so let's allow
+  them to be escaped with the sequence "\-".  We treat "\-" like a single token
+  that can be escaped ("\\-") to get a literal "\-".  This way, users can still
+  write "\" in other contexts (which is common in shell scripts for the
+  "program" command) without entering backslash hell.
+*/
+unescape = (script) -> script.replace /(?<!\\)\\-/g, '-'
 
 test-this = (contents) ->
 

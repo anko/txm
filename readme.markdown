@@ -243,9 +243,11 @@ Annotations (inside HTML comments):
 
    To use the same program for all tests, just declare it once.
 
-Note that 2 consecutive hyphens (`--`) inside HTML comments are [not allowed by
-the HTML spec][html-comments-spec], so `txm` lets you escape them: `\-` means
-the same as a hyphen.  To write a backslash, write `\\`.
+Note that 2 consecutive hyphens (`--`) inside HTML comments are [disallowed by
+the HTML spec][html-comments-spec].  For this reason, `txm` lets you escape
+hyphens: `\-` is automatically replaced by `-`.  To write literally `\-`, write
+`\\-` instead, and so on.  You can use backslashes normally, except immediately
+in front of hyphens.
 
 # screenshot
 

@@ -565,17 +565,29 @@ txm-expect do
   """
 
 
+b = "\\" # To escape backslash hell in the next test (ha ha)
+
 txm-expect do
-  "Escaping dashes works in all commands"
+  "Escaping hyphens with backslash works in all commands"
   """
-  <!-- !test program echo -\\-version > /dev/null ; cat -->
-  <!-- !test in \\-\\- -->
+  <!-- !test program
+  echo "Literal hyphen: -"
+  echo "Escaped hyphen: #{b}-"
+  echo "Escaped backslash: #{b}#{b}"
+  echo "Escaped hyphen-escape: #{b}#{b}-"
+  echo "Escaped hyphen-escape-escape: #{b}#{b}#{b}-"
+  -->
+  <!-- !test in #{b}-#{b}- -->
 
-      hi
+      irrelevant
 
-  <!-- !test out -\\- -->
+  <!-- !test out -#{b}- -->
 
-      hi
+      Literal hyphen: -
+      Escaped hyphen: -
+      Escaped backslash: #{b}
+      Escaped hyphen-escape: #{b}-
+      Escaped hyphen-escape-escape: #{b}#{b}-
   """
   exit: 0
   stdout: """
