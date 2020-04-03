@@ -2,7 +2,7 @@
 # Parse a markdown file and check for code blocks that are marked as test
 # inputs or outputs.  Run the tests and check their inputs and outputs match.
 
-require! <[ fs os unified remark-parse yargs async chalk ]>
+require! <[ fs os unified remark-parse yargs async colorette ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 { each, map, fold, unwords, keys, first } = require \prelude-ls
@@ -50,9 +50,9 @@ indent = (n, text) ->
 
 format-properties = (properties, indent-level=0) ->
 
-  text = indent indent-level, "#{chalk.dim "---"}"
+  text = indent indent-level, "#{colorette.dim "---"}"
   for key, value of properties
-    text += "\n" + indent indent-level, "#{chalk.blue key}:"
+    text += "\n" + indent indent-level, "#{colorette.blue key}:"
     switch typeof! value
     case \Array
       for v in value
@@ -64,36 +64,36 @@ format-properties = (properties, indent-level=0) ->
       else text += " |\n" + indent (indent-level + 1), value
     default
       text += "\n" + indent (indent-level + 1), value.to-string!
-  text += "\n" + indent indent-level, "#{chalk.dim "---"}"
+  text += "\n" + indent indent-level, "#{colorette.dim "---"}"
   return text
 
 success-text = (index, name) ->
-  "#{chalk.green "ok"} #{chalk.dim index} #name"
+  "#{colorette.green "ok"} #{colorette.dim index} #name"
 
 failure-text = (index, name, failure-reason, properties) ->
-  text = "#{chalk.red "not ok"} #{chalk.dim index}"
-  text += " #name#{chalk.dim ": #failure-reason"}"
+  text = "#{colorette.red "not ok"} #{colorette.dim index}"
+  text += " #name#{colorette.dim ": #failure-reason"}"
   if properties
     text += "\n" + format-properties properties, 1
   return text
 
 parsing-error = (name, failure-reason, properties) ->
-  console.log chalk.dim "0..0"
+  console.log colorette.dim "0..0"
   console.log failure-text 0 name, failure-reason, properties
   console.log!
-  console.log chalk.red.inverse "# FAILED TO PARSE TESTS"
+  console.log ("# FAILED TO PARSE TESTS" |> colorette.bg-red |> colorette.black)
   process.exit exit-code.FORMAT_ERROR
 
 run-tests = (queue) ->
   try
 
     if queue.length is 0
-      console.log chalk.yellow "1..0"
-      console.log chalk.yellow "# no tests"
-      console.log chalk.dim "# For help, see #{homepage-link}"
+      console.log colorette.yellow "1..0"
+      console.log colorette.yellow "# no tests"
+      console.log colorette.dim "# For help, see #{homepage-link}"
       process.exit exit-code.SUCCESS
 
-    console.log chalk.dim "1..#{queue.length}"
+    console.log colorette.dim "1..#{queue.length}"
 
     # The parallel processing strategy here is to run multiple tests in
     # parallel (so their results may arrive in arbitrary order) but only
@@ -163,7 +163,9 @@ run-tests = (queue) ->
                     | 0  => previous + text
                     | -1 =>
                       text = with-visible-newlines text
-                      previous + chalk.red.inverse.strikethrough text
+                      previous + (text |> colorette.red
+                                       |> colorette.inverse
+                                       |> colorette.strikethrough)
                     | _  => previous
                   ""
                 actual-with-highlights = diff.reduce do
@@ -172,7 +174,8 @@ run-tests = (queue) ->
                     | 0 => previous + text
                     | 1 =>
                       text = with-visible-newlines text
-                      previous + chalk.green.inverse text
+                      previous + (text |> colorette.green
+                                       |> colorette.inverse)
                     | _ => previous
                   ""
                 return
@@ -206,12 +209,13 @@ run-tests = (queue) ->
     if e then die e.message
 
     console.log!
-    colour = if failures is 0 then chalk.green else chalk.red
+    colour = if failures is 0 then colorette.green else colorette.red
+    colour-inverse = colorette.inverse >> colour
     console.log colour "# #successes/#{queue.length} passed"
     if failures is 0
-      console.log colour.inverse "# OK"
+      console.log colour-inverse "# OK"
     else
-      console.log colour.inverse "# FAILED #failures"
+      console.log colour-inverse "# FAILED #failures"
       process.exit exit-code.TEST_FAILURE
   catch e
     die e

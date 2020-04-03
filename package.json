@@ -35,7 +35,7 @@
   ],
   "dependencies": {
     "async": "3.2.0",
-    "chalk": "^4.0.0",
+    "colorette": "^1.1.0",
     "concat-stream": "2.0.0",
     "diff-match-patch": "1.0.4",
     "parse5-sax-parser": "5.1.1",
