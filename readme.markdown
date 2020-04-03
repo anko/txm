@@ -16,9 +16,6 @@ Features:
 ![example failure
 output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
 
-The examples in this readme are tested the same way; [see the Markdown
-source](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)!
-
 <!-- !test program ./index.ls -->
 
 ## Quickstart
@@ -80,20 +77,108 @@ source](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.m
     # OK
     ```
 
+### Examples of various use-cases
+
+<details><summary>Example: Testing C code with GCC</summary>
+
+<!-- !test in C example -->
+
+```md
+<!-- !test program
+cat > /tmp/program.c
+gcc /tmp/program.c -o /tmp/test-program && /tmp/test-program -->
+
+<!-- !test in printf -->
+
+    #include <stdio.h>
+    int main () {
+        printf("%d\n", 42);
+    }
+
+<!-- !test out printf -->
+
+    42
+```
+
+<!-- !test out C example -->
+
+> ```
+> TAP version 13
+> 1..1
+> ok 1 printf
+>
+> # 1/1 passed
+> # OK
+> ```
+
+</details>
+
+
+<details><summary>Example: Replacing module name with local require</summary>
+
+Motivation:  The way users will be using your library is to call require with
+the name that your package is published with as a package.  However, we would
+like to actually test with the local implementation.
+
+So let's just replace those `require` calls before passing it to `node`!
+
+<!-- !test in require replacing example  -->
+
+```md
+<!-- !test program
+# First read stdin into a temporary file
+TEMP_FILE="$(mktemp --suffix=js)"
+cat > "$TEMP_FILE"
+
+# Read the package name and main file from package.json
+PACKAGE_NAME=$(node -e "console.log(require('./package.json').name)")
+LOCAL_MAIN_FILE=$(node -e "console.log(require('./package.json').main)")
+
+# Run a version of the input code where requires for the package name are
+# replaced with the local file path
+cat "$TEMP_FILE" \
+| sed -e "s/require('$PACKAGE_NAME')/require('.\\/$LOCAL_MAIN_FILE')/" \
+| node
+-->
+
+<!-- !test in use library -->
+
+    // In our case, requiring the main file just runs the program
+    require('tests-ex-markdown')
+
+<!-- !test out use library -->
+
+    TAP version 13
+    1..0
+    # no tests
+    # For help, see https://github.com/anko/tests-ex-markdown
+```
+
+<!-- !test out require replacing example -->
+
+> ```
+> TAP version 13
+> 1..1
+> ok 1 use library
+>
+> # 1/1 passed
+> # OK
+> ```
+
+</details>
+
 ## API
 
 ### The `txm` command line tool
 
     txm [--series] [filename]
 
-Tests run in parallel.  If you want sequential, pass `--series`.
+Tests run in parallel.  Their outputs are printed in order though.  If you need
+tests to run in series though, pass `--series`.
 
-If a `filename` is provided, `txm` parses it as Markdown and runs the tests
-specified in it.  Otherwise, `txm` reads `stdin`.
+If a `filename` is given, `txm` reads that file.  Otherwise, it reads `stdin`.
 
-The `txm` process will `exit` with a `0` status if all tests pass, and non-zero
-in all other cases.  It outputs valid TAP even if your specified test program
-fails, or if your format is wrong.
+The `txm` process will `exit` with a `0` status if and only if all tests pass.
 
 ### Annotations
 
@@ -130,7 +215,7 @@ the same as a hyphen.  To write a backslash, write `\\`.
  - **How do I test `stderr` output?**
 
    Prepend `2>&1` to your command, to [redirect][shell-redirection-q] `stderr`
-   to `stdout`.  (This is a shell feature, not a `txm` feature.)
+   to `stdout`.
 
    <details><summary>Example</summary>
 
@@ -195,6 +280,12 @@ the same as a hyphen.  To write a backslash, write `\\`.
    > # OK
    > ```
    </details>
+
+ - **How are the code examples in this readme tested?**
+
+   Have a guess.  [It's very
+   meta](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown).
+   :sunglasses:
 
 ## License
 
