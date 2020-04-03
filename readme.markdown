@@ -16,70 +16,50 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 
 <!-- !test program ./index.ls -->
 
-## Quickstart
+# usage
 
- 1. Annotate your usage examples with `!test` commands in HTML comments.
+<!-- !test in example -->
 
-    <!-- !test in example -->
+```markdown
+# My beautiful readme
 
-    ```markdown
-    <!-- !test program node -->
+<!-- !test program node -->
 
-    Here's how to print to the console in [Node.js][1]:
+Here's how to print to the console in [Node.js][1]:
 
-    <!-- !test in simple example -->
+<!-- !test in simple example -->
 
-        console.log("hi");
+    console.log("hi");
 
-    It will print this:
+It will print this:
 
-    <!-- !test out simple example -->
+<!-- !test out simple example -->
 
-        hi
+    hi
 
-    [1]: https://nodejs.org/
-    ```
+[1]: https://nodejs.org/
+```
 
-    Or if you develop for a different language, replace `node` with whatever
-    you want, in the `!test program` annotation.
+```
+tests-ex-markdown README.md
+```
 
- 2. Install and run tests-ex-markdown:
+<!-- !test out example -->
 
-    - If you **are** a JavaScript developer—
-
-      1. `npm install tests-ex-markdown` in the root of the project which files
-         you want to test.
-      2. Add `txm your-file.markdown` to your `package.json` `test` script.
-      3. `npm test` as usual.
-
-    - If you **are not** a JavaScript developer—
-
-      1. [Install Node.js](https://nodejs.org/en/) if you don't have it yet.
-         (You can check if you have it by trying to run its command `node`.)
-      2. Install the `txm` command-line tool with `npm install -g
-         tests-ex-markdown`.  (To uninstall, `npm uninstall -g
-         tests-ex-markdown`.)
-      3. Run `txm your-file.markdown` on the command line whenever you want to
-         test a file.
-
- 4. Get output in [TAP format][tap-spec]:
-
-    <!-- !test out example -->
-
-    ```
-    TAP version 13
-    1..1
-    ok 1 simple example
-
-    # 1/1 passed
-    # OK
-    ```
-
-### Examples of various use-cases
+> ```
+> TAP version 13
+> 1..1
+> ok 1 simple example
+>
+> # 1/1 passed
+> # OK
+> ```
 
 <details><summary>Example: Testing C code with GCC</summary>
 
 <!-- !test in C example -->
+
+You can use whatever you want as the `!test program`:
 
 ```md
 <!-- !test program
@@ -165,125 +145,108 @@ cat "$TEMP_FILE" \
 
 </details>
 
+<details><summary>Example: Testing stderr output</summary>
+
+Prepending `2>&1` to a shell command with [redirects][shell-redirection-q]
+`stderr` to `stdout`.
+
+<!-- !test in redirect stderr -->
+
+```md
+<!-- !test program 2>&1 node -->
+
+<!-- !test in print to both stdout and stderr -->
+
+    console.error("This goes to stderr!")
+    console.log("This goes to stdout!")
+
+<!-- !test out print to both stdout and stderr -->
+
+    This goes to stderr!
+    This goes to stdout!
+```
+
+<!-- !test out redirect stderr -->
+
+> ```
+> TAP version 13
+> 1..1
+> ok 1 print to both stdout and stderr
+>
+> # 1/1 passed
+> # OK
+> ```
+</details>
+
+<details><summary>Example: Testing a program with non-zero exit status</summary>
+
+Put `|| true` after the program, and the shell will swallow the exit code.  If
+you don't, `txm` assumes all programs that exit non-zero must have
+unintentionally failed.
+
+<!-- !test in don't fail on non-zero -->
+
+```md
+<!-- !test program node || true -->
+
+<!-- !test in don't fail -->
+
+    console.log("Hi before throw!")
+    throw new Error("AAAAAA!")
+
+<!-- !test out don't fail -->
+
+    Hi before throw!
+```
+
+<!-- !test out don't fail on non-zero -->
+
+> ```
+> TAP version 13
+> 1..1
+> ok 1 don't fail
+>
+> # 1/1 passed
+> # OK
+> ```
+</details>
+
+These examples in this readme are also tested with txm; [have a look at the raw
+view](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown).
+
 ## API
 
 ### The `txm` command line tool
 
     txm [--series] [filename]
 
-Tests run in parallel.  Their outputs are printed in order though.  If you need
-tests to run in series though, pass `--series`.
+ - `--series`: Force tests to run serially (default: in parallel)
+ - `filename`: If given, read that. (default: read `stdin`)
 
-If a `filename` is given, `txm` reads that file.  Otherwise, it reads `stdin`.
-
-The `txm` process will `exit` with a `0` status if and only if all tests pass.
+`txm` `exits` with status `0` if and only if all tests pass.
 
 ### Annotations
 
 #### `!test in` and `!test out`
 
 The next code block after a `!test in <name>` or `!test out <name>` command is
-read as a test input.  The `<name>` parts are used to match them.  The `<name>`
-can be any text.
+read as such.  The `<name>` parts are used to match inputs and outputs.
 
-The input and output code blocks can be anywhere in the file, as long as they
-can be matched by name.  `txm` will fail loudly if it cannot match one.
+The input and output code blocks can be anywhere in the file.  `txm` complains
+unless it finds unambiguous matches for everything.
 
 #### `!test program`
 
 In `!test program <program>`, the `<program>` part will be run as a shell
 command for any following matching input and outputs.
 
-The `<program>` can contain arbitrary characters, including spaces and
-newlines, so feel free.
-
-If you only mean to use one test program, you only have to declare it once,
-before your first test.  If you need to use a different program for some set of
-tests, just declare that before the next test.  When an `in` and `out` block
-are matched, the last encountered `program` command is used.
+If you only want to use one test program for all tests, you only have to declare it once.
 
 #### Hyphen quirk
 
 2 consecutive hyphens (`--`) inside HTML comments are [not allowed by the HTML
 spec][html-comments-spec].  Thankfully, `txm` lets you escape them: `\-` means
 the same as a hyphen.  To write a backslash, write `\\`.
-
-## FAQ
-
- - **How do I test `stderr` output?**
-
-   Prepend `2>&1` to your command, to [redirect][shell-redirection-q] `stderr`
-   to `stdout`.
-
-   <details><summary>Example</summary>
-
-   <!-- !test in redirect stderr -->
-
-   ```md
-   <!-- !test program 2>&1 node -->
-
-   <!-- !test in print to both stdout and stderr -->
-
-       console.error("This goes to stderr!")
-       console.log("This goes to stdout!")
-
-   <!-- !test out print to both stdout and stderr -->
-
-       This goes to stderr!
-       This goes to stdout!
-   ```
-
-   <!-- !test out redirect stderr -->
-
-   > ```
-   > TAP version 13
-   > 1..1
-   > ok 1 print to both stdout and stderr
-   >
-   > # 1/1 passed
-   > # OK
-   > ```
-   </details>
-
- - **How do I test a program that exits with a non-zero status?** (which `txm`
-   considers to have failed)
-
-   Put `|| true` after it to swallow the exit code.
-
-   <details><summary>Example</summary>
-
-   <!-- !test in don't fail on non-zero -->
-
-   ```md
-   <!-- !test program node || true -->
-
-   <!-- !test in don't fail -->
-
-       console.log("Hi before throw!")
-       throw new Error("AAAAAA!")
-
-   <!-- !test out don't fail -->
-
-       Hi before throw!
-   ```
-
-   <!-- !test out don't fail on non-zero -->
-
-   > ```
-   > TAP version 13
-   > 1..1
-   > ok 1 don't fail
-   >
-   > # 1/1 passed
-   > # OK
-   > ```
-   </details>
-
- - **How are the code examples in this readme tested?**
-
-   Have a guess.  [It's very
-   meta](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown).
-   :sunglasses:
 
 ## License
 
