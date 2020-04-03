@@ -2,12 +2,12 @@
 
 tool for testing your [Markdown][markdown] code examples
 
- - **language-agnostic** (you can run your example code with any program)
- - **clear diagnostics** (diffs, line numbers, stdout, stderr, exit code, …)
- - **non-intrusive** (reads annotations from HTML comments; the document
-   renders identically!)
- - **[TAP][tap-spec] output** (neat output, compatible with [an ecosystem of
-   tools](https://github.com/sindresorhus/awesome-tap)
+ - **language-agnostic** (you can choose what program runs your code examples)
+ - **clear diagnostics** (colour diffs, line numbers, stdout, stderr, exit code, …)
+ - **hidden** (only requires annotations in HTML comments; the document renders
+   the same!)
+ - **[TAP][tap-spec] output** (easy to read, compatible with [many other
+   tools](https://github.com/sindresorhus/awesome-tap))
 
 # examples
 
@@ -16,23 +16,30 @@ tool for testing your [Markdown][markdown] code examples
 <!-- !test in example -->
 
 ```markdown
-# My beautiful readme
+# async
+
+The [async][1] library for [Node.js][2] contains functions that abstract over
+various asynchronous operations on collections.  For example:
 
 <!-- !test program node -->
 
-Here's how to print to the console in [Node.js][1]:
-
 <!-- !test in simple example -->
 
-    console.log("hi");
+    const async = require('async')
+    async.map(
+      [1, 2, 3], // Input collection
+      (number, callback) => callback(null, number + 1), // Mapper
+      (error, value) => console.log(value) // Finish callback
+    )
 
-It will print this:
+The output is:
 
 <!-- !test out simple example -->
 
-    hi
+    [ 2, 3, 4 ]
 
-[1]: https://nodejs.org/
+[2]: https://caolan.github.io/async/
+[2]: https://nodejs.org/
 ```
 
 ```bash
@@ -221,20 +228,20 @@ readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.
 
 Annotations (inside HTML comments):
 
- - ### `!test in <name>` / `!test out <name>`
+ - #### `!test in <name>` / `!test out <name>`
 
-   The next code block after is read as an input or output.
+   The next code block is read as an input or output.
 
-   Inputs and outputs can be anywhere.  They are matched by `<name>`.  Errors
-   are shown for mismatches.
+   Inputs and outputs are only matched by `<name>`, so they can be anywhere.
+   Mismatches raise errors.
 
- - ### `!test program <program>`
+ - #### `!test program <program>`
 
    The `<program>` is run as a shell command for each following matching
    input/output pair.  It gets the input on `stdin`, and is expected to produce
    the output on `stdout`.
 
-   If you want to use the same program for all tests, just declare it once.
+   To use the same program for all tests, just declare it once.
 
 Note that 2 consecutive hyphens (`--`) inside HTML comments are [not allowed by
 the HTML spec][html-comments-spec], so `txm` lets you escape them: `\-` means
