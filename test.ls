@@ -167,20 +167,23 @@ txm-expect do
       hi
 
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
-  0..0
-  not ok 0 1: 'in' command precedes first 'program' command
+  1..1
+  not ok 1 1: no program defined
     ---
-    location: |
-      line 1
+    input location: |
+      line 3
+    output location: |
+      line 7
     how to fix: |
-      Declare a test program before the 'in 1' command at line 1,
+      Declare a test program before line 3,
       using <!-- !test program <TEST PROGRAM HERE> -->
     ---
 
-  # FAILED TO PARSE TESTS
+  # 0/1 passed
+  # FAILED 1
 
   """
   stderr: ""
@@ -193,20 +196,24 @@ txm-expect do
 
       hi
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
-  0..0
-  not ok 0 1: no output defined
+  1..1
+  not ok 1 1: output not defined
     ---
-    location: |
+    input location: |
       line 4
     how to fix: |
-      Define an output for '1', using <!-- !test out 1 -->,
+      Define an output for '1', using
+
+        <!-- !test out 1 -->
+
       followed by a code block.
     ---
 
-  # FAILED TO PARSE TESTS
+  # 0/1 passed
+  # FAILED 1
 
   """
 
@@ -218,20 +225,24 @@ txm-expect do
 
       hi
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
-  0..0
-  not ok 0 1: no input defined
+  1..1
+  not ok 1 1: input not defined
     ---
-    location: |
+    output location: |
       line 4
     how to fix: |
-      Define an input for '1', using <!-- !test in 1 -->,
+      Define an input for '1', using
+
+        <!-- !test in 1 -->
+
       followed by a code block.
     ---
 
-  # FAILED TO PARSE TESTS
+  # 0/1 passed
+  # FAILED 1
 
   """
 
@@ -388,17 +399,24 @@ txm-expect do
       two
 
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
-  0..0
-  not ok 0 1: duplicate input
+  1..1
+  not ok 1 1: multiple inputs defined
     ---
-    location: |
-      line 8
+    output location: |
+      line 12
+    input locations:
+      - line 4
+      - line 8
+      - line 16
+    how to fix: |
+      Remove or rename the other inputs.
     ---
 
-  # FAILED TO PARSE TESTS
+  # 0/1 passed
+  # FAILED 1
 
   """
 
@@ -423,17 +441,24 @@ txm-expect do
       two
 
   """
-  exit: 2
+  exit: 1
   stdout: """
   TAP version 13
-  0..0
-  not ok 0 1: duplicate output
+  1..1
+  not ok 1 1: multiple outputs defined
     ---
-    location: |
-      line 8
+    input location: |
+      line 12
+    output locations:
+      - line 4
+      - line 8
+      - line 16
+    how to fix: |
+      Remove or rename the other outputs.
     ---
 
-  # FAILED TO PARSE TESTS
+  # 0/1 passed
+  # FAILED 1
 
   """
 
@@ -514,24 +539,28 @@ txm-expect do
 
       hi
 
-  <!-- !test out big               cat -->
+  <!-- !test out big  cat -->
+
+      hello
+
+  <!-- !test out big cat -->
 
       hi
+
+  <!--!test in big  cat -->
+
+      hello
+
   """
-  exit: 2
+  exit: 0
   stdout: """
   TAP version 13
-  0..0
-  not ok 0 big cat: no output defined
-    ---
-    location: |
-      line 4
-    how to fix: |
-      Define an output for 'big cat', using <!-- !test out big cat -->,
-      followed by a code block.
-    ---
+  1..2
+  ok 1 big cat
+  ok 2 big  cat
 
-  # FAILED TO PARSE TESTS
+  # 2/2 passed
+  # OK
 
   """
 

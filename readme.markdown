@@ -252,7 +252,7 @@ the same as a hyphen.  To write a backslash, write `\\`.
 
    <details><summary>Example</summary>
 
-   <!-- !test in redirect stderr -->
+   <!-- !test in don't fail on non-zero -->
 
    ```md
    <!-- !test program node || true -->
@@ -267,7 +267,7 @@ the same as a hyphen.  To write a backslash, write `\\`.
        Hi before throw!
    ```
 
-   <!-- !test out redirect stderr -->
+   <!-- !test out don't fail on non-zero -->
 
    > ```
    > TAP version 13

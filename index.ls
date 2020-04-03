@@ -133,6 +133,107 @@ run-tests = (queue) ->
       try-to-say index, text
 
     e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
+
+      #
+      # Fail out early if something is clearly wrong with this test
+      #
+
+      valid-input = (test) ->
+        if test.input?length is 1 then test.input.0 else false
+      valid-output = (test) ->
+        if test.output?length is 1 then test.output.0 else false
+      valid-program = (test) ->
+        # It's OK for there to be multiple; just use the latest
+        non-null-programs = test.program .filter (?)
+        return test.program[* - 1] || false
+
+      earlier-position = (a, b) ->
+        return b if not a
+        return a if not b
+        if a.start.offset < b.start.offset then a else b
+
+      # No program specified
+      if not valid-program test
+        debug-properties = {}
+        earliest-position = null
+        if valid-input test
+          debug-properties["input location"] = format-position that.position
+          earliest-position := earlier-position do
+            that.position
+            earliest-position
+        if valid-output test
+          debug-properties["output location"] = format-position that.position
+          earliest-position := earlier-position do
+            that.position
+            earliest-position
+        debug-properties["how to fix"] = """
+          Declare a test program before #{format-position earliest-position},
+          using <!-- !test program <TEST PROGRAM HERE> -->"""
+        fail index, test.name, "no program defined", debug-properties
+        cb!; return
+
+      # No input specified
+      if (not test.input?) or test.input.length is 0
+        debug-properties = {}
+        if valid-output test
+          debug-properties["output location"] = format-position that.position
+        debug-properties["how to fix"] = """
+          Define an input for '#{test.name}', using
+
+            <!-- !test in #{test.name} -->
+
+          followed by a code block.
+          """
+        fail index, test.name, "input not defined", debug-properties
+        cb!; return
+
+      # No output specified
+      if (not test.output?) or test.output.length is 0
+        debug-properties = {}
+        if valid-input test
+          debug-properties["input location"] = format-position that.position
+        debug-properties["how to fix"] = """
+          Define an output for '#{test.name}', using
+
+            <!-- !test out #{test.name} -->
+
+          followed by a code block.
+          """
+        fail index, test.name, "output not defined", debug-properties
+        cb!; return
+
+      # Multiple inputs specified
+      if test.input?length > 1
+        debug-properties = {}
+        if valid-output test
+          debug-properties["output location"] = format-position that.position
+        debug-properties["input locations"] =
+          test.input.map -> format-position it.position
+        debug-properties["how to fix"] = """
+          Remove or rename the other inputs.
+          """
+        fail index, test.name, "multiple inputs defined", debug-properties
+        cb!; return
+
+      # Multiple outputs specified
+      if test.output?length > 1
+        debug-properties = {}
+        if valid-input test
+          debug-properties["input location"] = format-position that.position
+        debug-properties["output locations"] =
+          test.output.map -> format-position it.position
+        debug-properties["how to fix"] = """
+          Remove or rename the other outputs.
+          """
+        fail index, test.name, "multiple outputs defined", debug-properties
+        cb!; return
+
+      test =
+        name: test.name
+        program: valid-program test
+        input: valid-input test
+        output: valid-output test
+
       result-callback = (e, stdout, stderr) ->
 
         unless e
@@ -221,8 +322,8 @@ run-tests = (queue) ->
     die e
 
 die = (message) ->
-  # For fatal errors.  We should try when possible to fail via parsing-error,
-  # so that the error output is still valid TAP.
+  # For fatal errors.  When possible, we should fail by writing out valid TAP,
+  # by e.g. calling the parsing-error function.
   console.error message
   process.exit exit-code.INTERNAL_ERROR
 
@@ -248,28 +349,12 @@ test-this = (contents) ->
     spec corresponding to a name, we add that information, and when it's
     complete, delete it from the incomplete list and queue it for running.
   */
-  incomplete-test-specs = {}
-  try-to-complete-test-spec = (name, property-name, value, program) !->
-    test-spec = if name not of incomplete-test-specs
-      { program }
-    else
-      incomplete-test-specs[name]
-    incomplete-test-specs[name] = test-spec
+  test-specs = {}
+  add-to-test-spec = (name, key, value) !->
+    test-spec = if name of test-specs then test-specs[name] else {}
+    test-specs[name] = test-spec
 
-    if property-name of test-spec
-      parsing-error name, "duplicate #{property-name + \put}",
-        { location: format-position value.position }
-
-    test-spec[property-name] = value
-
-    if test-spec.in? and test-spec.out?
-      complete-spec =
-        name: name
-        program: test-spec.program
-        input: test-spec.in
-        output: test-spec.out
-      delete incomplete-test-specs[name]
-      return complete-spec
+    test-spec.[][key] .push value
 
   /*
     This state machine describes the state that the parser is in.  The 'now'
@@ -290,12 +375,7 @@ test-this = (contents) ->
           state-machine.now = state-machine.waitingForAnyCommand do
             program: { code: text, position: position }
         | \in => fallthrough
-        | \out
-          parsing-error text, "'#name' command precedes first 'program' command", do
-            location: format-position position
-            "how to fix": """
-            Declare a test program before the '#name #text' command at #{format-position position},
-            using <!-- !test program <TEST PROGRAM HERE> -->"""
+        | \out => void # Stay in waitingForProgramText state
 
     waitingForAnyCommand: ({ program }) ->
       got-text: !-> # Ignore
@@ -312,7 +392,8 @@ test-this = (contents) ->
     waitingForInputText: ({ program, name }) ->
       got-text: (text, position) !->
         state-machine.now = state-machine.waitingForAnyCommand { program }
-        return try-to-complete-test-spec name, \in, { text: text, position }, program
+        add-to-test-spec name, \input, { text: text, position }
+        add-to-test-spec name, \program, program
       got-command: (name, text, position) !->
         parsing-error "'#name #text'", "unexpected command (expected input text)", do
           location: format-position position
@@ -324,7 +405,8 @@ test-this = (contents) ->
     waitingForOutputText: ({ program, name }) ->
       got-text: (text, position) !->
         state-machine.now = state-machine.waitingForAnyCommand { program }
-        return try-to-complete-test-spec name, \out, { text: text, position }, program
+        add-to-test-spec name, \output, { text: text, position }
+        add-to-test-spec name, \program, program
       got-command: (name, text, position) !->
         parsing-error "'#name #text'", "unexpected command (expected output text)", do
           location: format-position position
@@ -335,7 +417,7 @@ test-this = (contents) ->
 
   # Initial state:  We don't know what program to assign to new tests, so we
   # expect to see that first.
-  state-machine.now = state-machine.waitingForProgramText!
+  state-machine.now = state-machine.waitingForAnyCommand { program: null }
 
   visit = (node) ->
     if node.type is \html
@@ -365,8 +447,6 @@ test-this = (contents) ->
               location: format-position node.position
               "supported commands": <[ in out program ]>
 
-      return []
-
     else if node.type is \code
 
       # Add a newline, because it's typical for the console output of any
@@ -378,42 +458,22 @@ test-this = (contents) ->
       # every normal command!
       text-content = node.value + os.EOL
 
-      maybe-test-spec = state-machine.now.got-text text-content, node.position
-      if maybe-test-spec then return [ maybe-test-spec ]
-      else return []
-
+      state-machine.now.got-text text-content, node.position
 
     else if \children of node
-      node.children |> map visit |> fold (++), []
-    else []
+      node.children |> each visit
 
   mdast-syntax-tree = unified!
     .use remark-parse
     .parse contents
-  tests = visit mdast-syntax-tree
+  visit mdast-syntax-tree
 
-  # Any incomplete test specs being left over implies some inputs or outputs
-  # couldn't be matched, which we should report as a parse error.
-  for name, properties of incomplete-test-specs
-    if properties.in and not properties.out
-      parsing-error name, "no output defined", do
-        location: format-position properties.in.position
-        "how to fix": """
-        Define an output for '#name', using <!-- !test out #name -->,
-        followed by a code block.
-        """
-    if properties.out and not properties.in
-      parsing-error name, "no input defined", do
-        location: format-position properties.out.position
-        "how to fix": """
-        Define an input for '#name', using <!-- !test in #name -->,
-        followed by a code block.
-        """
-
-    # This fallthrough case shouldn't happen, because to even be in the
-    # incomplete-text-specs structure, either an input or output for that name
-    # must have been found.
-    die "Unexpected state of incomplete test spec #name: #{JSON.stringify properties}"
+  tests = []
+  for name, properties of test-specs
+    test = { name }
+    for k, v of properties
+      test[k] = v
+    tests.push test
 
   run-tests tests
 
