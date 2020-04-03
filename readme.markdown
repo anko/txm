@@ -1,22 +1,17 @@
 # tests-ex-markdown [![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
 
-A tool for testing that your [Markdown][markdown] code examples actually work!
+tool for testing your [Markdown][markdown] code examples
 
- - **language-agnostic**: you choose how your example code is run, so this
-   works with any tool or programming language
+ - **language-agnostic** (you can run your example code with any program)
  - **clear diagnostics** (diffs, line numbers, stdout, stderr, exit code, …)
- - **non-intrustive** uses HTML comments for annotations, so your rendered
-   document is unaffected
- - **TAP output**: compatible with [other
-   tools](https://github.com/sindresorhus/awesome-tap) that consume
-   [TAP][tap-spec]
-
-![example failure
-output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
-
-<!-- !test program ./index.ls -->
+ - **non-intrusive** (reads annotations from HTML comments; the document
+   renders identically!)
+ - **[TAP][tap-spec] output** (neat output, compatible with [an ecosystem of
+   tools](https://github.com/sindresorhus/awesome-tap)
 
 # examples
+
+<!-- !test program ./index.ls -->
 
 <!-- !test in example -->
 
@@ -40,13 +35,13 @@ It will print this:
 [1]: https://nodejs.org/
 ```
 
-```
-tests-ex-markdown README.md
+```bash
+$ tests-ex-markdown README.md
 ```
 
 <!-- !test out example -->
 
-> ```
+> ```tap
 > TAP version 13
 > 1..1
 > ok 1 simple example
@@ -61,7 +56,7 @@ tests-ex-markdown README.md
 
 You can use whatever you want as the `!test program`:
 
-```md
+```markdown
 <!-- !test program
 cat > /tmp/program.c
 gcc /tmp/program.c -o /tmp/test-program && /tmp/test-program -->
@@ -92,17 +87,18 @@ gcc /tmp/program.c -o /tmp/test-program && /tmp/test-program -->
 </details>
 
 
-<details><summary>Example: Replacing module name with local require</summary>
+<details><summary>Example: Replacing <code>require('module-name')</code> with <code>require('./index.js')</code></summary>
 
-Motivation:  The way users will be using your library is to call require with
-the name that your package is published with as a package.  However, we would
-like to actually test with the local implementation.
+Your users are using your library by calling require with its package name
+(e.g. `require('module-name')`.  However, it makes sense to actually run tests
+on the local implementation at `require('./index.js')`, or whatever is listed
+as the `main` file in `oackage.json`.
 
 So let's just replace those `require` calls before passing it to `node`!
 
 <!-- !test in require replacing example  -->
 
-```md
+```markdown
 <!-- !test program
 # First read stdin into a temporary file
 TEMP_FILE="$(mktemp --suffix=js)"
@@ -152,7 +148,7 @@ to `stdout`.
 
 <!-- !test in redirect stderr -->
 
-```md
+```markdown
 <!-- !test program 2>&1 node -->
 
 <!-- !test in print to both stdout and stderr -->
@@ -186,7 +182,7 @@ unintentionally failed.
 
 <!-- !test in don't fail on non-zero -->
 
-```md
+```markdown
 <!-- !test program node || true -->
 
 <!-- !test in don't fail -->
@@ -211,7 +207,8 @@ unintentionally failed.
 > ```
 </details>
 
-[Even this readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
+Example: [This
+readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
 
 # usage
 
@@ -222,29 +219,31 @@ unintentionally failed.
 
 `txm` exits `0` *if and only if* all tests pass.
 
-## Annotations
+Annotations (inside HTML comments):
 
-### `!test in <name>` and `!test out <name>`
+ - ### `!test in <name>` / `!test out <name>`
 
-The next code block after is read as the input or output.
+   The next code block after is read as an input or output.
 
-The `<name>` parts are used to match inputs and outputs.  The input and output
-code blocks can be anywhere.  `txm` complains unless it finds unambiguous
-matches for everything.
+   Inputs and outputs can be anywhere.  They are matched by `<name>`.  Errors
+   are shown for mismatches.
 
-### `!test program <program>`
+ - ### `!test program <program>`
 
-The `<program>` part is run as a shell command for each following matching
-input and output.   It gets the input on `stdin`, and is expected to produce
-the output on `stdout`.
+   The `<program>` is run as a shell command for each following matching
+   input/output pair.  It gets the input on `stdin`, and is expected to produce
+   the output on `stdout`.
 
-If you only want to use one test program for all tests, you only have to declare it once.
+   If you want to use the same program for all tests, just declare it once.
 
-### Hyphen quirk
+Note that 2 consecutive hyphens (`--`) inside HTML comments are [not allowed by
+the HTML spec][html-comments-spec], so `txm` lets you escape them: `\-` means
+the same as a hyphen.  To write a backslash, write `\\`.
 
-2 consecutive hyphens (`--`) inside HTML comments are [not allowed by the HTML
-spec][html-comments-spec], so `txm` lets you escape them: `\-` means the same
-as a hyphen.  To write a backslash, write `\\`.
+# screenshot
+
+![example failure
+output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
 
 # License
 
