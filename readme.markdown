@@ -2,8 +2,6 @@
 
 A tool for testing that your [Markdown][markdown] code examples actually work!
 
-Features:
-
  - **language-agnostic**: you choose how your example code is run, so this
    works with any tool or programming language
  - **clear diagnostics** (diffs, line numbers, stdout, stderr, exit code, …)
