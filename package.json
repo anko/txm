@@ -41,8 +41,7 @@
     "parse5-sax-parser": "5.1.1",
     "prelude-ls": "1.1.2",
     "remark-parse": "^8.0.0",
-    "unified": "^9.0.0",
-    "yargs": "^15.3.1"
+    "unified": "^9.0.0"
   },
   "devDependencies": {
     "livescript": "1.6.0",

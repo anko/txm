@@ -2,7 +2,7 @@
 # Parse a markdown file and check for code blocks that are marked as test
 # inputs or outputs.  Run the tests and check their inputs and outputs match.
 
-require! <[ fs os unified remark-parse yargs async colorette ]>
+require! <[ fs os unified remark-parse async colorette ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 { each, map, fold, unwords, keys, first } = require \prelude-ls
@@ -33,8 +33,14 @@ argv = do ->
       # Slice off interpreter path and main file path
       process.argv.slice 2
 
-  return yargs.parse argv-to-parse
+  return-argv = { _: [] }
+  for arg in argv-to-parse
+    if arg is \--series
+      return-argv.series = true
+    else
+      return-argv._.push arg
 
+  return return-argv
 
 format-position = (position) ->
   pos =

@@ -9,7 +9,7 @@ txm-expect = (name, md-string, expected={}) ->
       # If everything goes as planned, return just an object with the stdout
       # property.
       return {
-        stdout : exec-sync "lsc index.ls --format=tap" {
+        stdout : exec-sync "lsc index.ls" {
           input : md-string
           stdio: [ null, null, null ]
         }
