@@ -16,7 +16,7 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 
 <!-- !test program ./index.ls -->
 
-# usage
+# examples
 
 <!-- !test in example -->
 
@@ -147,8 +147,8 @@ cat "$TEMP_FILE" \
 
 <details><summary>Example: Testing stderr output</summary>
 
-Prepending `2>&1` to a shell command with [redirects][shell-redirection-q]
-`stderr` to `stdout`.
+Prepending `2>&1` to a shell command [redirects][shell-redirection-q] `stderr`
+to `stdout`.
 
 <!-- !test in redirect stderr -->
 
@@ -211,44 +211,42 @@ unintentionally failed.
 > ```
 </details>
 
-These examples in this readme are also tested with txm; [have a look at the raw
-view](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown).
+[Even this readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
 
-## API
+# usage
 
-### The `txm` command line tool
+## `txm [--series] [filename]`
 
-    txm [--series] [filename]
+ - `--series`: Run tests serially (default: in parallel)
+ - `filename`: Input file (default: read `stdin`)
 
- - `--series`: Force tests to run serially (default: in parallel)
- - `filename`: If given, read that. (default: read `stdin`)
+`txm` exits `0` *if and only if* all tests pass.
 
-`txm` `exits` with status `0` if and only if all tests pass.
+## Annotations
 
-### Annotations
+### `!test in <name>` and `!test out <name>`
 
-#### `!test in` and `!test out`
+The next code block after is read as the input or output.
 
-The next code block after a `!test in <name>` or `!test out <name>` command is
-read as such.  The `<name>` parts are used to match inputs and outputs.
+The `<name>` parts are used to match inputs and outputs.  The input and output
+code blocks can be anywhere.  `txm` complains unless it finds unambiguous
+matches for everything.
 
-The input and output code blocks can be anywhere in the file.  `txm` complains
-unless it finds unambiguous matches for everything.
+### `!test program <program>`
 
-#### `!test program`
-
-In `!test program <program>`, the `<program>` part will be run as a shell
-command for any following matching input and outputs.
+The `<program>` part is run as a shell command for each following matching
+input and output.   It gets the input on `stdin`, and is expected to produce
+the output on `stdout`.
 
 If you only want to use one test program for all tests, you only have to declare it once.
 
-#### Hyphen quirk
+### Hyphen quirk
 
 2 consecutive hyphens (`--`) inside HTML comments are [not allowed by the HTML
-spec][html-comments-spec].  Thankfully, `txm` lets you escape them: `\-` means
-the same as a hyphen.  To write a backslash, write `\\`.
+spec][html-comments-spec], so `txm` lets you escape them: `\-` means the same
+as a hyphen.  To write a backslash, write `\\`.
 
-## License
+# License
 
 [ISC](LICENSE)
 
