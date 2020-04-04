@@ -273,8 +273,8 @@ txm-expect do
     location: |
       line 3
     how to fix: |
-      Check that your 'in' and 'out' commands are each followed by a block
-      of code, not another test command.
+      Check that your 'in' / 'out' / 'check' commands are each followed by
+      a block of code, not another test command.
     ---
 
   # FAILED TO PARSE TESTS
@@ -685,9 +685,10 @@ txm-expect do
     location: |
       line 2
     supported commands:
+      - program
       - in
       - out
-      - program
+      - check
     ---
 
   # FAILED TO PARSE TESTS
@@ -727,3 +728,165 @@ txm-expect do
   # FAILED 1
 
   """
+
+txm-expect do
+  "succeeding test specified with 'check' command"
+  """
+  <!-- !test program exit 0 -->
+
+  The check command doesn't need a corresponding output
+
+  <!-- !test check my test -->
+
+      hi
+
+  """
+  exit: 0
+  stdout: """
+  TAP version 13
+  1..1
+  ok 1 my test
+
+  # 1/1 passed
+  # OK
+
+  """
+
+txm-expect do
+  "failing test specified with 'check' command"
+  """
+  <!-- !test program
+  >&2 echo stderr here
+  echo stdout here
+  exit 1 -->
+
+  <!-- !test check my test -->
+
+      hi
+
+  """
+  exit: 1
+  stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: program exited with error
+    ---
+    program: |
+      >&2 echo stderr here
+      echo stdout here
+      exit 1
+    exit status: 1
+    stderr: |
+      stderr here
+
+    stdout: |
+      stdout here
+
+    check location: |
+      line 8
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
+  "check test with input (invalid)"
+  """
+  <!-- !test program
+  >&2 echo stderr here
+  echo stdout here
+  exit 1 -->
+
+  <!-- !test check my test -->
+
+      hi
+
+  <!-- !test in my test -->
+
+      hi
+
+  """
+  exit: 1
+  stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: defined as check, but also has input
+    ---
+    input locations:
+      - line 12
+    how to fix: |
+      Remove the input, or create an in/out test instead.
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
+  "check test with output (invalid)"
+  """
+  <!-- !test program
+  >&2 echo stderr here
+  echo stdout here
+  exit 1 -->
+
+  <!-- !test check my test -->
+
+      hi
+
+  <!-- !test out my test -->
+
+      hi
+
+  """
+  exit: 1
+  stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: defined as check, but also has output
+    ---
+    output locations:
+      - line 12
+    how to fix: |
+      Remove the output, or create an in/out test instead.
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
+  "check test program gets input"
+  """
+  <!-- !test program cat ; exit 1 -->
+  <!-- !test check my test -->
+
+      hi
+
+  """
+  exit: 1
+  stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: program exited with error
+    ---
+    program: |
+      cat ; exit 1
+    exit status: 1
+    stderr: ''
+    stdout: |
+      hi
+
+    check location: |
+      line 4
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+

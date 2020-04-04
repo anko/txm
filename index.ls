@@ -148,6 +148,8 @@ run-tests = (queue) ->
         if test.input?length is 1 then test.input.0 else false
       valid-output = (test) ->
         if test.output?length is 1 then test.output.0 else false
+      valid-check = (test) ->
+        if test.check?length is 1 then test.check.0 else false
       valid-program = (test) ->
         # It's OK for there to be multiple; just use the latest
         non-null-programs = test.program .filter (?)
@@ -178,71 +180,113 @@ run-tests = (queue) ->
         fail index, test.name, "no program defined", debug-properties
         cb!; return
 
-      # No input specified
-      if (not test.input?) or test.input.length is 0
-        debug-properties = {}
-        if valid-output test
-          debug-properties["output location"] = format-position that.position
-        debug-properties["how to fix"] = """
-          Define an input for '#{test.name}', using
+      if test.check
+        if test.input
+          fail index, test.name, "defined as check, but also has input",
+            "input locations": test.input.map -> format-position it.position
+            "how to fix": """
+            Remove the input, or create an in/out test instead.
+            """
+          cb!; return
+        if test.output
+          fail index, test.name, "defined as check, but also has output",
+            "output locations": test.output.map -> format-position it.position
+            "how to fix": """
+            Remove the output, or create an in/out test instead.
+            """
+          cb!; return
+        if test.check.length > 1
+          fail index, test.name, "multiple checks defined",
+            "check locations": test.check.map -> format-position it.position
+            "how to fix": """
+            Remove or rename the other checks.
+            """
+          cb!; return
+      else
+        # No input specified
+        if (not test.input?) or test.input.length is 0
+          debug-properties = {}
+          if valid-output test
+            debug-properties["output location"] = format-position that.position
+          debug-properties["how to fix"] = """
+            Define an input for '#{test.name}', using
 
-            <!-- !test in #{test.name} -->
+              <!-- !test in #{test.name} -->
 
-          followed by a code block.
-          """
-        fail index, test.name, "input not defined", debug-properties
-        cb!; return
+            followed by a code block.
+            """
+          fail index, test.name, "input not defined", debug-properties
+          cb!; return
 
-      # No output specified
-      if (not test.output?) or test.output.length is 0
-        debug-properties = {}
-        if valid-input test
-          debug-properties["input location"] = format-position that.position
-        debug-properties["how to fix"] = """
-          Define an output for '#{test.name}', using
+        # No output specified
+        if (not test.output?) or test.output.length is 0
+          debug-properties = {}
+          if valid-input test
+            debug-properties["input location"] = format-position that.position
+          debug-properties["how to fix"] = """
+            Define an output for '#{test.name}', using
 
-            <!-- !test out #{test.name} -->
+              <!-- !test out #{test.name} -->
 
-          followed by a code block.
-          """
-        fail index, test.name, "output not defined", debug-properties
-        cb!; return
+            followed by a code block.
+            """
+          fail index, test.name, "output not defined", debug-properties
+          cb!; return
 
-      # Multiple inputs specified
-      if test.input?length > 1
-        debug-properties = {}
-        if valid-output test
-          debug-properties["output location"] = format-position that.position
-        debug-properties["input locations"] =
-          test.input.map -> format-position it.position
-        debug-properties["how to fix"] = """
-          Remove or rename the other inputs.
-          """
-        fail index, test.name, "multiple inputs defined", debug-properties
-        cb!; return
+        # Multiple inputs specified
+        if test.input?length > 1
+          debug-properties = {}
+          if valid-output test
+            debug-properties["output location"] = format-position that.position
+          debug-properties["input locations"] =
+            test.input.map -> format-position it.position
+          debug-properties["how to fix"] = """
+            Remove or rename the other inputs.
+            """
+          fail index, test.name, "multiple inputs defined", debug-properties
+          cb!; return
 
-      # Multiple outputs specified
-      if test.output?length > 1
-        debug-properties = {}
-        if valid-input test
-          debug-properties["input location"] = format-position that.position
-        debug-properties["output locations"] =
-          test.output.map -> format-position it.position
-        debug-properties["how to fix"] = """
-          Remove or rename the other outputs.
-          """
-        fail index, test.name, "multiple outputs defined", debug-properties
-        cb!; return
+        # Multiple outputs specified
+        if test.output?length > 1
+          debug-properties = {}
+          if valid-input test
+            debug-properties["input location"] = format-position that.position
+          debug-properties["output locations"] =
+            test.output.map -> format-position it.position
+          debug-properties["how to fix"] = """
+            Remove or rename the other outputs.
+            """
+          fail index, test.name, "multiple outputs defined", debug-properties
+          cb!; return
 
       test =
         name: test.name
         program: valid-program test
         input: valid-input test
         output: valid-output test
+        check: valid-check test
+
+      with-location-props = (obj) ->
+        location-props = {}
+          if test.check
+            ..["check location"] = format-position test.check.position
+          if test.input
+            ..["input location"] = format-position test.input.position
+          if test.output
+            ..["output location"] = format-position test.output.position
+
+        props = {}
+          Object.assign .., obj
+          Object.assign .., location-props
 
       result-callback = (e, stdout, stderr) ->
 
         unless e
+
+          if test.check
+            succeed index, test.name
+            cb! ; return
+
           if stdout is test.output.text
             succeed index, test.name
           else
@@ -289,20 +333,17 @@ run-tests = (queue) ->
                   expected: expected-with-highlights
                   actual: actual-with-highlights
 
-            fail index, test.name, "output mismatch",
+            fail index, test.name, "output mismatch", with-location-props do
               expected: expected
               actual: actual
               program: test.program.code
-              "input location": format-position test.input.position
-              "output location": format-position test.output.position
+
         else
-          fail index, test.name, "program exited with error",
+          fail index, test.name, "program exited with error", with-location-props do
             program: test.program.code
             "exit status": e.code
             stderr: stderr
             stdout: stdout
-            "input location": format-position test.input.position
-            "output location": format-position test.output.position
         cb!
 
       exec test.program.code, result-callback
@@ -311,7 +352,10 @@ run-tests = (queue) ->
             void # do nothing
           else throw it
 
-        ..stdin.end test.input.text
+        if test.input
+          ..stdin.end test.input.text
+        else
+          ..stdin.end test.check.text
 
     if e then die e.message
 
@@ -385,8 +429,6 @@ test-this = (contents) ->
         | \program =>
           state-machine.now = state-machine.waitingForAnyCommand do
             program: { code: text, position: position }
-        | \in => fallthrough
-        | \out => void # Stay in waitingForProgramText state
 
     waitingForAnyCommand: ({ program }) ->
       got-text: !-> # Ignore
@@ -399,6 +441,8 @@ test-this = (contents) ->
           state-machine.now = state-machine.waitingForInputText { program, name: text }
         | \out =>
           state-machine.now = state-machine.waitingForOutputText { program, name: text }
+        | \check =>
+          state-machine.now = state-machine.waitingForCheckText { program, name: text }
 
     waitingForInputText: ({ program, name }) ->
       got-text: (text, position) !->
@@ -409,8 +453,8 @@ test-this = (contents) ->
         parsing-error "'#name #text'", "unexpected command (expected input text)", do
           location: format-position position
           "how to fix": """
-          Check that your 'in' and 'out' commands are each followed by a block
-          of code, not another test command.
+          Check that your 'in' / 'out' / 'check' commands are each followed by
+          a block of code, not another test command.
           """
 
     waitingForOutputText: ({ program, name }) ->
@@ -422,8 +466,21 @@ test-this = (contents) ->
         parsing-error "'#name #text'", "unexpected command (expected output text)", do
           location: format-position position
           "how to fix": """
-          Check that your 'in' and 'out' commands are each followed by a block
-          of code, not another test command.
+          Check that your 'in' / 'out' / 'check' commands are each followed by
+          a block of code, not another test command.
+          """
+
+    waitingForCheckText: ({ program, name }) ->
+      got-text: (text, position) !->
+        state-machine.now = state-machine.waitingForAnyCommand { program }
+        add-to-test-spec name, \check, { text: text, position }
+        add-to-test-spec name, \program, program
+      got-command: (name, text, position) !->
+        parsing-error "'#name #text'", "unexpected command (expected check input text)", do
+          location: format-position position
+          "how to fix": """
+          Check that your 'in' / 'out' / 'check' commands are each followed by
+          a block of code, not another test command.
           """
 
   # Initial state:  We don't know what program to assign to new tests, so we
@@ -448,7 +505,7 @@ test-this = (contents) ->
           command-words = command .split /\s+/
           first-word    = first command-words
 
-          if first-word in <[ program in out ]>
+          if first-word in <[ program in out check ]>
             rest = command |> (.slice first-word.length)
                            |> (.trim!)
                            |> unescape
@@ -456,7 +513,7 @@ test-this = (contents) ->
           else
             parsing-error "'#first-word'", "unknown command type", do
               location: format-position node.position
-              "supported commands": <[ in out program ]>
+              "supported commands": <[ program in out check ]>
 
     else if node.type is \code
 

@@ -214,6 +214,36 @@ unintentionally failed.
 > ```
 </details>
 
+<details><summary>Example: Testing code that checks itself</summary>
+
+If your example code calls `assert` or such (which throw an error and exit
+nonzero when the assert fails), then you don't really need an output block.
+Use a `!test check`, which works standalone.
+
+<!-- !test in asserting test -->
+
+```markdown
+<!-- !test program node -->
+
+<!-- !test check laws of mathematics -->
+
+    const assert = require('assert')
+    assert(1 + 1 == 2)
+
+```
+
+<!-- !test out asserting test -->
+
+> ```
+> TAP version 13
+> 1..1
+> ok 1 laws of mathematics
+>
+> # 1/1 passed
+> # OK
+> ```
+</details>
+
 Example: [This
 readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
 
@@ -228,13 +258,6 @@ readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.
 
 Annotations (inside HTML comments):
 
- - #### `!test in <name>` / `!test out <name>`
-
-   The next code block is read as an input or output.
-
-   Inputs and outputs are only matched by `<name>`, so they can be anywhere.
-   Mismatches raise errors.
-
  - #### `!test program <program>`
 
    The `<program>` is run as a shell command for each following matching
@@ -242,6 +265,22 @@ Annotations (inside HTML comments):
    the output on `stdout`.
 
    To use the same program for all tests, just declare it once.
+
+ - #### `!test in <name>` / `!test out <name>`
+
+   The next code block is read as an input or output.
+
+   Inputs and outputs are only matched by `<name>`, so they can be anywhere.
+   Mismatches raise errors.
+
+ - #### `!test check <name>`
+
+   The next code block is read as a check test.  The previously-specified
+   program gets this as input, but its output is ignored.  The test passes if
+   the program exits `0`.
+
+   Use this for code examples that check their own correctness, (e.g.  by
+   calling `assert`), or if your test program is a linter.
 
 Note that 2 consecutive hyphens (`--`) inside HTML comments are [disallowed by
 the HTML spec][html-comments-spec].  For this reason, `txm` lets you escape
