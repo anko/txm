@@ -571,23 +571,24 @@ txm-expect do
   "Escaping hyphens with backslash works in all commands"
   """
   <!-- !test program
-  echo "Literal hyphen: -"
-  echo "Escaped hyphen: #{b}-"
-  echo "Escaped backslash: #{b}#{b}"
-  echo "Escaped hyphen-escape: #{b}#{b}-"
-  echo "Escaped hyphen-escape-escape: #{b}#{b}#{b}-"
+  printf "Literal hyphen: -\n"
+  printf "Escaped hyphen: #-\n"
+  printf "Single octothorpe: #\n"
+  printf "Escaped hyphen-escape: ##-\n"
+  printf "Escaped hyphen-escape-escape: ###-\n"
   -->
-  <!-- !test in #{b}-#{b}- -->
+
+  <!-- !test in #-#- -->
 
       irrelevant
 
-  <!-- !test out -#{b}- -->
+  <!-- !test out -#- -->
 
       Literal hyphen: -
       Escaped hyphen: -
-      Escaped backslash: #{b}
-      Escaped hyphen-escape: #{b}-
-      Escaped hyphen-escape-escape: #{b}#{b}-
+      Single octothorpe: #
+      Escaped hyphen-escape: #-
+      Escaped hyphen-escape-escape: ##-
   """
   exit: 0
   stdout: """

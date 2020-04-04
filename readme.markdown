@@ -284,9 +284,8 @@ Annotations (inside HTML comments):
 
 Note that 2 consecutive hyphens (`--`) inside HTML comments are [disallowed by
 the HTML spec][html-comments-spec].  For this reason, `txm` lets you escape
-hyphens: `\-` is automatically replaced by `-`.  To write literally `\-`, write
-`\\-` instead, and so on.  You can use backslashes normally, except immediately
-in front of hyphens.
+hyphens: `#-` is automatically replaced by `-`.  If you need to write literally
+`#-`, write `##-` instead, and so on.  `#` acts normally everywhere else.
 
 # screenshot
 

@@ -391,7 +391,7 @@ extract-html-comments = (input) ->
   write "\" in other contexts (which is common in shell scripts for the
   "program" command) without entering backslash hell.
 */
-unescape = (script) -> script.replace /(?<!\\)\\-/g, '-'
+unescape = -> it.replace /#-/g, '-'
 
 test-this = (contents) ->
 
