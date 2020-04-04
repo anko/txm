@@ -214,11 +214,12 @@ unintentionally failed.
 > ```
 </details>
 
-<details><summary>Example: Testing code that checks itself</summary>
+<details><summary>Example: Testing examples that call <code>assert</code></summary>
 
 If your example code calls `assert` or such (which throw an error and exit
-nonzero when the assert fails), then you don't really need an output block.
-Use a `!test check`, which works standalone.
+nonzero when the assert fails), then you don't really need an output block,
+because it already documents itself.  In such cases you can use a `!test check`
+annotation.
 
 <!-- !test in asserting test -->
 
