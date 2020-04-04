@@ -99,7 +99,7 @@ gcc /tmp/program.c -o /tmp/test-program && /tmp/test-program -->
 Your users are using your library by calling require with its package name
 (e.g. `require('module-name')`.  However, it makes sense to actually run tests
 on the local implementation at `require('./index.js')`, or whatever is listed
-as the `main` file in `oackage.json`.
+as the `main` file in `package.json`.
 
 So let's just replace those `require` calls before passing it to `node`!
 
