@@ -43,7 +43,7 @@ The output is:
 ```
 
 ```bash
-$ tests-ex-markdown README.md
+$ txm README.md
 ```
 
 <!-- !test out example -->
