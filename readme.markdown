@@ -250,10 +250,12 @@ readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.
 
 # usage
 
-## `txm [--series] [filename]`
+## `txm [--jobs <n>] [filename]`
 
- - `--series`: Run tests serially (default: in parallel)
+ - `--jobs`: How many tests may run in parallel (default: number of CPU cores)
  - `filename`: Input file (default: read `stdin`)
+ - `--version`
+ - `--help`
 
 `txm` exits `0` *if and only if* all tests pass.
 
@@ -265,7 +267,7 @@ Annotations (inside HTML comments):
    input/output pair.  It gets the input on `stdin`, and is expected to produce
    the output on `stdout`.
 
-   To use the same program for all tests, just declare it once.
+   To use the same program for each test, just declare it once.
 
  - #### `!test in <name>` / `!test out <name>`
 

@@ -2,7 +2,7 @@
 # Parse a markdown file and check for code blocks that are marked as test
 # inputs or outputs.  Run the tests and check their inputs and outputs match.
 
-require! <[ fs os unified remark-parse async colorette ]>
+require! <[ fs os unified remark-parse async colorette yargs ]>
 sax-parser = require \parse5-sax-parser
 { exec } = require \child_process
 { each, map, fold, unwords, keys, first } = require \prelude-ls
@@ -33,14 +33,21 @@ argv = do ->
       # Slice off interpreter path and main file path
       process.argv.slice 2
 
-  return-argv = { _: [] }
-  for arg in argv-to-parse
-    if arg is \--series
-      return-argv.series = true
-    else
-      return-argv._.push arg
-
-  return return-argv
+  yargs
+    .option \jobs do
+      desc: "How many tests may run in parallel"
+      default: os.cpus().length
+      defaultDescription: "# of CPU cores"
+      nargs: 1
+    .check (args) ->
+      if args.jobs?
+        unless (typeof args.jobs is \number) \
+            and (Number.isInteger args.jobs) \
+            and (args.jobs >= 1)
+          throw Error "Invalid --jobs value '#{args.jobs}' (expected integer >= 1)"
+      return true
+    .help!
+    .parse argv-to-parse
 
 format-position = (position) ->
   pos =
@@ -106,7 +113,6 @@ run-tests = (queue) ->
     # print each one's results when all tests before that one's index have
     # been printed.
 
-    parallelism = if argv.series then 1 else os.cpus().length
     prints-waiting = []
     next-index-to-print = 0
     successes = 0
@@ -138,7 +144,7 @@ run-tests = (queue) ->
       text = failure-text (index + 1), name, failure-reason, properties
       try-to-say index, text
 
-    e <- async.each-of-limit queue, parallelism, (test, index, cb) ->
+    e <- async.each-of-limit queue, argv.jobs, (test, index, cb) ->
 
       #
       # Fail out early if something is clearly wrong with this test
