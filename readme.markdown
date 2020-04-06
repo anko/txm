@@ -255,8 +255,6 @@ readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.
 
  - `filename`: Input file (default: read `stdin`)
  - `--jobs`: How many tests may run in parallel (default: number of CPU cores)
- - `--backend`: Command to background before first test, killed after last test
-   (default: none)
  - `--version`
  - `--help`
 
