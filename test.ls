@@ -103,11 +103,11 @@ txm-expect do
   1..1
   not ok 1 test name: output mismatch
     ---
-    expected: |
+    expected stdout: |
       hello
       there
 
-    actual: |
+    actual stdout: |
       hi
 
     program: |
@@ -189,14 +189,18 @@ txm-expect do
   expect-stdout: """
   TAP version 13
   1..1
-  not ok 1 1: output not defined
+  not ok 1 1: only input defined
     ---
     input location: |
       line 4
     how to fix: |
-      Define an output for '1', using
+      Define an output or error for '1', using
 
         <!-- !test out 1 -->
+
+      or
+
+        <!-- !test err 1 -->
 
       followed by a code block.
     ---
@@ -261,8 +265,8 @@ txm-expect do
     location: |
       line 3
     how to fix: |
-      Check that your 'in' / 'out' / 'check' commands are each followed by
-      a block of code, not another test command.
+      Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
+      by a block of code, not another test command.
     ---
 
   # FAILED TO PARSE TESTS
@@ -665,6 +669,7 @@ txm-expect do
       - program
       - in
       - out
+      - err
       - check
     ---
 
@@ -864,5 +869,61 @@ txm-expect do
 
   # 0/1 passed
   # FAILED 1
+
+  """
+
+txm-expect do
+  name: "test with err block"
+  input: """
+  <!-- !test program
+  >&2 echo stderr here
+  echo stdout here
+  -->
+  <!-- !test in my test -->
+
+      irrelevant
+
+  <!-- !test err my test -->
+
+      stderr here
+
+  """
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 my test
+
+  # 1/1 passed
+  # OK
+
+  """
+
+txm-expect do
+  name: "test with both out and err blocks"
+  input: """
+  <!-- !test program
+  >&2 echo stderr here
+  echo stdout here
+  -->
+  <!-- !test in my test -->
+
+      irrelevant
+
+  <!-- !test out my test -->
+
+      stdout here
+
+  <!-- !test err my test -->
+
+      stderr here
+
+  """
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 my test
+
+  # 1/1 passed
+  # OK
 
   """

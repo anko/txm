@@ -154,6 +154,8 @@ run-tests = (queue) ->
         if test.input?length is 1 then test.input.0 else false
       valid-output = (test) ->
         if test.output?length is 1 then test.output.0 else false
+      valid-error = (test) ->
+        if test.error?length is 1 then test.error.0 else false
       valid-check = (test) ->
         if test.check?length is 1 then test.check.0 else false
       valid-program = (test) ->
@@ -201,6 +203,13 @@ run-tests = (queue) ->
             Remove the output, or create an in/out test instead.
             """
           cb!; return
+        if test.error
+          fail index, test.name, "defined as check, but also has error",
+            "error locations": test.error.map -> format-position it.position
+            "how to fix": """
+            Remove the error, or create an in/out test instead.
+            """
+          cb!; return
         if test.check.length > 1
           fail index, test.name, "multiple checks defined",
             "check locations": test.check.map -> format-position it.position
@@ -224,19 +233,26 @@ run-tests = (queue) ->
           fail index, test.name, "input not defined", debug-properties
           cb!; return
 
-        # No output specified
-        if (not test.output?) or test.output.length is 0
+        no-stdout = (not test.output? or test.output?length is 0)
+        no-stderr = (not test.error? or test.error?length is 0)
+
+        # No stdout or stderr specified
+        if no-stdout and no-stderr
           debug-properties = {}
           if valid-input test
             debug-properties["input location"] = format-position that.position
           debug-properties["how to fix"] = """
-            Define an output for '#{test.name}', using
+            Define an output or error for '#{test.name}', using
 
               <!-- !test out #{test.name} -->
 
+            or
+
+              <!-- !test err #{test.name} -->
+
             followed by a code block.
             """
-          fail index, test.name, "output not defined", debug-properties
+          fail index, test.name, "only input defined", debug-properties
           cb!; return
 
         # Multiple inputs specified
@@ -265,91 +281,122 @@ run-tests = (queue) ->
           fail index, test.name, "multiple outputs defined", debug-properties
           cb!; return
 
-      test =
-        name: test.name
-        program: valid-program test
-        input: valid-input test
-        output: valid-output test
-        check: valid-check test
+        # Multiple errors specified
+        if test.error?length > 1
+          debug-properties = {}
+          if valid-input test
+            debug-properties["input location"] = format-position that.position
+          debug-properties["error locations"] =
+            test.error.map -> format-position it.position
+          debug-properties["how to fix"] = """
+            Remove or rename the other errors.
+            """
+          fail index, test.name, "multiple errors defined", debug-properties
+          cb!; return
+
+      normalise-test = (t) ->
+        normalised =
+          name: t.name
+          program: valid-program t
+        if valid-input test then normalised.input = that
+        if valid-output test then normalised.output = that
+        if valid-error test then normalised.error = that
+        if valid-check test then normalised.check = that
+        return normalised
+
+      test = normalise-test test
 
       with-location-props = (obj) ->
         location-props = {}
-          if test.check
+          if test.check?
             ..["check location"] = format-position test.check.position
-          if test.input
+          if test.input?
             ..["input location"] = format-position test.input.position
-          if test.output
+          if test.output?
             ..["output location"] = format-position test.output.position
+          if test.error?
+            ..["error location"] = format-position test.error.position
 
         props = {}
           Object.assign .., obj
           Object.assign .., location-props
 
+
+      make-coloured-diff = (expected, actual) ->
+        if not process.stdout.isTTY
+          return { expected, actual }
+        else
+          # We are outputting to a terminal, so it's going to be seen
+          # by a human.  Let's do a diff, and helpfully highlight
+          # parts of the expected and actual output values, to make
+          # it easier for the human to spot differences.
+
+          diff = dmp.diff_main expected, actual
+          dmp.diff_cleanupSemantic diff
+
+          with-visible-newlines = ->
+            it.replace (new RegExp os.EOL, \g), (x) -> "↵#x"
+
+          expected-with-highlights = diff.reduce do
+            (previous, [change, text]) ->
+              switch change
+              | 0  => previous + text
+              | -1 =>
+                text = with-visible-newlines text
+                previous + (text |> colorette.red
+                                 |> colorette.inverse
+                                 |> colorette.strikethrough)
+              | _  => previous
+            ""
+          actual-with-highlights = diff.reduce do
+            (previous, [change, text]) ->
+              switch change
+              | 0 => previous + text
+              | 1 =>
+                text = with-visible-newlines text
+                previous + (text |> colorette.green
+                                 |> colorette.inverse)
+              | _ => previous
+            ""
+          return
+            expected: expected-with-highlights
+            actual: actual-with-highlights
+
       result-callback = (e, stdout, stderr) ->
 
-        unless e
-
-          if test.check
-            succeed index, test.name
-            cb! ; return
-
-          if stdout is test.output.text
-            succeed index, test.name
-          else
-
-            { expected, actual } = do ->
-              if not process.stdout.isTTY
-                return
-                  expected: test.output.text
-                  actual: stdout
-              else
-                # We are outputting to a terminal, so it's going to be seen
-                # by a human.  Let's do a diff, and helpfully highlight
-                # parts of the expected and actual output values, to make
-                # it easier for the human to spot differences.
-
-                diff = dmp.diff_main test.output.text, stdout
-                dmp.diff_cleanupSemantic diff
-
-                with-visible-newlines = ->
-                  it.replace (new RegExp os.EOL, \g), (x) -> "↵#x"
-
-                expected-with-highlights = diff.reduce do
-                  (previous, [change, text]) ->
-                    switch change
-                    | 0  => previous + text
-                    | -1 =>
-                      text = with-visible-newlines text
-                      previous + (text |> colorette.red
-                                       |> colorette.inverse
-                                       |> colorette.strikethrough)
-                    | _  => previous
-                  ""
-                actual-with-highlights = diff.reduce do
-                  (previous, [change, text]) ->
-                    switch change
-                    | 0 => previous + text
-                    | 1 =>
-                      text = with-visible-newlines text
-                      previous + (text |> colorette.green
-                                       |> colorette.inverse)
-                    | _ => previous
-                  ""
-                return
-                  expected: expected-with-highlights
-                  actual: actual-with-highlights
-
-            fail index, test.name, "output mismatch", with-location-props do
-              expected: expected
-              actual: actual
-              program: test.program.code
-
-        else
+        if e
           fail index, test.name, "program exited with error", with-location-props do
             program: test.program.code
             "exit status": e.code
             stderr: stderr
             stdout: stdout
+          cb!; return
+        else
+
+          if test.check
+            succeed index, test.name
+            cb! ; return
+
+          if test.output? and stdout isnt test.output.text
+            { expected, actual } = make-coloured-diff test.output.text, stdout
+            fail index, test.name, "output mismatch", with-location-props do
+              "expected stdout": expected
+              "actual stdout": actual
+              program: test.program.code
+            cb!; return
+
+          if test.error? and stderr isnt test.error.text
+            { expected, actual } = make-coloured-diff test.error.text, stderr
+            fail index, test.name, "error mismatch", with-location-props do
+              "expected stderr": expected
+              "actual stderr": actual
+              program: test.program.code
+            cb!; return
+
+          # If we got this far, everything's good
+          succeed index, test.name
+          cb!; return
+
         cb!
 
       exec test.program.code, result-callback
@@ -365,6 +412,7 @@ run-tests = (queue) ->
 
     if e then die e.message
 
+    # Print final summary comments
     console.log!
     colour = if failures is 0 then colorette.green else colorette.red
     colour-inverse = colorette.inverse >> colour
@@ -417,6 +465,11 @@ test-this = (contents) ->
 
     test-spec.[][key] .push value
 
+  how-to-fix-unexpected-command-explanation = """
+    Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
+    by a block of code, not another test command.
+    """
+
   /*
     This state machine describes the state that the parser is in.  The 'now'
     property holds its current state.  States are represented by constructor
@@ -447,6 +500,8 @@ test-this = (contents) ->
           state-machine.now = state-machine.waitingForInputText { program, name: text }
         | \out =>
           state-machine.now = state-machine.waitingForOutputText { program, name: text }
+        | \err =>
+          state-machine.now = state-machine.waitingForErrorText { program, name: text }
         | \check =>
           state-machine.now = state-machine.waitingForCheckText { program, name: text }
 
@@ -458,10 +513,7 @@ test-this = (contents) ->
       got-command: (name, text, position) !->
         parsing-error "'#name #text'", "unexpected command (expected input text)", do
           location: format-position position
-          "how to fix": """
-          Check that your 'in' / 'out' / 'check' commands are each followed by
-          a block of code, not another test command.
-          """
+          "how to fix": how-to-fix-unexpected-command-explanation
 
     waitingForOutputText: ({ program, name }) ->
       got-text: (text, position) !->
@@ -471,10 +523,17 @@ test-this = (contents) ->
       got-command: (name, text, position) !->
         parsing-error "'#name #text'", "unexpected command (expected output text)", do
           location: format-position position
-          "how to fix": """
-          Check that your 'in' / 'out' / 'check' commands are each followed by
-          a block of code, not another test command.
-          """
+          "how to fix": how-to-fix-unexpected-command-explanation
+
+    waitingForErrorText: ({ program, name }) ->
+      got-text: (text, position) !->
+        state-machine.now = state-machine.waitingForAnyCommand { program }
+        add-to-test-spec name, \error, { text: text, position }
+        add-to-test-spec name, \program, program
+      got-command: (name, text, position) !->
+        parsing-error "'#name #text'", "unexpected command (expected error text)", do
+          location: format-position position
+          "how to fix": how-to-fix-unexpected-command-explanation
 
     waitingForCheckText: ({ program, name }) ->
       got-text: (text, position) !->
@@ -484,10 +543,7 @@ test-this = (contents) ->
       got-command: (name, text, position) !->
         parsing-error "'#name #text'", "unexpected command (expected check input text)", do
           location: format-position position
-          "how to fix": """
-          Check that your 'in' / 'out' / 'check' commands are each followed by
-          a block of code, not another test command.
-          """
+          "how to fix": how-to-fix-unexpected-command-explanation
 
   # Initial state:  We don't know what program to assign to new tests, so we
   # expect to see that first.
@@ -511,7 +567,9 @@ test-this = (contents) ->
           command-words = command .split /\s+/
           first-word    = first command-words
 
-          if first-word in <[ program in out check ]>
+          supported-commands = <[ program in out err check ]>
+
+          if first-word in supported-commands
             rest = command |> (.slice first-word.length)
                            |> (.trim!)
                            |> unescape
@@ -519,7 +577,7 @@ test-this = (contents) ->
           else
             parsing-error "'#first-word'", "unknown command type", do
               location: format-position node.position
-              "supported commands": <[ program in out check ]>
+              "supported commands": supported-commands
 
     else if node.type is \code
 

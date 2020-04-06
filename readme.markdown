@@ -148,7 +148,8 @@ cat "$TEMP_FILE" \
 
 </details>
 
-<details><summary>Example: Testing stderr output</summary>
+<details><summary>Example: Testing stdout and stderr output in the same code
+block</summary>
 
 Prepending `2>&1` to a shell command [redirects][shell-redirection-q] `stderr`
 to `stdout`.
@@ -252,8 +253,10 @@ readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.
 
 ## `txm [--jobs <n>] [filename]`
 
- - `--jobs`: How many tests may run in parallel (default: number of CPU cores)
  - `filename`: Input file (default: read `stdin`)
+ - `--jobs`: How many tests may run in parallel (default: number of CPU cores)
+ - `--backend`: Command to background before first test, killed after last test
+   (default: none)
  - `--version`
  - `--help`
 
@@ -269,12 +272,11 @@ Annotations (inside HTML comments):
 
    To use the same program for each test, just declare it once.
 
- - #### `!test in <name>` / `!test out <name>`
+ - #### `!test in <name>` / `!test out <name>` / `!test err <name>`
 
-   The next code block is read as an input or output.
+   The next code block is read as given input, or expected stdout or stderr.
 
-   Inputs and outputs are only matched by `<name>`, so they can be anywhere.
-   Mismatches raise errors.
+   These are matched by `<name>`, and may be anywhere.
 
  - #### `!test check <name>`
 
