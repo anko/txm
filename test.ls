@@ -2,14 +2,23 @@
 { exec-sync } = require \child_process
 test = require \tape
 
-txm-expect = (name, md-string, expected={}) ->
+txm-expect = (options) ->
 
-  txm = (md-string) ->
+  name = options.name
+  if not name? then throw Error "No test name specified!"
+  input = options.input
+  if not input? then throw Error "No test input specified!"
+  expect-stdout = options.expect-stdout
+  expect-stderr = options.expect-stderr
+  expect-exit = if options.expect-exit? then that else 0
+  flags = options.flags
+
+  run-txm = (md-string, flags="") ->
     try
       # If everything goes as planned, return just an object with the stdout
       # property.
       return {
-        stdout : exec-sync "lsc index.ls" {
+        stdout : exec-sync "lsc index.ls #{flags}" {
           input : md-string
           stdio: [ null, null, null ]
         }
@@ -20,47 +29,30 @@ txm-expect = (name, md-string, expected={}) ->
       return e
 
   test name, (t) ->
-    { stdout, status, stderr } = txm md-string
+    { stdout, status, stderr } = run-txm input, flags
     if not status? then status := 0
     if not stderr? then stderr := ''
 
-    if expected.exit?
-      t.equals do
-        status
-        expected.exit
-        "exit code is #{expected.exit}"
+    t.equals status, expect-exit, "exit #{expect-exit}"
 
-    if expected.stdout?
-      t.equals do
-        stdout.to-string!
-        expected.stdout
-        "stdout matches"
+    if options.expect-stdout?
+      t.equals stdout.to-string!, options.expect-stdout, "stdout matches"
     else
-      t.equals do
-        stdout.to-string!
-        ""
-        "stdout empty"
+      t.equals stdout.to-string!, "", "stderr empty"
 
-    if expected.stderr?
-      t.equals do
-        stderr.to-string!
-        expected.stderr
-        "stderr matches"
+    if options.expect-stderr?
+      t.equals stderr.to-string!, options.expect-stderr, "stderr matches"
     else
-      t.equals do
-        stderr.to-string!
-        ""
-        "stderr empty"
+      t.equals stderr.to-string!, "", "stderr empty"
 
     t.end!
 
 txm-expect do
-  "no tests"
-  """
+  name: "no tests"
+  input: """
   Some irrelevant Markdown text.
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..0
   # no tests
@@ -69,8 +61,8 @@ txm-expect do
   """
 
 txm-expect do
-  "simple cat passthrough"
-  """
+  name: "simple cat passthrough"
+  input: """
   <!-- !test program cat -->
   <!-- !test in test name -->
 
@@ -81,8 +73,7 @@ txm-expect do
       hi
 
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 test name
@@ -93,8 +84,8 @@ txm-expect do
   """
 
 txm-expect do
-  "failing test"
-  """
+  name: "failing test"
+  input: """
   <!-- !test program cat -->
   <!-- !test in test name -->
 
@@ -106,8 +97,8 @@ txm-expect do
       there
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 test name: output mismatch
@@ -133,8 +124,8 @@ txm-expect do
   """
 
 txm-expect do
-  "same line comments, some irrelevant"
-  """
+  name: "same line comments, some irrelevant"
+  input: """
   <!-- !test program cat --><!-- !test in test name --><!-- something else -->
 
       hi
@@ -144,8 +135,7 @@ txm-expect do
       hi
 
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 test name
@@ -156,8 +146,8 @@ txm-expect do
   """
 
 txm-expect do
-  "no program specified"
-  """
+  name: "no program specified"
+  input: """
   <!-- !test in 1 -->
 
       hi
@@ -167,8 +157,8 @@ txm-expect do
       hi
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 1: no program defined
@@ -186,18 +176,17 @@ txm-expect do
   # FAILED 1
 
   """
-  stderr: ""
 
 txm-expect do
-  "input without matching output"
-  """
+  name: "input without matching output"
+  input: """
   <!-- !test program cat -->
   <!-- !test in 1 -->
 
       hi
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 1: output not defined
@@ -218,15 +207,15 @@ txm-expect do
   """
 
 txm-expect do
-  "output without matching input"
-  """
+  name: "output without matching input"
+  input: """
   <!-- !test program cat -->
   <!-- !test out 1 -->
 
       hi
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 1: input not defined
@@ -246,10 +235,9 @@ txm-expect do
 
   """
 
-
 txm-expect do
-  "another output command before first resolves"
-  """
+  name: "another output command before first resolves"
+  input: """
   <!-- !test program cat -->
   <!-- !test out 1 -->
   <!-- !test out 2 -->
@@ -264,8 +252,8 @@ txm-expect do
 
       hi
   """
-  exit: 2
-  stdout: """
+  expect-exit: 2
+  expect-stdout: """
   TAP version 13
   0..0
   not ok 0 'out 2': unexpected command (expected output text)
@@ -282,8 +270,8 @@ txm-expect do
   """
 
 txm-expect do
-  "redirection in program"
-  """
+  name: "redirection in program"
+  input: """
   # whatxml
 
   XML/HTML templating with [LiveScript][1]'s [cascade][2] syntax.
@@ -308,8 +296,7 @@ txm-expect do
   yo
   ```
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 1
@@ -320,8 +307,8 @@ txm-expect do
   """
 
 txm-expect do
-  "output defined before input"
-  """
+  name: "output defined before input"
+  input: """
   <!-- !test program cat -->
   <!-- !test out test name -->
 
@@ -332,8 +319,7 @@ txm-expect do
       hi
 
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 test name
@@ -342,11 +328,10 @@ txm-expect do
   # OK
 
   """
-  stderr: ""
 
 txm-expect do
-  "interleaved tests"
-  """
+  name: "interleaved tests"
+  input: """
   <!-- !test program cat -->
   <!-- !test in test one -->
 
@@ -365,8 +350,7 @@ txm-expect do
       two
 
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..2
   ok 1 test one
@@ -376,11 +360,10 @@ txm-expect do
   # OK
 
   """
-  stderr: ""
 
 txm-expect do
-  "Multiple inputs with conflicting id"
-  """
+  name: "Multiple inputs with conflicting id"
+  input: """
   <!-- !test program cat -->
   <!-- !test in 1 -->
 
@@ -399,8 +382,8 @@ txm-expect do
       two
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 1: multiple inputs defined
@@ -421,8 +404,8 @@ txm-expect do
   """
 
 txm-expect do
-  "Multiple outputs with conflicting id"
-  """
+  name: "Multiple outputs with conflicting id"
+  input: """
   <!-- !test program cat -->
   <!-- !test out 1 -->
 
@@ -441,8 +424,8 @@ txm-expect do
       two
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 1: multiple outputs defined
@@ -463,8 +446,8 @@ txm-expect do
   """
 
 txm-expect do
-  "Long test name"
-  """
+  name: "Long test name"
+  input: """
   <!-- !test program cat -->
   <!-- !test in something fairly long going in here -->
 
@@ -474,8 +457,7 @@ txm-expect do
 
       hi
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 something fairly long going in here
@@ -486,8 +468,8 @@ txm-expect do
   """
 
 txm-expect do
-  "Test name in Unicode"
-  """
+  name: "Test name in Unicode"
+  input: """
   <!-- !test program cat -->
   <!-- !test in 本当にいいんですか -->
 
@@ -497,8 +479,7 @@ txm-expect do
 
       hi
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 本当にいいんですか
@@ -509,8 +490,8 @@ txm-expect do
   """
 
 txm-expect do
-  "Whitespace at ends is ignored when matching inputs and outputs"
-  """
+  name: "Whitespace at ends is ignored when matching inputs and outputs"
+  input: """
   <!-- !test program cat -->
   <!-- !test in           spacing         -->
 
@@ -520,8 +501,7 @@ txm-expect do
 
       hi
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 spacing
@@ -532,8 +512,8 @@ txm-expect do
   """
 
 txm-expect do
-  "Whitespace inside input/output name is significant"
-  """
+  name: "Whitespace inside input/output name is significant"
+  input: """
   <!-- !test program cat -->
   <!-- !test in big cat -->
 
@@ -552,8 +532,7 @@ txm-expect do
       hello
 
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..2
   ok 1 big cat
@@ -565,11 +544,9 @@ txm-expect do
   """
 
 
-b = "\\" # To escape backslash hell in the next test (ha ha)
-
 txm-expect do
-  "Escaping hyphens with backslash works in all commands"
-  """
+  name: "Escaping hyphens with backslash works in all commands"
+  input: """
   <!-- !test program
   printf "Literal hyphen: -\n"
   printf "Escaped hyphen: #-\n"
@@ -590,8 +567,7 @@ txm-expect do
       Escaped hyphen-escape: #-
       Escaped hyphen-escape-escape: ##-
   """
-  exit: 0
-  stdout: """
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 --
@@ -602,8 +578,8 @@ txm-expect do
   """
 
 txm-expect do
-  "tests continue when test program fails"
-  """
+  name: "tests continue when test program fails"
+  input: """
   <!-- !test program echo stdout hello; >&2 echo stderr hello; exit 1 -->
   <!-- !test in x -->
 
@@ -623,8 +599,8 @@ txm-expect do
       hi
       there
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..2
   not ok 1 x: program exited with error
@@ -666,8 +642,8 @@ txm-expect do
   """
 
 txm-expect do
-  "unknown command"
-  """
+  name: "unknown command"
+  input: """
   <!-- !test program cat -->
   <!-- !test something x -->
 
@@ -677,8 +653,8 @@ txm-expect do
 
       hi
   """
-  exit: 2
-  stdout: """
+  expect-exit: 2
+  expect-stdout: """
   TAP version 13
   0..0
   not ok 0 'something': unknown command type
@@ -697,8 +673,8 @@ txm-expect do
   """
 
 txm-expect do
-  "empty stdout and stderr are rendered in YAML as empty string"
-  """
+  name: "empty stdout and stderr are rendered in YAML as empty string"
+  input: """
   <!-- !test program exit 1 -->
   <!-- !test in my test -->
 
@@ -708,8 +684,8 @@ txm-expect do
 
       hi
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 my test: program exited with error
@@ -731,8 +707,8 @@ txm-expect do
   """
 
 txm-expect do
-  "succeeding test specified with 'check' command"
-  """
+  name: "succeeding test specified with 'check' command"
+  input: """
   <!-- !test program exit 0 -->
 
   The check command doesn't need a corresponding output
@@ -742,8 +718,8 @@ txm-expect do
       hi
 
   """
-  exit: 0
-  stdout: """
+  expect-exit: 0
+  expect-stdout: """
   TAP version 13
   1..1
   ok 1 my test
@@ -754,8 +730,8 @@ txm-expect do
   """
 
 txm-expect do
-  "failing test specified with 'check' command"
-  """
+  name: "failing test specified with 'check' command"
+  input: """
   <!-- !test program
   >&2 echo stderr here
   echo stdout here
@@ -766,8 +742,8 @@ txm-expect do
       hi
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 my test: program exited with error
@@ -793,8 +769,8 @@ txm-expect do
   """
 
 txm-expect do
-  "check test with input (invalid)"
-  """
+  name: "check test with input (invalid)"
+  input: """
   <!-- !test program
   >&2 echo stderr here
   echo stdout here
@@ -809,8 +785,8 @@ txm-expect do
       hi
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 my test: defined as check, but also has input
@@ -827,8 +803,8 @@ txm-expect do
   """
 
 txm-expect do
-  "check test with output (invalid)"
-  """
+  name: "check test with output (invalid)"
+  input: """
   <!-- !test program
   >&2 echo stderr here
   echo stdout here
@@ -843,8 +819,8 @@ txm-expect do
       hi
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 my test: defined as check, but also has output
@@ -861,16 +837,16 @@ txm-expect do
   """
 
 txm-expect do
-  "check test program gets input"
-  """
+  name: "check test program gets input"
+  input: """
   <!-- !test program cat ; exit 1 -->
   <!-- !test check my test -->
 
       hi
 
   """
-  exit: 1
-  stdout: """
+  expect-exit: 1
+  expect-stdout: """
   TAP version 13
   1..1
   not ok 1 my test: program exited with error
@@ -890,4 +866,3 @@ txm-expect do
   # FAILED 1
 
   """
-
