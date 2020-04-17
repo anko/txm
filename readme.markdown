@@ -14,7 +14,7 @@ Requires [Node.js][nodejs].  Install with `npm install -g txm`.
 
 # examples
 
-<!-- !test program ./index.ls -->
+<!-- !test program node index.js -->
 
 <!-- !test in example -->
 

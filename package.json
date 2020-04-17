@@ -4,8 +4,7 @@
   "description": "tool for testing code examples in Markdown files",
   "main": "index.js",
   "scripts": {
-    "prepare": "lsc --compile --bare --print index.ls | sed '1s:^:#!/usr/bin/env node\\n:' > index.js",
-    "test": "lsc index.ls readme.markdown && lsc test.ls"
+    "test": "node index.js readme.markdown && lsc test.ls"
   },
   "bin": {
     "txm": "index.js"
