@@ -1,11 +1,12 @@
 # txm [![npm module](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/txm.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
 
-tool for **t**esting your [**m**arkdown][markdown] code-e**x**amples
+Test your [markdown][markdown] code-examples.
 
  - **language-agnostic** (you can choose what program runs your code examples)
- - **clear diagnostics** (colour diffs, line numbers, stdout, stderr, exit code, …)
- - **hidden** (only requires annotations in HTML comments; the document renders
-   the same!)
+ - **parallel** (faster results on multi-core CPUs)
+ - **clear diagnostics** ([colour diffs, line numbers, stdout, stderr, exit
+   code, …](#screenshot))
+ - **metadata only** (all you need to do is add HTML comments with annotations)
  - **[TAP][tap-spec] output** (easy to read, compatible with [many other
    tools](https://github.com/sindresorhus/awesome-tap))
 
@@ -61,18 +62,22 @@ $ txm README.md
 
 <!-- !test in C example -->
 
-You can use whatever you want as the `!test program`:
+You can use whatever you want as the `!test program`, including shell file
+management and a C compiler:
 
 ```markdown
 <!-- !test program
 cat > /tmp/program.c
 gcc /tmp/program.c -o /tmp/test-program && /tmp/test-program -->
 
+Here is a simple example C program that computes the answer to life, the
+universe, and everything:
+
 <!-- !test in printf -->
 
     #include <stdio.h>
     int main () {
-        printf("%d\n", 42);
+        printf("%d\n", 6 * 7);
     }
 
 <!-- !test out printf -->
@@ -96,12 +101,14 @@ gcc /tmp/program.c -o /tmp/test-program && /tmp/test-program -->
 
 <details><summary>Example: Replacing <code>require('module-name')</code> with <code>require('./index.js')</code></summary>
 
-Your users are using your library by calling require with its package name
-(e.g. `require('module-name')`.  However, it makes sense to actually run tests
-on the local implementation at `require('./index.js')`, or whatever is listed
-as the `main` file in `package.json`.
+Your users will be using your library by importing it using its package name
+(e.g. `require('module-name')`.  However, it makes sense to actually run your
+tests such that they use your local implementation in `./index.js`, or whatever
+is listed as the `main` file in `package.json`.
 
-So let's just replace those `require` calls before passing it to `node`!
+So here's a markdown file with a test program specified that loads the name of
+the main file out of `./package.json`, and replaces the first `require(...)`
+call with that:
 
 <!-- !test in require replacing example  -->
 
@@ -124,8 +131,10 @@ cat "$TEMP_FILE" \
 
 <!-- !test in use library -->
 
-    // In our case, requiring the main file just runs the program
     require('txm')
+
+Note that because this module isn't really a library, requiring it just runs
+the program...
 
 <!-- !test out use library -->
 
@@ -148,11 +157,12 @@ cat "$TEMP_FILE" \
 
 </details>
 
-<details><summary>Example: Testing stdout and stderr output in the same code
+<details><summary>Example: Redirecting stderr→stdout, to test both in the same
 block</summary>
 
 Prepending `2>&1` to a shell command [redirects][shell-redirection-q] `stderr`
-to `stdout`.
+to `stdout`.  This can be handy if you don't want to write separate `!test out`
+and `!test err` blocks.
 
 <!-- !test in redirect stderr -->
 
@@ -182,11 +192,12 @@ to `stdout`.
 > ```
 </details>
 
-<details><summary>Example: Testing a program with non-zero exit status</summary>
+<details><summary>Example: Testing a program that exits non-zero</summary>
 
-Put `|| true` after the program, and the shell will swallow the exit code.  If
-you don't, `txm` assumes all programs that exit non-zero must have
-unintentionally failed.
+`txm` assumes that if the test program exits non-zero, it must have been
+unintentional.  You can put `|| true` after the program command to make the
+shell swallow the exit code and pretend to `txm` that it was `0` and everything
+is fine.
 
 <!-- !test in don't fail on non-zero -->
 
@@ -219,8 +230,10 @@ unintentionally failed.
 
 If your example code calls `assert` or such (which throw an error and exit
 nonzero when the assert fails), then you don't really need an output block,
-because it already documents itself.  In such cases you can use a `!test check`
-annotation.
+because the example already documents its assumptions.
+
+In such cases you can use use a `!test check` annotation.  This simply runs the
+code, and checks that the program exits with status `0`, ignoring its output.
 
 <!-- !test in asserting test -->
 
@@ -253,8 +266,8 @@ readme!](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
 
 ## `txm [--jobs <n>] [filename]`
 
- - `filename`: Input file (default: read `stdin`)
- - `--jobs`: How many tests may run in parallel (default: number of CPU cores)
+ - `filename`: Input file (default: read from `stdin`)
+ - `--jobs`: How many tests may run in parallel (default: `os.cpus().length`)
  - `--version`
  - `--help`
 
