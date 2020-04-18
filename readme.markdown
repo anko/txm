@@ -259,7 +259,7 @@ code, and checks that the program exits with status `0`, ignoring its output.
 > ```
 </details>
 
-Example: [This
+▹ Example: [This
 readme!](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
 
 # usage
@@ -319,3 +319,4 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 [tap-spec]: https://testanything.org/tap-version-13-specification.html
 [html-comments-spec]: http://www.w3.org/TR/REC-xml/#sec-comments
 [shell-redirection-q]: https://superuser.com/questions/1179844/what-does-dev-null-21-true-mean-in-linux
+
