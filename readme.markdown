@@ -1,6 +1,6 @@
-# tests-ex-markdown [![npm module](https://img.shields.io/npm/v/tests-ex-markdown.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/tests-ex-markdown.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/tests-ex-markdown.svg?style=flat-square)][3]
+# txm [![npm module](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/txm.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
 
-tool for testing your [Markdown][markdown] code examples
+tool for **t**esting your [**m**arkdown][markdown] code-e**x**amples
 
  - **language-agnostic** (you can choose what program runs your code examples)
  - **clear diagnostics** (colour diffs, line numbers, stdout, stderr, exit code, …)
@@ -125,14 +125,14 @@ cat "$TEMP_FILE" \
 <!-- !test in use library -->
 
     // In our case, requiring the main file just runs the program
-    require('tests-ex-markdown')
+    require('txm')
 
 <!-- !test out use library -->
 
     TAP version 13
     1..0
     # no tests
-    # For help, see https://github.com/anko/tests-ex-markdown
+    # For help, see https://github.com/anko/txm
 ```
 
 <!-- !test out require replacing example -->
@@ -247,7 +247,7 @@ annotation.
 </details>
 
 Example: [This
-readme!](https://raw.githubusercontent.com/anko/tests-ex-markdown/master/readme.markdown)
+readme!](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
 
 # usage
 
@@ -299,9 +299,9 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 
 [ISC](LICENSE)
 
-[1]: https://www.npmjs.com/package/tests-ex-markdown
-[2]: https://travis-ci.org/anko/tests-ex-markdown
-[3]: https://david-dm.org/anko/tests-ex-markdown
+[1]: https://www.npmjs.com/package/txm
+[2]: https://travis-ci.org/anko/txm
+[3]: https://david-dm.org/anko/txm
 [markdown]: http://daringfireball.net/projects/markdown/syntax
 [tap-spec]: https://testanything.org/tap-version-13-specification.html
 [html-comments-spec]: http://www.w3.org/TR/REC-xml/#sec-comments

@@ -1,5 +1,5 @@
 {
-  "name": "tests-ex-markdown",
+  "name": "txm",
   "version": "7.1.0",
   "description": "tool for testing code examples in Markdown files",
   "main": "index.js",
@@ -11,12 +11,12 @@
     "txm": "index.js"
   },
   "author": "Anko <an@cyan.io>",
-  "homepage": "https://github.com/anko/tests-ex-markdown",
+  "homepage": "https://github.com/anko/txm",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anko/tests-ex-markdown"
+    "url": "https://github.com/anko/txm"
   },
-  "bugs": "https://github.com/anko/tests-ex-markdown/issues",
+  "bugs": "https://github.com/anko/txm/issues",
   "license": "ISC",
   "files": [
     "index.js",

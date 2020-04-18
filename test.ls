@@ -56,7 +56,7 @@ txm-expect do
   TAP version 13
   1..0
   # no tests
-  # For help, see https://github.com/anko/tests-ex-markdown
+  # For help, see https://github.com/anko/txm
 
   """
 
