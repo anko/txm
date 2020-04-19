@@ -4,7 +4,11 @@
   "description": "tool for testing code examples in Markdown files",
   "main": "index.js",
   "scripts": {
-    "test": "node index.js readme.markdown && lsc test.ls"
+    "test": "npm run-script test-docs && npm run-script test-code",
+    "test-code": "lsc test.ls",
+    "test-docs": "node index.js readme.markdown",
+    "test-with-coverage": "nyc npm run-script test-code",
+    "upload-coverage-report": "nyc report --reporter=text-lcov | coveralls"
   },
   "bin": {
     "txm": "index.js"
@@ -40,7 +44,9 @@
     "yargs": "^15.3.1"
   },
   "devDependencies": {
+    "coveralls": "^3.0.11",
     "livescript": "1.6.0",
+    "nyc": "^15.0.1",
     "tape": "4.13.2"
   }
 }
