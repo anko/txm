@@ -1,4 +1,7 @@
 language: node_js
 node_js:
-  - node
-  - lts/*
+ - node
+ - lts/*
+script:
+ - npm run-script test-with-coverage
+ - npm run-script upload-coverage-report

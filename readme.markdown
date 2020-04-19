@@ -1,4 +1,4 @@
-# txm [![npm module](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![Travis CI test status](https://img.shields.io/travis/anko/txm.svg?style=flat-square)][2] [![npm dependencies](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
+# txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/travis/anko/txm.svg?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls] [![](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
 
 Test your [markdown][markdown] code-examples.
 
@@ -14,7 +14,7 @@ Requires [Node.js][nodejs].  Install with `npm install -g txm`.
 
 # examples
 
-<!-- !test program ./index.ls -->
+<!-- !test program node index.js -->
 
 <!-- !test in example -->
 
@@ -317,6 +317,7 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 [1]: https://www.npmjs.com/package/txm
 [2]: https://travis-ci.org/anko/txm
 [3]: https://david-dm.org/anko/txm
+[coveralls]: https://coveralls.io/github/anko/txm
 [nodejs]: https://nodejs.org/
 [markdown]: http://daringfireball.net/projects/markdown/syntax
 [tap-spec]: https://testanything.org/tap-version-13-specification.html

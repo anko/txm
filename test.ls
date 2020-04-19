@@ -18,7 +18,7 @@ txm-expect = (options) ->
       # If everything goes as planned, return just an object with the stdout
       # property.
       return {
-        stdout : exec-sync "lsc index.ls #{flags}" {
+        stdout : exec-sync "node index.js #{flags}" {
           input : md-string
           stdio: [ null, null, null ]
         }
