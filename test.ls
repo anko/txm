@@ -96,6 +96,11 @@ txm-expect do
       hello
       there
 
+  <!-- !test err test name -->
+
+      hello
+      there
+
   """
   expect-exit: 1
   expect-stdout: """
@@ -116,6 +121,8 @@ txm-expect do
       line 4
     output location: |
       lines 8-9
+    error location: |
+      lines 13-14
     ---
 
   # 0/1 passed
