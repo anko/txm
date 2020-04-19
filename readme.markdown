@@ -10,6 +10,8 @@ Test your [markdown][markdown] code-examples.
  - **[TAP][tap-spec] output** (easy to read, compatible with [many other
    tools](https://github.com/sindresorhus/awesome-tap))
 
+Requires [Node.js][nodejs].  Install with `npm install -g txm`.
+
 # examples
 
 <!-- !test program ./index.ls -->
@@ -39,7 +41,7 @@ The output is:
 
     [ 2, 3, 4 ]
 
-[2]: https://caolan.github.io/async/
+[1]: https://caolan.github.io/async/
 [2]: https://nodejs.org/
 ```
 
@@ -315,6 +317,7 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 [1]: https://www.npmjs.com/package/txm
 [2]: https://travis-ci.org/anko/txm
 [3]: https://david-dm.org/anko/txm
+[nodejs]: https://nodejs.org/
 [markdown]: http://daringfireball.net/projects/markdown/syntax
 [tap-spec]: https://testanything.org/tap-version-13-specification.html
 [html-comments-spec]: http://www.w3.org/TR/REC-xml/#sec-comments
