@@ -351,7 +351,16 @@ const runTests = (queue, options) => {
         return cb()
       }
 
-      const subprocess = exec(test.program.code, resultCallback);
+      const subprocessOptions = {
+        env: Object.assign({
+          'TXM_INDEX': index + 1,
+          'TXM_NAME': test.name,
+          'TXM_INDEX_FIRST': 1,
+          'TXM_INDEX_LAST': queue.length,
+        }, process.env)
+      }
+      const subprocess = exec(
+        test.program.code, subprocessOptions, resultCallback);
       subprocess.stdin.on('error', (e) => {
         // Swallow EPIPE errors
         if (e.code !== 'EPIPE') { throw e }

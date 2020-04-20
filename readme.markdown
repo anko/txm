@@ -285,6 +285,9 @@ Annotations (inside HTML comments):
 
    To use the same program for each test, just declare it once.
 
+   Your program is run with the environment variables `TXM_INDEX`, `TXM_NAME`,
+   `TXM_INDEX_FIRST` and `TXM_INDEX_LAST` containing appropriate values.
+
  - #### `!test in <name>` / `!test out <name>` / `!test err <name>`
 
    The next code block is read as given input, or expected stdout or stderr.

@@ -1003,3 +1003,34 @@ txm-expect do
   # OK
 
   """
+txm-expect do
+  name: "test program sees metadata as env variables"
+  input: """
+  <!-- !test program
+  echo "index: $TXM_INDEX"
+  echo "name: $TXM_NAME"
+  echo "first index: $TXM_INDEX_FIRST"
+  echo "last index: $TXM_INDEX_LAST"
+  -->
+  <!-- !test in test name -->
+
+      whatever
+
+  <!-- !test out test name -->
+
+      index: 1
+      name: test name
+      first index: 1
+      last index: 1
+
+  """
+  expect-exit: 0
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 test name
+
+  # 1/1 passed
+  # OK
+
+  """
