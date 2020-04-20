@@ -1322,3 +1322,14 @@ test "file passed as argument" (t) ->
       """
     cleanup!
     t.end!
+
+test "more than 1 file shows an error" (t) ->
+  tmp.file (err, path, fd, cleanup) ->
+    tmp.file (err, path2, fd2, cleanup2) ->
+      { stdout, status, stderr } = run-program "#txm-command #path #path2"
+      t.equal status, 1
+      t.ok stderr.match /Expected 1.*got 2/
+
+      cleanup!
+      cleanup2!
+      t.end!

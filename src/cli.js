@@ -15,6 +15,8 @@ const argv = yargs
     'nargs': 1
   })
   .check((args) => {
+    if (args._.length > 1)
+      throw Error(`Too many files.  Expected 1 max, got ${args._.length}`)
     if ('jobs' in args) {
       const valueOk = Number.isInteger(args.jobs) && args.jobs >= 1
       if (!valueOk) throw Error(
@@ -25,19 +27,16 @@ const argv = yargs
   .help()
   .parse(process.argv.slice(2))
 
-const files = argv._
-// No files given, read from stdin
-if (files.length === 0) {
+const file = argv._[0]
+// If a file was given, read that.  Else read stdin.
+if (file) {
+  fs.readFile(file, (e, text) => {
+    if (e) throw e
+    parseAndRunTests(text, argv)
+  })
+} else {
   process.stdin
     .on('error', (e) => { throw e })
     .pipe(concat((text) => parseAndRunTests(text, argv)))
-} else {
-  // If files, run for each of them
-  files.forEach((file) => {
-    fs.readFile(file, (e, text) => {
-      if (e) throw e
-      parseAndRunTests(text, argv)
-    })
-  })
 }
 
