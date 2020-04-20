@@ -14,7 +14,7 @@ Requires [Node.js][nodejs].  Install with `npm install -g txm`.
 
 # examples
 
-<!-- !test program node cli.js -->
+<!-- !test program node src/cli.js -->
 
 <!-- !test in example -->
 
@@ -127,7 +127,7 @@ LOCAL_MAIN_FILE=$(node -e "console.log(Object.values(require('./package.json').b
 # Run a version of the input code where requires for the package name are
 # replaced with the local file path
 cat "$TEMP_FILE" \
-| sed -e "s/require('$PACKAGE_NAME')/require('.\\/$LOCAL_MAIN_FILE')/" \
+| sed -e "s#require('$PACKAGE_NAME')#require('./$LOCAL_MAIN_FILE')#" \
 | node
 -->
 

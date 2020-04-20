@@ -6,7 +6,7 @@ const color = require('colorette');
 const saxParser = require('parse5-sax-parser');
 const exec = require('child_process').exec;
 const dmp = new (require('diff-match-patch'))();
-const homepageLink = require('./package.json').homepage;
+const homepageLink = require('../package.json').homepage;
 
 const exitCode = {
   SUCCESS: 0,
@@ -328,7 +328,8 @@ const runTests = (queue, options) => {
             addLocationProperties(test, {
               'expected stdout': expected,
               'actual stdout': actual,
-              program: test.program.code
+              program: test.program.code,
+              'stderr': stderr,
             }))
           return cb()
         }

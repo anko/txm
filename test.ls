@@ -1,6 +1,7 @@
 #!/usr/bin/env lsc
 { exec-sync } = require \child_process
 test = require \tape
+cli-path = require \./package.json .bin.txm
 
 txm-expect = (options) ->
 
@@ -18,7 +19,7 @@ txm-expect = (options) ->
       # If everything goes as planned, return just an object with the stdout
       # property.
       return {
-        stdout : exec-sync "node cli.js #{flags}" {
+        stdout : exec-sync "node #cli-path #{flags}" {
           input : md-string
           stdio: [ null, null, null ]
         }
@@ -117,6 +118,7 @@ txm-expect do
 
     program: |
       cat
+    stderr: ''
     input location: |
       line 4
     output location: |
