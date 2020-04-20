@@ -323,6 +323,33 @@ txm-expect do
   """
 
 txm-expect do
+  name: "another command before 'check' resolves"
+  input: """
+  <!-- !test program cat -->
+  <!-- !test check 1 -->
+  <!-- !test check 2 -->
+
+      hi
+
+  """
+  expect-exit: 2
+  expect-stdout: """
+  TAP version 13
+  0..0
+  not ok 0 'check 2': unexpected command (expected check text)
+    ---
+    location: |
+      line 3
+    how to fix: |
+      Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
+      by a block of code, not another test command.
+    ---
+
+  # FAILED TO PARSE TESTS
+
+  """
+
+txm-expect do
   name: "redirection in program"
   input: """
   # whatxml
