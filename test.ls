@@ -3,6 +3,27 @@
 test = require \tape
 color = require \colorette
 
+txm-command = "node src/cli.js"
+
+run-program = (command, input="", env={}) ->
+  try
+    # If everything goes as planned, return just an object with the stdout
+    # property.
+    return {
+      status: 0
+      stderr: ''
+      stdout : exec-sync command, {
+        stdio: [ null, null, null ]
+        encoding: 'utf-8'
+        input
+        env
+      }
+    }
+  catch e
+    # If something fails, return the error object, which contains `status` and
+    # `stderr` properties also.
+    return e
+
 txm-expect = (options) ->
 
   name = options.name
@@ -12,29 +33,14 @@ txm-expect = (options) ->
   expect-stdout = options.expect-stdout
   expect-stderr = options.expect-stderr
   expect-exit = if options.expect-exit? then that else 0
-  flags = options.flags
+  flags = options.flags || ""
+  files = options.files || ""
   env = {}
   if options.force-color
     env.FORCE_COLOR = 1
 
-  run-txm = (md-string, flags="") ->
-    try
-      # If everything goes as planned, return just an object with the stdout
-      # property.
-      return {
-        stdout : exec-sync "node src/cli.js #{flags}" {
-          input : md-string
-          stdio: [ null, null, null ]
-          env: env
-        }
-      }
-    catch e
-      # If something fails, return the error object, which contains `status`
-      # and `stderr` properties also.
-      return e
-
   test name, (t) ->
-    { stdout, status, stderr } = run-txm input, flags
+    { stdout, status, stderr } = run-program "#txm-command #flags", input, env
     if not status? then status := 0
     if not stderr? then stderr := ''
 
@@ -43,17 +49,17 @@ txm-expect = (options) ->
     if options.expect-stdout?
       if options.expect-stdout instanceof RegExp
         t.ok do
-          stdout.to-string! .match options.expect-stdout
+          stdout .match options.expect-stdout
           "stdout matches"
       else
-        t.equals stdout.to-string!, options.expect-stdout, "stdout matches"
+        t.equals stdout, options.expect-stdout, "stdout matches"
     else
-      t.equals stdout.to-string!, "", "stderr empty"
+      t.equals stdout, "", "stderr empty"
 
     if options.expect-stderr?
-      t.equals stderr.to-string!, options.expect-stderr, "stderr matches"
+      t.equals stderr, options.expect-stderr, "stderr matches"
     else
-      t.equals stderr.to-string!, "", "stderr empty"
+      t.equals stderr, "", "stderr empty"
 
     t.end!
 
