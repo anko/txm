@@ -29,7 +29,7 @@ const files = argv._
 // No files given, read from stdin
 if (files.length === 0) {
   process.stdin
-    .on('error', (e) => die(e.message))
+    .on('error', (e) => { throw e })
     .pipe(concat((text) => parseAndRunTests(text, argv)))
 } else {
   // If files, run for each of them
