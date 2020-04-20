@@ -2,6 +2,8 @@
 { exec-sync } = require \child_process
 test = require \tape
 color = require \colorette
+tmp = require \tmp
+fs = require \fs
 
 txm-command = "node src/cli.js"
 
@@ -1291,3 +1293,32 @@ txm-expect do
   """
   expect-exit: 1
   expect-stdout: new RegExp(color.red('not ok').replace(/\[/g, '\\['))
+
+test "file passed as argument" (t) ->
+  tmp.file (err, path, fd, cleanup) ->
+    fs.writeFileSync do
+      fd
+      """
+      <!-- !test program cat -->
+      <!-- !test in 1 -->
+
+          hi
+
+      <!-- !test out 1 -->
+
+          hi
+
+      """
+    { stdout, status, stderr } = run-program "#txm-command #path"
+    t.equal status, 0
+    t.equal stdout, """
+      TAP version 13
+      1..1
+      ok 1 1
+
+      # 1/1 passed
+      # OK
+
+      """
+    cleanup!
+    t.end!
