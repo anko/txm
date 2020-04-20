@@ -448,17 +448,6 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     that state.
   */
   const parseStateMachine = {
-    waitingForProgramText: () => {
-      return {
-        gotText: () => {},
-        gotCommand: (name, text, position) => {
-          if (name === 'program') {
-            parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
-              { program: { code: text, position: position } })
-          }
-        }
-      }
-    },
     waitingForAnyCommand: ({program}) => {
       return {
         gotText: () => {},
