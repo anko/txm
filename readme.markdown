@@ -279,6 +279,10 @@ readme!](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
 
 `txm` exits `0` *if and only if* all tests pass.
 
+Coloured output is on if outputting to a terminal, and off otherwise.  If you
+want no colors ever, set the env variable `NO_COLOR=1`.  If you want to output
+colour codes even when not in a TTY, set `FORCE_COLOR=1`.
+
 Annotations (inside HTML comments):
 
  - #### `!test program <program>`

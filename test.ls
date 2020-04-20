@@ -1,6 +1,7 @@
 #!/usr/bin/env lsc
 { exec-sync } = require \child_process
 test = require \tape
+color = require \colorette
 
 txm-expect = (options) ->
 
@@ -12,6 +13,9 @@ txm-expect = (options) ->
   expect-stderr = options.expect-stderr
   expect-exit = if options.expect-exit? then that else 0
   flags = options.flags
+  env = {}
+  if options.force-color
+    env.FORCE_COLOR = 1
 
   run-txm = (md-string, flags="") ->
     try
@@ -21,6 +25,7 @@ txm-expect = (options) ->
         stdout : exec-sync "node src/cli.js #{flags}" {
           input : md-string
           stdio: [ null, null, null ]
+          env: env
         }
       }
     catch e
@@ -36,7 +41,12 @@ txm-expect = (options) ->
     t.equals status, expect-exit, "exit #{expect-exit}"
 
     if options.expect-stdout?
-      t.equals stdout.to-string!, options.expect-stdout, "stdout matches"
+      if options.expect-stdout instanceof RegExp
+        t.ok do
+          stdout.to-string! .match options.expect-stdout
+          "stdout matches"
+      else
+        t.equals stdout.to-string!, options.expect-stdout, "stdout matches"
     else
       t.equals stdout.to-string!, "", "stderr empty"
 
@@ -1066,3 +1076,37 @@ txm-expect do
   # OK
 
   """
+
+txm-expect do
+  name: "success colours work"
+  force-color: true
+  input: """
+  <!-- !test program cat -->
+  <!-- !test in 1 -->
+
+      hi
+
+  <!-- !test out 1 -->
+
+      hi
+
+  """
+  expect-exit: 0
+  expect-stdout: new RegExp(color.green('ok').replace(/\[/g, '\\['))
+
+txm-expect do
+  name: "failure colours work"
+  force-color: true
+  input: """
+  <!-- !test program cat -->
+  <!-- !test in 1 -->
+
+      hi there
+
+  <!-- !test out 1 -->
+
+      replaced text
+
+  """
+  expect-exit: 1
+  expect-stdout: new RegExp(color.red('not ok').replace(/\[/g, '\\['))

@@ -8,6 +8,10 @@ const exec = require('child_process').exec;
 const dmp = new (require('diff-match-patch'))();
 const homepageLink = require('../package.json').homepage;
 
+if (process.env.FORCE_COLOR !== undefined) {
+  color.options.enabled = true
+}
+
 const exitCode = {
   SUCCESS: 0,
   TEST_FAILURE: 1,
@@ -111,7 +115,7 @@ const runTests = (queue, options) => {
     }
 
     const makeColouredDiff = (expected, actual) => {
-      if (!process.stdout.isTTY) return { expected, actual }
+      if (!color.options.enabled) return { expected, actual }
 
       const diff = dmp.diff_main(expected, actual)
       dmp.diff_cleanupSemantic(diff);
