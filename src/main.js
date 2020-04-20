@@ -387,7 +387,10 @@ const runTests = (queue, options) => {
         process.exit(exitCode.TEST_FAILURE)
       }
     })
-  } catch (e) { die(e) }
+  } catch (e) {
+    /* istanbul ignore next: shouldn't happen */
+    die(e)
+  }
 }
 
 const extractHtmlComments = function(input){
@@ -607,6 +610,7 @@ const repeatString = (str, n) => {
   return out
 }
 
+/* istanbul ignore next: shouldn't happen */
 const die = (message) => {
   // For fatal errors.  When possible, fail through 'parsingError', since that
   // still outputs valid TAP.
@@ -630,8 +634,6 @@ const indent = (n, text) => {
     .join(os.EOL)
 }
 const formatProperties = (properties, indentLevel=0) => {
-  var i$, len$, v;
-
   const horizontalRule = indent(indentLevel, color.dim("---"))
   let text = horizontalRule
 
@@ -650,7 +652,9 @@ const formatProperties = (properties, indentLevel=0) => {
         else text += ' |\n' + indent(indentLevel + 1, value)
         break
       default:
-        text += '\n' + indent(indentLevel + 1, value.toString())
+        /* istanbul ignore next: shouldn't happen */
+        throw Error(`Unexpected property type ${type(value)}:`
+          + `${JSON.stringify(value)}`)
     }
   }
   text += "\n" + horizontalRule
