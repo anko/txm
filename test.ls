@@ -928,6 +928,40 @@ txm-expect do
   """
 
 txm-expect do
+  name: "check test with error (invalid)"
+  input: """
+  <!-- !test program
+  >&2 echo stderr here
+  echo stdout here
+  exit 1 -->
+
+  <!-- !test check my test -->
+
+      hi
+
+  <!-- !test err my test -->
+
+      hi
+
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: defined as check, but also has error
+    ---
+    error locations:
+      - line 12
+    how to fix: |
+      Remove the error, or create an in/out test instead.
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
   name: "check test program gets input"
   input: """
   <!-- !test program cat ; exit 1 -->
