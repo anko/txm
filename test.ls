@@ -132,6 +132,47 @@ txm-expect do
   """
 
 txm-expect do
+  name: "stderr mismatch"
+  input: """
+  <!-- !test program cat -->
+  <!-- !test in test name -->
+
+      hi
+
+  <!-- !test err test name -->
+
+      hello
+      there
+
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 test name: error mismatch
+    ---
+    expected stderr: |
+      hello
+      there
+
+    actual stderr: ''
+    program: |
+      cat
+    stdout: |
+      hi
+
+    input location: |
+      line 4
+    error location: |
+      lines 8-9
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
   name: "same line comments, some irrelevant"
   input: """
   <!-- !test program cat --><!-- !test in test name --><!-- something else -->

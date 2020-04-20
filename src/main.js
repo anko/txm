@@ -340,7 +340,8 @@ const runTests = (queue, options) => {
             addLocationProperties(test, {
               'expected stderr': expected,
               'actual stderr': actual,
-              program: test.program.code
+              program: test.program.code,
+              'stdout': stdout,
             }))
           return cb()
         }
