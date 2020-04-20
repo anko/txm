@@ -336,6 +336,39 @@ txm-expect do
   # FAILED 1
 
   """
+txm-expect do
+  name: "another input command before first resolves"
+  input: """
+  <!-- !test program cat -->
+  <!-- !test in 1 -->
+  <!-- !test in 2 -->
+
+      hi
+
+  <!-- !test out 1 -->
+
+      hi
+
+  <!-- !test out 2 -->
+
+      hi
+  """
+  expect-exit: 2
+  expect-stdout: """
+  TAP version 13
+  0..0
+  not ok 0 'in 2': unexpected command (expected input text)
+    ---
+    location: |
+      line 3
+    how to fix: |
+      Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
+      by a block of code, not another test command.
+    ---
+
+  # FAILED TO PARSE TESTS
+
+  """
 
 txm-expect do
   name: "another output command before first resolves"
@@ -359,6 +392,40 @@ txm-expect do
   TAP version 13
   0..0
   not ok 0 'out 2': unexpected command (expected output text)
+    ---
+    location: |
+      line 3
+    how to fix: |
+      Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
+      by a block of code, not another test command.
+    ---
+
+  # FAILED TO PARSE TESTS
+
+  """
+
+txm-expect do
+  name: "another error command before first resolves"
+  input: """
+  <!-- !test program cat -->
+  <!-- !test err 1 -->
+  <!-- !test err 2 -->
+
+      hi
+
+  <!-- !test in 1 -->
+
+      hi
+
+  <!-- !test in 2 -->
+
+      hi
+  """
+  expect-exit: 2
+  expect-stdout: """
+  TAP version 13
+  0..0
+  not ok 0 'err 2': unexpected command (expected error text)
     ---
     location: |
       line 3
