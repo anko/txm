@@ -2,16 +2,16 @@
   "name": "txm",
   "version": "7.2.0",
   "description": "tool for testing code examples in Markdown files",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "test": "npm run-script test-docs && npm run-script test-code",
     "test-code": "lsc test.ls",
-    "test-docs": "node index.js readme.markdown",
+    "test-docs": "node cli.js readme.markdown",
     "test-with-coverage": "nyc npm run-script test-code",
     "upload-coverage-report": "nyc report --reporter=text-lcov | coveralls"
   },
   "bin": {
-    "txm": "index.js"
+    "txm": "cli.js"
   },
   "author": "Anko <an@cyan.io>",
   "homepage": "https://github.com/anko/txm",
@@ -22,7 +22,8 @@
   "bugs": "https://github.com/anko/txm/issues",
   "license": "ISC",
   "files": [
-    "index.js",
+    "cli.js",
+    "main.js",
     "readme.markdown"
   ],
   "keywords": [

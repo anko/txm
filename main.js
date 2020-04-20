@@ -1,14 +1,10 @@
-#!/usr/bin/env node
-const fs = require('fs');
 const os = require('os');
 const unified = require('unified');
 const remarkParse = require('remark-parse');
 const async = require('async');
 const color = require('colorette');
-const yargs = require('yargs');
 const saxParser = require('parse5-sax-parser');
 const exec = require('child_process').exec;
-const concat = require('concat-stream');
 const dmp = new (require('diff-match-patch'))();
 const homepageLink = require('./package.json').homepage;
 
@@ -19,26 +15,7 @@ const exitCode = {
   INTERNAL_ERROR: 3
 };
 
-// Parse arguments
-const argv = yargs
-  .option('jobs', {
-    'desc': 'How many tests may run in parallel',
-    'default': os.cpus().length,
-    'defaultDescription': '# of CPU cores',
-    'nargs': 1
-  })
-  .check((args) => {
-    if ('jobs' in args) {
-      const valueOk = Number.isInteger(args.jobs) && args.jobs >= 1
-      if (!valueOk) throw Error(
-        `Invalid --jobs value '${args.jobs}' (expected integer >= 1)`)
-    }
-    return true
-  })
-  .help()
-  .parse(process.argv.slice(2))
-
-const runTests = (queue) => {
+const runTests = (queue, options) => {
   try {
 
     if (queue.length === 0) {
@@ -175,7 +152,7 @@ const runTests = (queue) => {
       }
     }
 
-    return async.eachOfLimit(queue, argv.jobs, (test, index, cb) => {
+    return async.eachOfLimit(queue, options.jobs, (test, index, cb) => {
 
       // Handle invalid 'program'
       if (!validProgram(test)) {
@@ -418,7 +395,7 @@ const extractHtmlComments = function(input){
 */
 const unescape = (x) => x.replace(/#-/g, '-')
 
-const parseAndRunTests = (text) => {
+const parseAndRunTests = (text, options={jobs: 1}) => {
 
   // TAP header
   console.log('TAP version 13')
@@ -611,23 +588,7 @@ const parseAndRunTests = (text) => {
     const test = Object.assign({name}, testSpecs[name])
     tests.push(test)
   }
-  runTests(tests)
-}
-
-const files = argv._
-// No files given, read from stdin
-if (files.length === 0) {
-  process.stdin
-    .on('error', (e) => die(e.message))
-    .pipe(concat(parseAndRunTests))
-} else {
-  // If files, run for each of them
-  files.forEach((file) => {
-    fs.readFile(file, (e, text) => {
-      if (e) throw e
-      parseAndRunTests(text)
-    })
-  })
+  runTests(tests, options)
 }
 
 //
@@ -707,3 +668,5 @@ const parsingError = (name, failureReason, properties) => {
   console.log(color.black(color.bgRed('# FAILED TO PARSE TESTS')))
   process.exit(exitCode.FORMAT_ERROR)
 }
+
+module.exports = parseAndRunTests
