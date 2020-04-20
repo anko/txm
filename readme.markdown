@@ -269,7 +269,11 @@ readme!](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
 ## `txm [--jobs <n>] [filename]`
 
  - `filename`: Input file (default: read from `stdin`)
- - `--jobs`: How many tests may run in parallel (default: `os.cpus().length`)
+ - `--jobs`: How many tests may run in parallel.(default: `os.cpus().length`)
+
+   Results will always be shown in insertion order in the output, regardless of
+   the order parallel tests complete.
+
  - `--version`
  - `--help`
 

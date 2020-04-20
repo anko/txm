@@ -1034,3 +1034,35 @@ txm-expect do
   # OK
 
   """
+
+txm-expect do
+  name: "tests finishing out of order"
+  input: """
+  <!-- !test program
+  # If this is the first test, have a little sleep while waiting letting the
+  # second one finish first.
+  if [ "$TXM_INDEX" == "1" ]; then
+    sleep 0.5
+  fi
+  -->
+  <!-- !test check 1 -->
+
+      hi
+
+  <!-- !test check 2 -->
+
+      hi
+
+  """
+  expect-exit: 0
+  # Outputs are still in the right order
+  expect-stdout: """
+  TAP version 13
+  1..2
+  ok 1 1
+  ok 2 2
+
+  # 2/2 passed
+  # OK
+
+  """
