@@ -1238,7 +1238,7 @@ txm-expect do
   name: "lang env variable in check test"
   input: """
   <!-- !test program
-  [ "$TXM_INPUT_LANG" == "languageTag" ] && exit 0
+  [ "$TXM_INPUT_LANG" = "languageTag" ] && exit 0
   exit 1
   -->
   <!-- !test check test name -->
