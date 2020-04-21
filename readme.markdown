@@ -3,7 +3,7 @@
 Test your [markdown][markdown] code-examples.
 
  - **language-agnostic** (you can choose what program runs your code examples)
- - **parallel** (faster results on multi-core CPUs)
+ - **parallel** (makes use of multi-core CPUs)
  - **clear diagnostics** ([colour diffs, line numbers, stdout, stderr, exit
    code, …](#screenshot))
  - **metadata only** (all you need to do is add HTML comments with annotations)
