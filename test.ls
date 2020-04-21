@@ -1196,6 +1196,7 @@ txm-expect do
   # OK
 
   """
+
 txm-expect do
   name: "test program sees metadata as env variables"
   input: """
@@ -1204,10 +1205,13 @@ txm-expect do
   echo "name: $TXM_NAME"
   echo "first index: $TXM_INDEX_FIRST"
   echo "last index: $TXM_INDEX_LAST"
+  echo "lang: $TXM_INPUT_LANG"
   -->
   <!-- !test in test name -->
 
-      whatever
+  ```js
+  whatever
+  ```
 
   <!-- !test out test name -->
 
@@ -1215,6 +1219,32 @@ txm-expect do
       name: test name
       first index: 1
       last index: 1
+      lang: js
+
+  """
+  expect-exit: 0
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 test name
+
+  # 1/1 passed
+  # OK
+
+  """
+
+txm-expect do
+  name: "lang env variable in check test"
+  input: """
+  <!-- !test program
+  [ "$TXM_INPUT_LANG" == "languageTag" ] && exit 0
+  exit 1
+  -->
+  <!-- !test check test name -->
+
+  ```languageTag
+  whatever
+  ```
 
   """
   expect-exit: 0

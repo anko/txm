@@ -293,8 +293,13 @@ Annotations (inside HTML comments):
 
    To use the same program for each test, just declare it once.
 
-   Your program is run with the environment variables `TXM_INDEX`, `TXM_NAME`,
-   `TXM_INDEX_FIRST` and `TXM_INDEX_LAST` containing appropriate values.
+   The program sees these environment variables:
+
+    - `TXM_INDEX` (1-based number of test)
+    - `TXM_NAME` (name of test)
+    - `TXM_INDEX_FIRST`, `TXM_INDEX_LAST` (indexes of first and last tests)
+    - `TXM_INPUT_LANG` (the language tag of the input/check markdown code
+      block, if applicable)
 
  - #### `!test in <name>` / `!test out <name>` / `!test err <name>`
 

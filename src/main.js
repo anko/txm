@@ -363,6 +363,11 @@ const runTests = (queue, options) => {
           'TXM_INDEX_LAST': queue.length,
         }, process.env)
       }
+      if (test.input && test.input.lang)
+        subprocessOptions.env['TXM_INPUT_LANG'] = test.input.lang
+      else if (test.check && test.check.lang)
+        subprocessOptions.env['TXM_INPUT_LANG'] = test.check.lang
+
       const subprocess = exec(
         test.program.code, subprocessOptions, resultCallback);
       subprocess.stdin.on('error', (e) => {
@@ -481,10 +486,10 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     },
     waitingForInputText: ({program, name}) => {
       return {
-        gotText: (text, position) => {
+        gotText: (text, position, lang) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({program})
-          addToTestSpec(name, 'input', { text, position })
+          addToTestSpec(name, 'input', { text, position, lang })
           addToTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
@@ -498,10 +503,10 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     },
     waitingForOutputText: ({program, name}) => {
       return {
-        gotText: (text, position) => {
+        gotText: (text, position, lang) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({ program })
-          addToTestSpec(name, 'output', {text, position})
+          addToTestSpec(name, 'output', {text, position, lang})
           addToTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
@@ -516,10 +521,10 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
 
     waitingForErrorText: ({program, name}) => {
       return {
-        gotText: (text, position) => {
+        gotText: (text, position, lang) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({ program })
-          addToTestSpec(name, 'error', {text, position})
+          addToTestSpec(name, 'error', {text, position, lang})
           addToTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
@@ -534,10 +539,10 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
 
     waitingForCheckText: ({program, name}) => {
       return {
-        gotText: (text, position) => {
+        gotText: (text, position, lang) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({ program })
-          addToTestSpec(name, 'check', {text, position})
+          addToTestSpec(name, 'check', {text, position, lang})
           addToTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
@@ -581,7 +586,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
       })
     } else if (node.type === 'code') {
       const text = node.value + os.EOL
-      parseStateMachine.now.gotText(text, node.position)
+      parseStateMachine.now.gotText(text, node.position, node.lang)
     } else if ('children' in node) {
       node.children.forEach(visitMarkdownNode)
     }
