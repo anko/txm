@@ -8,6 +8,7 @@ fs = require \fs
 txm-command = "node src/cli.js"
 
 run-program = (command, input="", env={}) ->
+  env = Object.assign env, process.env
   try
     # If everything goes as planned, return just an object with the stdout
     # property.
