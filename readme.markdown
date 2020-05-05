@@ -1,53 +1,67 @@
 # txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/travis/anko/txm.svg?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls] [![](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
 
-Test your [markdown][markdown] code-examples.
+### Purpose
 
- - **language-agnostic** (you can choose what program runs your code examples)
- - **parallel** (makes use of multi-core CPUs)
- - **clear diagnostics** ([colour diffs, line numbers, stdout, stderr, exit
-   code, …](#screenshot))
- - **metadata only** (all you need to do is add HTML comments with annotations)
- - **[TAP][tap-spec] output** (easy to read, compatible with [many other
-   tools](https://github.com/sindresorhus/awesome-tap))
+Command-line program that verifies the correctness of code examples in a given
+[Markdown][markdown] file.  It parses the file for code blocks preceded by
+[HTML comments containing `!test` annotations](#use), and checks that given
+inputs to the given program result in given outputs.
 
-Requires [Node.js][nodejs].  Install with `npm install -g txm`.
+### Features
 
-# examples
+ - Language-agnostic.  Runs tests with any shell command.
+ - [TAP][tap-spec] format output.
+ - Process-level parallelism.
+ - [Clear diagnostics](#screenshot) when tests fail.
+ - Users retain full choice of formatting.
+
+### Non-features
+
+ - No compilation step.
+ - No language-specific features.
+ - No annotations visible in the rendered document.
+
+# example
 
 <!-- !test program node src/cli.js -->
 
 <!-- !test in example -->
 
-```markdown
-# async
+`README.md`:
 
-The [async][1] library for [Node.js][2] contains functions that abstract over
-various asynchronous operations on collections.  For example:
+```markdown
+# console.log
+
+The [console.log][1] function in [Node.js][2] stringifies the given arguments
+and writes them to `stdout`, followed by a newline.  For example:
 
 <!-- !test program node -->
 
 <!-- !test in simple example -->
 
-    const async = require('async')
-    async.map(
-      [1, 2, 3], // Input collection
-      (number, callback) => callback(null, number + 1), // Mapper
-      (error, value) => console.log(value) // Finish callback
-    )
+    console.log('a')
+    console.log(42)
+    console.log([1, 2, 3])
 
 The output is:
 
 <!-- !test out simple example -->
 
-    [ 2, 3, 4 ]
+    a
+    42
+    [ 1, 2, 3 ]
 
-[1]: https://caolan.github.io/async/
+[1]: https://nodejs.org/api/console.html#console_console_log_data_args
 [2]: https://nodejs.org/
 ```
+
+Run:
 
 ```bash
 $ txm README.md
 ```
+
+Output:
 
 <!-- !test out example -->
 
@@ -60,12 +74,16 @@ $ txm README.md
 > # OK
 > ```
 
-<details><summary>Example: Testing C code with GCC</summary>
+- - -
+
+Examples of other use-cases:
+
+<details><summary>Testing C code with <code>gcc</code></summary>
 
 <!-- !test in C example -->
 
-You can use whatever you want as the `!test program`, including shell file
-management and a C compiler:
+Any sequence of shell commands is a valid `!test program`, so you can e.g. cat
+the test input into a file, then compile and run it:
 
 ```markdown
 <!-- !test program
@@ -98,15 +116,20 @@ universe, and everything:
 > # OK
 > ```
 
+In practice you might want to invoke `mktemp` in the `!test program` to avoid
+multiple parallel tests overwrting each other's files.  Or pass `--jobs 1` to
+run tests serially.
+
 </details>
 
 
-<details><summary>Example: Replacing <code>require('module-name')</code> with <code>require('./index.js')</code></summary>
+<details><summary>Replacing package imports with local file imports<br>(For example, <code>require('module-name')</code> → <code>require('./index.js')</code>)</summary>
 
-Your users will be using your library by importing it using its package name
-(e.g. `require('module-name')`.  However, it makes sense to actually run your
-tests such that they use your local implementation in `./index.js`, or whatever
-is listed as the `main` file in `package.json`.
+In languages with package managers, users will likely be using your library by
+importing it using its package name (e.g. `require('module-name')`.  However,
+it makes sense to actually run your tests such that they use your local
+implementation (e.g. `./index.js`, or whatever is listed as the `main` file in
+`package.json`).
 
 So here's a markdown file with a test program specified that loads the name of
 the main file out of `./package.json`, and replaces the first `require(...)`
@@ -131,12 +154,14 @@ cat "$TEMP_FILE" \
 | node
 -->
 
+Loading the `txm` module through `require` isn't really a useful exercise...
+
 <!-- !test in use library -->
 
     require('txm')
 
-Note that because this module isn't really a library, requiring it just runs
-the program...
+...because it isn't really a library.  Requiring it just runs the program with
+no tests specified:
 
 <!-- !test out use library -->
 
@@ -159,7 +184,7 @@ the program...
 
 </details>
 
-<details><summary>Example: Redirecting stderr→stdout, to test both in the same
+<details><summary>Redirecting <code>stderr</code>→<code>stdout</code>, to test both in the same
 block</summary>
 
 Prepending `2>&1` to a shell command [redirects][shell-redirection-q] `stderr`
@@ -194,7 +219,7 @@ and `!test err` blocks.
 > ```
 </details>
 
-<details><summary>Example: Testing a program that exits non-zero</summary>
+<details><summary>Testing a program that exits non-zero</summary>
 
 `txm` assumes that if the test program exits non-zero, it must have been
 unintentional.  You can put `|| true` after the program command to make the
@@ -228,7 +253,7 @@ is fine.
 > ```
 </details>
 
-<details><summary>Example: Testing examples that call <code>assert</code></summary>
+<details><summary>Testing examples that call <code>assert</code></summary>
 
 If your example code calls `assert` or such (which throw an error and exit
 nonzero when the assert fails), then you don't really need an output block,
@@ -261,10 +286,14 @@ code, and checks that the program exits with status `0`, ignoring its output.
 > ```
 </details>
 
-▹ Example: [This
-readme!](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
+▹ [This
+readme](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
 
-# usage
+# install
+
+Requires [Node.js][nodejs].  Install with `npm install -g txm`.
+
+# use
 
 ## `txm [--jobs <n>] [filename]`
 
@@ -326,7 +355,7 @@ hyphens: `#-` is automatically replaced by `-`.  If you need to write literally
 ![example failure
 output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
 
-# License
+# license
 
 [ISC](LICENSE)
 
