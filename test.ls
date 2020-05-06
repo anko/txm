@@ -285,6 +285,41 @@ txm-expect do
   """
 
 txm-expect do
+  name: "no program specified and has multiple inputs"
+  input: """
+  <!-- !test in 1 -->
+
+      hi
+
+  <!-- !test in 1 -->
+
+      hi
+
+  <!-- !test out 1 -->
+
+      hi
+
+  """
+  expect-exit: 1
+  # The "no program" error takes precedence
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 1: no program defined
+    ---
+    output location: |
+      line 11
+    how to fix: |
+      Declare a test program before line 11,
+      using <!-- !test program <TEST PROGRAM HERE> -->
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
   name: "input without matching output"
   input: """
   <!-- !test program cat -->
