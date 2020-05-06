@@ -370,8 +370,12 @@ const runTests = (queue, options) => {
 
       const subprocess = exec(
         test.program.code, subprocessOptions, resultCallback);
+      // Swallow EPIPE errors.  These can happen when the subprocess closes its
+      // stdin before we manage to write to it.  It's not a problem if it does:
+      // the subprocess just doesn't want any more input.
       subprocess.stdin.on('error', (e) => {
-        // Swallow EPIPE errors
+        /* istanbul ignore next: nondeterministic, and therefore difficult to
+         * cause on-demand and test for */
         if (e.code !== 'EPIPE') { throw e }
       })
       if (test.input) subprocess.stdin.end(test.input.text)
