@@ -427,76 +427,31 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
         }
       };
     },
-    waitingForInputText: ({program, name}) => {
-      return {
-        gotText: (text, position, lang) => {
-          parseStateMachine.now =
-            parseStateMachine.waitingForAnyCommand({program})
-          addToTestSpec(name, 'input', { text, position, lang })
-          setTestSpec(name, 'program', program)
-        },
-        gotCommand: (name, text, position) => {
-          parsingError(`'${name} ${text}'`,
-            'unexpected command (expected input text)', {
-              location: formatPosition(position),
-              'how to fix': howToFixUnexpectedCommandExplanation
-            })
+  }
+
+  const capitalise = (text) => text.replace(/./, (x) => x.toUpperCase())
+
+  // Construct state-machine states for each of the states where we're
+  // expecting to next see a code block.
+  for (let annotationType of ['input', 'output', 'error', 'check']) {
+    parseStateMachine[`waitingFor${capitalise(annotationType)}Text`] =
+      ({program, name}) => {
+        return {
+          gotText: (text, position, lang) => {
+            parseStateMachine.now =
+              parseStateMachine.waitingForAnyCommand({ program })
+            addToTestSpec(name, annotationType, {text, position, lang})
+            setTestSpec(name, 'program', program)
+          },
+          gotCommand: (name, text, position) => {
+            parsingError(`'${name} ${text}'`,
+              `unexpected command (expected ${annotationType} text)`, {
+                location: formatPosition(position),
+                'how to fix': howToFixUnexpectedCommandExplanation
+              })
+          }
         }
       }
-    },
-    waitingForOutputText: ({program, name}) => {
-      return {
-        gotText: (text, position, lang) => {
-          parseStateMachine.now =
-            parseStateMachine.waitingForAnyCommand({ program })
-          addToTestSpec(name, 'output', {text, position, lang})
-          setTestSpec(name, 'program', program)
-        },
-        gotCommand: (name, text, position) => {
-          parsingError(`'${name} ${text}'`,
-            'unexpected command (expected output text)', {
-              location: formatPosition(position),
-              'how to fix': howToFixUnexpectedCommandExplanation
-            })
-        }
-      };
-    },
-
-    waitingForErrorText: ({program, name}) => {
-      return {
-        gotText: (text, position, lang) => {
-          parseStateMachine.now =
-            parseStateMachine.waitingForAnyCommand({ program })
-          addToTestSpec(name, 'error', {text, position, lang})
-          setTestSpec(name, 'program', program)
-        },
-        gotCommand: (name, text, position) => {
-          parsingError(`'${name} ${text}'`,
-            'unexpected command (expected error text)', {
-              location: formatPosition(position),
-              'how to fix': howToFixUnexpectedCommandExplanation
-            })
-        }
-      };
-    },
-
-    waitingForCheckText: ({program, name}) => {
-      return {
-        gotText: (text, position, lang) => {
-          parseStateMachine.now =
-            parseStateMachine.waitingForAnyCommand({ program })
-          addToTestSpec(name, 'check', {text, position, lang})
-          setTestSpec(name, 'program', program)
-        },
-        gotCommand: (name, text, position) => {
-          parsingError(`'${name} ${text}'`,
-            'unexpected command (expected check text)', {
-              location: formatPosition(position),
-              'how to fix': howToFixUnexpectedCommandExplanation
-            })
-        }
-      };
-    }
   }
   // Initial state
   parseStateMachine.now =
