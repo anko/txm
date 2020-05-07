@@ -443,6 +443,11 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     testSpec[key] = testSpecArrayForKey
     testSpec[key].push(value)
   }
+  const setTestSpec = (name, key, value) => {
+    const testSpec = name in testSpecs ? testSpecs[name] : {}
+    testSpecs[name] = testSpec
+    testSpec[key] = [value]
+  }
 
   const howToFixUnexpectedCommandExplanation = `Check that your`
     + ` 'in' / 'out' / 'err' / 'check'`
@@ -494,7 +499,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({program})
           addToTestSpec(name, 'input', { text, position, lang })
-          addToTestSpec(name, 'program', program)
+          setTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
           parsingError(`'${name} ${text}'`,
@@ -511,7 +516,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({ program })
           addToTestSpec(name, 'output', {text, position, lang})
-          addToTestSpec(name, 'program', program)
+          setTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
           parsingError(`'${name} ${text}'`,
@@ -529,7 +534,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({ program })
           addToTestSpec(name, 'error', {text, position, lang})
-          addToTestSpec(name, 'program', program)
+          setTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
           parsingError(`'${name} ${text}'`,
@@ -547,7 +552,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
           parseStateMachine.now =
             parseStateMachine.waitingForAnyCommand({ program })
           addToTestSpec(name, 'check', {text, position, lang})
-          addToTestSpec(name, 'program', program)
+          setTestSpec(name, 'program', program)
         },
         gotCommand: (name, text, position) => {
           parsingError(`'${name} ${text}'`,
