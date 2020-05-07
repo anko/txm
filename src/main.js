@@ -72,10 +72,7 @@ const runTests = (queue, options) => {
     const validOutput = checkExistsAndGetOnlyElement('output')
     const validError = checkExistsAndGetOnlyElement('error')
     const validCheck = checkExistsAndGetOnlyElement('check')
-    const validProgram = (test) => {
-      const nonNullPrograms = test.program.filter((x) => x !== null)
-      return nonNullPrograms[nonNullPrograms.length - 1]
-    }
+    const validProgram = (test) => test.program[0]
 
     const normaliseTest = (t) => {
       const normalised = {
@@ -396,7 +393,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     property holds its current state.  States are represented by constructor
     functions take parameters, through which data is passed when transitioning
     between states.
-  
+
     Each state can react to texts (i.e. code blocks) or commands (i.e. HTML
     comments containing "!test" commands) in whatever way is appropriate for
     that state.
