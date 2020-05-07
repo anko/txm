@@ -145,7 +145,7 @@ cat > "$TEMP_FILE"
 
 # Read the package name and main file from package.json
 PACKAGE_NAME=$(node -e "console.log(require('./package.json').name)")
-LOCAL_MAIN_FILE=$(node -e "console.log(Object.values(require('./package.json').bin)[0])")
+LOCAL_MAIN_FILE=$(node -e "console.log(require('./package.json').main)")
 
 # Run a version of the input code where requires for the package name are
 # replaced with the local file path
@@ -154,21 +154,30 @@ cat "$TEMP_FILE" \
 | node
 -->
 
-Loading the `txm` module through `require` isn't really a useful exercise...
+Did you know you can also use `txm` as a module to use it programmatically?
 
 <!-- !test in use library -->
 
-    require('txm')
+    const parseAndRunTests = require('txm')
+    parseAndRunTests(`
+    # Markdown heading!
 
-...because it isn't really a library.  Requiring it just runs the program with
-no tests specified:
+    <!-- !test program node -->
+    <!-- !test check print -->
+
+        require('assert')(true)
+    `)
+
+It produces output onto console:
 
 <!-- !test out use library -->
 
     TAP version 13
-    1..0
-    # no tests
-    # For help, see https://github.com/anko/txm
+    1..1
+    ok 1 print
+
+    # 1/1 passed
+    # OK
 ```
 
 <!-- !test out require replacing example -->
