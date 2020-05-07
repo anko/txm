@@ -90,30 +90,6 @@ const runTests = (queue, options) => {
       return normalised
     }
 
-    const earlierPosition = (a, b) => {
-      if (!a) return b
-      if (!b) return a
-      return (a.start.offset < b.start.offset) ? a : b
-    }
-
-
-    const addLocationProperties = (test, obj) => {
-      const locationProps = {}
-      if (test.check)
-        locationProps['check location'] = formatPosition(test.check.position)
-      if (test.input)
-        locationProps['input location'] = formatPosition(test.input.position)
-      if (test.output)
-        locationProps['output location'] = formatPosition(test.output.position)
-      if (test.error)
-        locationProps['error location'] = formatPosition(test.error.position)
-
-      const finalProps = {}
-      Object.assign(finalProps, obj)
-      Object.assign(finalProps, locationProps)
-      return finalProps
-    }
-
     const makeColouredDiff = (expected, actual) => {
       if (!color.options.enabled) return { expected, actual }
 
@@ -156,80 +132,70 @@ const runTests = (queue, options) => {
       }
     }
 
+    const collectAnnotationLocations = (test, annotationTypes) => {
+      const locations = {}
+      annotationTypes = annotationTypes
+        || ['input', 'output', 'error', 'check', 'program']
+
+      for (let type of annotationTypes) {
+        if (test[type]) {
+          if (test[type].length) {
+            let annotationsOfType = test[type].filter((x) => x)
+            if (annotationsOfType.length > 1) {
+              locations[`${type} locations`] = annotationsOfType
+                .filter((x) => x)
+                .map((x) => formatPosition(x.position))
+            } else if (annotationsOfType.length === 1) {
+              locations[`${type} location`] =
+                formatPosition(annotationsOfType[0].position)
+            }
+          } else {
+            locations[`${type} location`] = formatPosition(test[type].position)
+          }
+        }
+      }
+      return locations
+    }
+
     return async.eachOfLimit(queue, options.jobs, (test, index, cb) => {
 
       // Handle invalid 'program'
       if (!validProgram(test)) {
-        const debugProperties = {}
-        const input = validInput(test)
-        const output = validOutput(test)
-        let earliestPositionMentioned = null
+        const debugProperties = Object.assign(
+          collectAnnotationLocations(test),
+          { 'how to fix':
+            'Declare a test program before your test,'
+            + `\nusing <!-- !test program <TEST PROGRAM HERE> -->` })
 
-        if (input) {
-          debugProperties['input location'] = formatPosition(input.position)
-          earliestPositionMentioned =
-            earlierPosition(input.position, earliestPositionMentioned)
-        }
-        if (output) {
-          debugProperties['output location'] = formatPosition(output.position)
-          earliestPositionMentioned =
-            earlierPosition(output.position, earliestPositionMentioned)
-        }
-        debugProperties['how to fix'] =
-          `Declare a test program before`
-          + ` ${formatPosition(earliestPositionMentioned)},`
-          + `\nusing <!-- !test program <TEST PROGRAM HERE> -->`
         fail(index, test.name, "no program defined", debugProperties)
         return cb()
       }
 
       // Handle invalid combinations with 'check'
       if (test.check) {
-        if (test.input) {
-          fail(index, test.name, 'defined as check, but also has input', {
-            'input locations':
-              test.input.map((x) => formatPosition(x.position)),
-            'how to fix':
-              'Remove the input, or create an in/out test instead.'
-          })
-          return cb()
+
+        for (let type of ['input', 'output', 'error']) {
+          if (test[type]) {
+            fail(index, test.name, `defined as check, but also has ${type}`,
+              Object.assign(
+                collectAnnotationLocations(test, [type, 'check']),
+                { 'how to fix':
+                  `Remove the ${type}, or create an in/out test instead.` }))
+            return cb()
+          }
         }
-        if (test.output) {
-          fail(index, test.name, 'defined as check, but also has output', {
-            'output locations':
-              test.output.map((x) => formatPosition(x.position)),
-            'how to fix':
-              'Remove the output, or create an in/out test instead.'
-          })
-          return cb()
-        }
-        if (test.error) {
-          fail(index, test.name, 'defined as check, but also has error', {
-            'error locations':
-              test.error.map((x) => formatPosition(x.position)),
-            'how to fix':
-              'Remove the error, or create an in/out test instead.'
-          })
-          return cb()
-        }
+
         if (test.check.length > 1) {
-          fail(index, test.name, "multiple checks defined", {
-            "check locations":
-              test.check.map((x) => formatPosition(x.position)),
-            "how to fix":
-              "Remove or rename the other checks."
-          })
+          fail(index, test.name, 'multiple checks defined',
+            Object.assign(
+              collectAnnotationLocations(test, ['check']),
+              { 'how to fix': 'Remove or rename the other checks.' }))
           return cb()
         }
       } else {
         // Handle missing 'in'
         if (!test.input || test.input.length === 0) {
-          const debugProperties = {}
-          const output = validOutput(test)
-          if (output)
-            debugProperties['output location'] =
-              formatPosition(output.position)
-
+          const debugProperties = collectAnnotationLocations(test, ['output'])
           debugProperties['how to fix'] =
             `Define an input for '${test.name}', using`
             + `\n\n  <!-- !test in ${test.name} -->`
@@ -241,12 +207,7 @@ const runTests = (queue, options) => {
         const noOut = !test.output || test.output.length === 0
         const noErr = !test.error || test.error.length === 0
         if (noOut && noErr) {
-          const debugProperties = {}
-
-          const input = validInput(test)
-          if (input)
-            debugProperties['input location'] = formatPosition(input.position)
-
+          const debugProperties = collectAnnotationLocations(test, ['input'])
           debugProperties['how to fix'] =
             `Define an output or error for '${test.name}', using`
             + `\n\n  <!-- !test out ${test.name} -->`
@@ -257,15 +218,7 @@ const runTests = (queue, options) => {
         }
 
         if (test.input && test.input.length > 1) {
-          const debugProperties = {}
-
-          const output = validOutput(test)
-          if (output)
-            debugProperties['output location'] =
-              formatPosition(output.position)
-
-          debugProperties['input locations'] =
-            test.input.map((x) =>  formatPosition(x.position))
+          const debugProperties = collectAnnotationLocations(test)
           debugProperties['how to fix'] = 'Remove or rename the other inputs.'
 
           fail(index, test.name, "multiple inputs defined", debugProperties)
@@ -273,15 +226,7 @@ const runTests = (queue, options) => {
         }
 
         if (test.output && test.output.length > 1) {
-          const debugProperties = {}
-
-          const input = validInput(test)
-          if (input)
-            debugProperties['input location'] =
-              formatPosition(input.position)
-
-          debugProperties['output locations'] =
-            test.output.map((x) =>  formatPosition(x.position))
+          const debugProperties = collectAnnotationLocations(test)
           debugProperties['how to fix'] = 'Remove or rename the other outputs.'
 
           fail(index, test.name, "multiple outputs defined", debugProperties)
@@ -289,15 +234,7 @@ const runTests = (queue, options) => {
         }
 
         if (test.error && test.error.length > 1) {
-          const debugProperties = {}
-
-          const input = validInput(test)
-          if (input)
-            debugProperties['input location'] =
-              formatPosition(input.position)
-
-          debugProperties['error locations'] =
-            test.error.map((x) =>  formatPosition(x.position))
+          const debugProperties = collectAnnotationLocations(test)
           debugProperties['how to fix'] = 'Remove or rename the other errors.'
 
           fail(index, test.name, "multiple errors defined", debugProperties)
@@ -312,12 +249,12 @@ const runTests = (queue, options) => {
       const resultCallback = (e, stdout, stderr) => {
         if (e) {
           fail(index, test.name, 'program exited with error',
-            addLocationProperties(test, {
+            Object.assign({
               program: test.program.code,
               'exit status': e.code,
               stderr: stderr,
               stdout: stdout
-            }))
+            }, collectAnnotationLocations(test)))
           return cb()
         }
 
@@ -329,24 +266,24 @@ const runTests = (queue, options) => {
         if (('output' in test) && stdout !== test.output.text) {
           const {expected, actual} = makeColouredDiff(test.output.text, stdout)
           fail(index, test.name, 'output mismatch',
-            addLocationProperties(test, {
+            Object.assign({
               'expected stdout': expected,
               'actual stdout': actual,
               program: test.program.code,
               'stderr': stderr,
-            }))
+            }, collectAnnotationLocations(test)))
           return cb()
         }
 
         if (('error' in test) && stderr !== test.error.text) {
           const {expected, actual} = makeColouredDiff(test.error.text, stderr)
           fail(index, test.name, 'error mismatch',
-            addLocationProperties(test, {
+            Object.assign({
               'expected stderr': expected,
               'actual stderr': actual,
               program: test.program.code,
               'stdout': stdout,
-            }))
+            }, collectAnnotationLocations(test)))
           return cb()
         }
 

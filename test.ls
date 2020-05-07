@@ -143,6 +143,8 @@ txm-expect do
       lines 8-9
     error location: |
       lines 13-14
+    program location: |
+      line 1
     ---
 
   # 0/1 passed
@@ -184,6 +186,8 @@ txm-expect do
       line 4
     error location: |
       lines 8-9
+    program location: |
+      line 1
     ---
 
   # 0/1 passed
@@ -221,6 +225,8 @@ txm-expect do
     error locations:
       - lines 8-9
       - lines 13-14
+    program location: |
+      line 1
     how to fix: |
       Remove or rename the other errors.
     ---
@@ -275,7 +281,7 @@ txm-expect do
     output location: |
       line 7
     how to fix: |
-      Declare a test program before line 3,
+      Declare a test program before your test,
       using <!-- !test program <TEST PROGRAM HERE> -->
     ---
 
@@ -307,10 +313,13 @@ txm-expect do
   1..1
   not ok 1 1: no program defined
     ---
+    input locations:
+      - line 3
+      - line 7
     output location: |
       line 11
     how to fix: |
-      Declare a test program before line 11,
+      Declare a test program before your test,
       using <!-- !test program <TEST PROGRAM HERE> -->
     ---
 
@@ -628,12 +637,14 @@ txm-expect do
   1..1
   not ok 1 1: multiple inputs defined
     ---
-    output location: |
-      line 12
     input locations:
       - line 4
       - line 8
       - line 16
+    output location: |
+      line 12
+    program location: |
+      line 1
     how to fix: |
       Remove or rename the other inputs.
     ---
@@ -676,6 +687,8 @@ txm-expect do
       - line 4
       - line 8
       - line 16
+    program location: |
+      line 1
     how to fix: |
       Remove or rename the other outputs.
     ---
@@ -858,6 +871,8 @@ txm-expect do
       line 4
     output location: |
       line 8
+    program location: |
+      line 1
     ---
   not ok 2 y: program exited with error
     ---
@@ -874,6 +889,8 @@ txm-expect do
       lines 12-13
     output location: |
       lines 17-18
+    program location: |
+      line 1
     ---
 
   # 0/2 passed
@@ -940,6 +957,8 @@ txm-expect do
       line 4
     output location: |
       line 8
+    program location: |
+      line 1
     ---
 
   # 0/1 passed
@@ -1002,6 +1021,8 @@ txm-expect do
 
     check location: |
       line 8
+    program location: |
+      lines 1-4
     ---
 
   # 0/1 passed
@@ -1032,8 +1053,10 @@ txm-expect do
   1..1
   not ok 1 my test: defined as check, but also has input
     ---
-    input locations:
-      - line 12
+    input location: |
+      line 12
+    check location: |
+      line 8
     how to fix: |
       Remove the input, or create an in/out test instead.
     ---
@@ -1066,8 +1089,10 @@ txm-expect do
   1..1
   not ok 1 my test: defined as check, but also has output
     ---
-    output locations:
-      - line 12
+    output location: |
+      line 12
+    check location: |
+      line 8
     how to fix: |
       Remove the output, or create an in/out test instead.
     ---
@@ -1100,8 +1125,10 @@ txm-expect do
   1..1
   not ok 1 my test: defined as check, but also has error
     ---
-    error locations:
-      - line 12
+    error location: |
+      line 12
+    check location: |
+      line 8
     how to fix: |
       Remove the error, or create an in/out test instead.
     ---
@@ -1170,6 +1197,8 @@ txm-expect do
 
     check location: |
       line 4
+    program location: |
+      line 1
     ---
 
   # 0/1 passed
