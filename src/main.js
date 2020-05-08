@@ -17,7 +17,7 @@ const exitCode = {
   TEST_FAILURE: 1,
   FORMAT_ERROR: 2,
   INTERNAL_ERROR: 3
-};
+}
 
 const runTests = (queue, options) => {
   try {
@@ -64,21 +64,19 @@ const runTests = (queue, options) => {
         failureText(index + 1, name, failureReason, properties))
     }
 
-    const getOnlyElement = (x) => x.length === 1 ? x[0] : undefined
-    const checkExistsAndGetOnlyElement = (prop) =>
-      (x) => x[prop] && getOnlyElement(x[prop])
-
-    const validInput = checkExistsAndGetOnlyElement('input')
-    const validOutput = checkExistsAndGetOnlyElement('output')
-    const validError = checkExistsAndGetOnlyElement('error')
-    const validCheck = checkExistsAndGetOnlyElement('check')
-    const validProgram = (test) => test.program[0]
-
     const normaliseTest = (t) => {
-      const normalised = {
-        name: t.name,
-        program: validProgram(t)
-      }
+
+      const getIfOnce = (x) => x.length === 1 ? x[0] : undefined
+      const getIfExistsOnce = (prop) =>
+        (x) => x[prop] && getIfOnce(x[prop])
+
+      const validInput = getIfExistsOnce('input')
+      const validOutput = getIfExistsOnce('output')
+      const validError = getIfExistsOnce('error')
+      const validCheck = getIfExistsOnce('check')
+      const validProgram = (test) => test.program[0]
+
+      const normalised = { name: t.name, program: validProgram(t) }
       let that
       if (that = validInput(t)) normalised.input = that
       if (that = validOutput(t)) normalised.output = that
@@ -157,7 +155,7 @@ const runTests = (queue, options) => {
     return async.eachOfLimit(queue, options.jobs, (test, index, cb) => {
 
       // Handle invalid 'program'
-      if (!validProgram(test)) {
+      if (!test.program[0]) {
         const debugProperties = Object.assign(
           collectAnnotationLocations(test),
           { 'how to fix':
