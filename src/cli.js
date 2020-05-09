@@ -14,6 +14,10 @@ const argv = yargs
     'defaultDescription': '# of CPU cores',
     'nargs': 1
   })
+  .option('backend', {
+    'desc': 'Program to run in the background during testing',
+    'nargs': 1
+  })
   .check((args) => {
     if (args._.length > 1)
       throw Error(`Too many files.  Expected 1 max, got ${args._.length}`)

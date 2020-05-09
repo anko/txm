@@ -304,13 +304,21 @@ Requires [Node.js][nodejs].  Install with `npm install -g txm`.
 
 # use
 
-## `txm [--jobs <n>] [filename]`
+## `txm [--jobs <n>] [--backend <command>] [filename]`
 
  - `filename`: Input file (default: read from `stdin`)
- - `--jobs`: How many tests may run in parallel.(default: `os.cpus().length`)
+
+ - `--jobs`: How many tests may run in parallel. (default: `os.cpus().length`)
 
    Results will always be shown in insertion order in the output, regardless of
    the order parallel tests complete.
+
+ - `--backend`: Command to run in the background during tests. (default: none)
+
+   The given command is started before the first test, and closed (with
+   `SIGTERM`) after the last test.  If the command exits at any point during
+   testing, all then-incomplete tests fail, showing diagnostics with the
+   backend command's exit code, stderr, stdout, etc.
 
  - `--version`
  - `--help`
@@ -326,12 +334,13 @@ Annotations (inside HTML comments):
  - #### `!test program <program>`
 
    The `<program>` is run as a shell command for each following matching
-   input/output pair.  It gets the input on `stdin`, and is expected to produce
-   the output on `stdout`.
+   input/output/error set or check.  It gets the input on `stdin`, and is
+   expected to produce the output on `stdout` or error on `stderr`.
 
-   To use the same program for each test, just declare it once.
+   Each test uses the most recently declared program, so you can just declare
+   it once at the top if you intend to use the same one for many tests.
 
-   The program sees these environment variables:
+   The program is run with these environment variables set:
 
     - `TXM_INDEX` (1-based number of test)
     - `TXM_NAME` (name of test)
@@ -343,7 +352,7 @@ Annotations (inside HTML comments):
 
    The next code block is read as given input, or expected stdout or stderr.
 
-   These are matched by `<name>`, and may be anywhere.
+   These are matched by `<name>`.  The order they appear doesn't matter.
 
  - #### `!test check <name>`
 
@@ -351,13 +360,13 @@ Annotations (inside HTML comments):
    program gets this as input, but its output is ignored.  The test passes if
    the program exits `0`.
 
-   Use this for code examples that check their own correctness, (e.g.  by
-   calling `assert`), or if your test program is a linter.
+   Good for code examples that check their own correctness, (e.g.  by calling
+   `assert`), or if your test program is set to a linter.
 
 Note that 2 consecutive hyphens (`--`) inside HTML comments are [disallowed by
 the HTML spec][html-comments-spec].  For this reason, `txm` lets you escape
 hyphens: `#-` is automatically replaced by `-`.  If you need to write literally
-`#-`, write `##-` instead, and so on.  `#` acts normally everywhere else.
+`#-`, write `##-` instead, and so on.  `#` acts normally in any other context.
 
 # screenshot
 

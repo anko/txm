@@ -31,8 +31,8 @@ const runTests = (queue, options) => {
 
     // Print test plan
     console.log(color.dim("1.." + queue.length));
-    let nSuccesses = 0
-    let nFailures = 0
+    let succeeded = {}
+    let failed = {}
 
     // Challenge:  Results of parallel operations may arrive out-of-order, but
     // we want them to always print their results in order.
@@ -55,11 +55,11 @@ const runTests = (queue, options) => {
       }
     }
     const succeed = (index, name, properties) => {
-      ++nSuccesses
+      succeeded[index] = true
       printWhenOurTurn(index, successText(index + 1, name))
     }
     const fail = (index, name, failureReason, properties) => {
-      ++nFailures
+      failed[index] = true
       printWhenOurTurn(index,
         failureText(index + 1, name, failureReason, properties))
     }
@@ -152,7 +152,47 @@ const runTests = (queue, options) => {
       return locations
     }
 
+    // First, start the specified background process
+    let backgroundProcess = null
+    if (options.backend) {
+
+      backgroundProcess = exec(options.backend, {}, (e, stdout, stderr) => {
+
+        // Process exited.  Fail all non-finished tests.
+
+        const testIndexesThatRan = []
+        for (let i = 0; i < indexThatMayPrint; ++i) {
+          testIndexesThatRan.push(i)
+        }
+        for (let i of printsWaiting.keys()) {
+          testIndexesThatRan.push(i)
+        }
+
+        while (indexThatMayPrint < queue.length) {
+          // 'fail' changes 'indexThatMayPrint' to the right value when it's
+          // called.
+          let nextIndex = indexThatMayPrint
+          const test = queue[nextIndex]
+
+          const debugProperties = Object.assign(
+            collectAnnotationLocations(test), {
+              'how to fix': 'Your --backend should only terminate on SIGTERM.',
+              'backend command': options.backend,
+              'backend exit code': backgroundProcess.exitCode,
+              'backend stdout': stdout,
+              'backend stderr': stderr,
+            })
+          fail(nextIndex, test.name,
+            "backend program exited before test finished", debugProperties)
+        }
+      })
+    }
+
     return async.eachOfLimit(queue, options.jobs, (test, index, cb) => {
+
+      // If the background process has exited, just give up.  The background
+      // process exit handler should have triggered a 'fail' call for us.
+      if (backgroundProcess && backgroundProcess.exitCode !== null) return cb()
 
       // Handle invalid 'program'
       if (!test.program[0]) {
@@ -313,18 +353,25 @@ const runTests = (queue, options) => {
       if (test.input) subprocess.stdin.end(test.input.text)
       else subprocess.stdin.end(test.check.text)
     }, (e) => {
+      // If background process is still alive, kill it.
+      if (backgroundProcess && backgroundProcess.exitCode === null)
+        backgroundProcess.kill()
+
       if (e) die(e.message)
 
       // Print final summary comments
 
+      const nSucceeded = Object.keys(succeeded).length
+      const nFailed = Object.keys(failed).length
+
       console.log()
-      const colour = (nFailures === 0) ? color.green : color.red
+      const colour = (nFailed === 0) ? color.green : color.red
       const colourInverse = (x) => color.inverse(colour(x))
 
-      console.log(colour(`# ${nSuccesses}/${queue.length} passed`))
-      if (nFailures === 0) console.log(colourInverse('# OK'))
+      console.log(colour(`# ${nSucceeded}/${queue.length} passed`))
+      if (nFailed === 0) console.log(colourInverse('# OK'))
       else {
-        console.log(colourInverse(`# FAILED ${nFailures}`))
+        console.log(colourInverse(`# FAILED ${nFailed}`))
         process.exit(exitCode.TEST_FAILURE)
       }
     })

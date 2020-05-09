@@ -4,6 +4,7 @@ test = require \tape
 color = require \colorette
 tmp = require \tmp
 fs = require \fs
+wait-on = require \wait-on
 
 txm-command = "node src/cli.js"
 
@@ -1428,3 +1429,185 @@ test "more than 1 file shows an error" (t) ->
       cleanup!
       cleanup2!
       t.end!
+
+test "--backend flag" (t) ->
+  tmp.file (err, path, fd, cleanup) ->
+    fs.writeFileSync do
+      fd
+      """
+      <!-- !test program node -->
+      <!-- !test in fetch -->
+
+          const http = require('http')
+          const waitOn = require('wait-on')
+
+          const uri = 'http://localhost:8888/test'
+
+          // Wait for up to a second the server to start, then fetch the URI
+          // and print it.
+          waitOn({ resources: [ uri ], timeout: 1000 }, (error) => {
+            if (error) throw error
+            http.get(uri, (res) => {
+              res.pipe(process.stdout)
+              res.on('end', () => { process.stdout.write('\\n') })
+            })
+          })
+
+      <!-- !test out fetch -->
+
+          /TEST
+
+      The same server continues to be available throughout tests.
+
+      <!-- !test in fetch again -->
+
+          const http = require('http')
+
+          const uri = 'http://localhost:8888/test/two'
+
+          http.get(uri, (res) => {
+            res.pipe(process.stdout)
+            res.on('end', () => { process.stdout.write('\\n') })
+          })
+
+      <!-- !test out fetch again -->
+
+          /TEST/TWO
+
+      """
+    node-http-server-script = """
+    require('http')
+    .createServer((req, res) => { res.end(req.url.toUpperCase()) })
+    .listen(8888)
+    """ .split('\n').join('')
+
+    flags = "--jobs 1 --backend=\"node -e \\\"#node-http-server-script\\\"\""
+    { stdout, status, stderr } = run-program "#txm-command #flags #path"
+    t.equal status, 0
+    t.equal stdout, """
+      TAP version 13
+      1..2
+      ok 1 fetch
+      ok 2 fetch again
+
+      # 2/2 passed
+      # OK
+
+      """
+
+    wait-on do
+      { reverse: true, timeout: 1000, resources: [ 'http://localhost:8888' ] }
+      (err) ->
+        cleanup!
+        t.equal err, undefined, 'Backend killed after tests ran'
+        t.end!
+
+test "--backend that fails after first test" (t) ->
+  tmp.file (err, path, fd, cleanup) ->
+    fs.writeFileSync do
+      fd
+      """
+      <!-- !test program node -->
+      <!-- !test in fetch -->
+
+          const http = require('http')
+          const waitOn = require('wait-on')
+
+          const uri = 'http://localhost:8888/test'
+
+          // Wait for up to a second the server to start, then fetch the URI
+          // and print it.
+          waitOn({ resources: [ uri ], timeout: 1000 }, (error) => {
+            if (error) throw error
+            http.get(uri, (res) => {
+              res.pipe(process.stdout)
+              res.on('end', () => { process.stdout.write('\\n') })
+            })
+          })
+
+      <!-- !test out fetch -->
+
+          /TEST
+
+      The same server continues to be available throughout tests.
+
+      <!-- !test in fetch again -->
+
+          const http = require('http')
+
+          const uri = 'http://localhost:8888/test/two'
+
+          http.get(uri, (res) => {
+            res.pipe(process.stdout)
+            res.on('end', () => { process.stdout.write('\\n') })
+          })
+
+      <!-- !test out fetch again -->
+
+          /TEST/TWO
+
+      """
+    node-http-server-script = """
+    let count = 0;
+    require('http')
+    .createServer((req, res) => {
+      if (req.url === '/test/two') {
+        console.error('stderr text');
+        console.log('stdout text');
+        process.exit(1)
+      }
+      res.end(req.url.toUpperCase());
+    })
+    .listen(8888)
+    """
+
+    flags = "--jobs 1 --backend=\"node -e \\\"#node-http-server-script\\\"\""
+    { stdout, status, stderr } = run-program "#txm-command #flags #path"
+    t.equal status, 1
+    t.equal stdout, """
+      TAP version 13
+      1..2
+      ok 1 fetch
+      not ok 2 fetch again: backend program exited before test finished
+        ---
+        input location: |
+          lines 27-34
+        output location: |
+          line 38
+        program location: |
+          line 1
+        how to fix: |
+          Your --backend should only terminate on SIGTERM.
+        backend command: |
+          node -e "let count = 0;
+          require(\'http\')
+          .createServer((req, res) => {
+            if (req.url === \'/test/two\') {
+              console.error(\'stderr text\');
+              console.log(\'stdout text\');
+              process.exit(1)
+            }
+            res.end(req.url.toUpperCase());
+          })
+          .listen(8888)"
+        backend exit code: 1
+        backend stdout: |
+          stdout text
+
+        backend stderr: |
+          stderr text
+
+        ---
+
+      # 1/2 passed
+      # FAILED 1
+
+      """
+    t.equal stderr, ''
+
+    wait-on do
+      { reverse: true, timeout: 1000, resources: [ 'http://localhost:8888' ] }
+      (err) ->
+        cleanup!
+        t.equal err, undefined, 'Backend dead after tests'
+        t.end!
