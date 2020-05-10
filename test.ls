@@ -1478,7 +1478,7 @@ test "--backend flag" (t) ->
     node-http-server-script = """
     require('http')
     .createServer((req, res) => { res.end(req.url.toUpperCase()) })
-    .listen(8888)
+    .listen(8888, 'localhost')
     """ .split('\n').join('')
 
     flags = "--jobs 1 --backend=\"node -e \\\"#node-http-server-script\\\"\""
@@ -1558,7 +1558,7 @@ test "--backend that fails after first test" (t) ->
       }
       res.end(req.url.toUpperCase());
     })
-    .listen(8888)
+    .listen(8888, 'localhost')
     """
 
     flags = "--jobs 1 --backend=\"node -e \\\"#node-http-server-script\\\"\""
@@ -1589,7 +1589,7 @@ test "--backend that fails after first test" (t) ->
             }
             res.end(req.url.toUpperCase());
           })
-          .listen(8888)"
+          .listen(8888, 'localhost')"
         backend exit code: 1
         backend stdout: |
           stdout text
