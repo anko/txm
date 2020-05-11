@@ -1,4 +1,4 @@
-# txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/travis/anko/txm.svg?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls] [![](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
+# txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/travis/anko/txm/master.svg?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls] [![](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
 
 ### Purpose
 
