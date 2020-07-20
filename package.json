@@ -35,19 +35,19 @@
   ],
   "dependencies": {
     "async": "3.2.0",
-    "colorette": "^1.1.0",
+    "colorette": "1.2.0",
     "concat-stream": "2.0.0",
     "diff-match-patch": "1.0.4",
     "parse5-sax-parser": "5.1.1",
-    "remark-parse": "^8.0.0",
-    "unified": "^9.0.0",
-    "yargs": "^15.3.1"
+    "remark-parse": "8.0.0",
+    "unified": "9.0.0",
+    "yargs": "15.3.1"
   },
   "devDependencies": {
-    "coveralls": "^3.0.11",
+    "coveralls": "3.0.11",
     "livescript": "1.6.0",
-    "nyc": "^15.0.1",
+    "nyc": "15.0.1",
     "tape": "4.13.2",
-    "tmp": "^0.1.0"
+    "tmp": "0.1.0"
   }
 }
