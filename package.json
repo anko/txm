@@ -38,7 +38,7 @@
     "colorette": "1.2.0",
     "concat-stream": "^2.0.0",
     "diff-match-patch": "^1.0.5",
-    "parse5-sax-parser": "^5.1.1",
+    "parse5-sax-parser": "^6.0.1",
     "remark-parse": "^8.0.3",
     "unified": "^9.1.0",
     "yargs": "^15.4.1"
@@ -47,7 +47,7 @@
     "coveralls": "^3.1.0",
     "livescript": "^1.6.0",
     "nyc": "^15.1.0",
-    "tape": "^4.13.3",
-    "tmp": "^0.1.0"
+    "tape": "^5.0.1",
+    "tmp": "^0.2.1"
   }
 }
