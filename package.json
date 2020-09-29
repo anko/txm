@@ -40,8 +40,8 @@
     "diff-match-patch": "^1.0.5",
     "parse5-sax-parser": "^6.0.1",
     "remark-parse": "^8.0.3",
-    "unified": "^9.1.0",
-    "yargs": "^15.4.1"
+    "unified": "^9.2.0",
+    "yargs": "^16.0.3"
   },
   "devDependencies": {
     "coveralls": "^3.1.0",
