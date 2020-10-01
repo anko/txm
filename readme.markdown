@@ -375,6 +375,6 @@ output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529
 [nodejs]: https://nodejs.org/
 [markdown]: http://daringfireball.net/projects/markdown/syntax
 [tap-spec]: https://testanything.org/tap-version-13-specification.html
-[html-comments-spec]: https://www.w3.org/TR/2011/WD-html5-20110525/syntax.html#comments
+[html-comments-spec]: https://html.spec.whatwg.org/multipage/syntax.html#comments
 [shell-redirection-q]: https://superuser.com/questions/1179844/what-does-dev-null-21-true-mean-in-linux
 
