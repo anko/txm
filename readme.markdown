@@ -78,6 +78,42 @@ Output:
 
 Examples of other use-cases:
 
+<details><summary>Testing Node.js code with ESM imports</summary>
+
+Running code from `node`'s stdin as an ES module requires
+`--input-type=module`.
+
+<!-- !test in node ESM example -->
+
+```markdown
+Demonstrating that the root directory is a directory:
+
+<!-- !test program node --input-type=module -->
+
+<!-- !test in example -->
+
+    import { stat } from 'fs/promises'
+    console.log((await stat('/')).isDirectory())
+
+<!-- !test out example -->
+
+    true
+
+```
+
+<!-- !test out node ESM example -->
+
+> ```
+> TAP version 13
+> 1..1
+> ok 1 example
+>
+> # 1/1 passed
+> # OK
+> ```
+
+</details>
+
 <details><summary>Testing C code with <code>gcc</code></summary>
 
 <!-- !test in C example -->
