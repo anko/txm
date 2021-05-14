@@ -1,5 +1,8 @@
 # txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/travis/anko/txm/master.svg?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls] [![](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
 
+<img align="right" width="40%" alt="example output for a test failure" src="https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png"></img>
+
+
 ### Purpose
 
 Command-line program that verifies the correctness of code examples in a given
@@ -394,11 +397,6 @@ Note that 2 consecutive hyphens (`--`) inside HTML comments are [disallowed by
 the HTML spec][html-comments-spec].  For this reason, `txm` lets you escape
 hyphens: `#-` is automatically replaced by `-`.  If you need to write literally
 `#-`, write `##-` instead, and so on.  `#` acts normally everywhere else.
-
-# screenshot
-
-![example failure
-output](https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png)
 
 # license
 
