@@ -34,20 +34,20 @@
     "tap"
   ],
   "dependencies": {
-    "async": "^3.2.0",
+    "async": "^3.2.1",
     "colorette": "1.2.0",
     "concat-stream": "^2.0.0",
     "diff-match-patch": "^1.0.5",
     "parse5-sax-parser": "^6.0.1",
     "remark-parse": "^9.0.0",
-    "unified": "^9.2.1",
-    "yargs": "^17.0.1"
+    "unified": "^9.2.2",
+    "yargs": "^17.1.1"
   },
   "devDependencies": {
-    "coveralls": "^3.1.0",
+    "coveralls": "^3.1.1",
     "livescript": "^1.6.0",
     "nyc": "^15.1.0",
-    "tape": "^5.2.2",
+    "tape": "^5.3.1",
     "tmp": "^0.2.1"
   }
 }
