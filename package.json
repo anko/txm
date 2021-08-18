@@ -1,6 +1,6 @@
 {
   "name": "txm",
-  "version": "7.4.6",
+  "version": "7.4.7",
   "description": "tool for testing code examples in Markdown files",
   "main": "src/main.js",
   "scripts": {
