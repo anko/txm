@@ -1,12 +1,16 @@
-const os = require('os');
-const unified = require('unified');
-const remarkParse = require('remark-parse');
-const async = require('async');
-const color = require('colorette');
-const saxParser = require('parse5-sax-parser');
-const exec = require('child_process').exec;
-const dmp = new (require('diff-match-patch'))();
-const homepageLink = require('../package.json').homepage;
+import os from 'os'
+import unified from 'unified'
+import remarkParse from 'remark-parse'
+import async from 'async'
+import color from 'colorette'
+import saxParser from 'parse5-sax-parser'
+import { exec } from 'child_process'
+import DMP from 'diff-match-patch'
+
+import { readFileSync } from 'fs'
+const homepageLink = JSON.parse(readFileSync('./package.json')).homepage
+
+const dmp = new DMP()
 
 if (process.env.FORCE_COLOR !== undefined) {
   color.options.enabled = true
@@ -578,4 +582,4 @@ const parsingError = (name, failureReason, properties) => {
   process.exit(exitCode.FORMAT_ERROR)
 }
 
-module.exports = parseAndRunTests
+export default parseAndRunTests

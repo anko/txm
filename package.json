@@ -2,7 +2,8 @@
   "name": "txm",
   "version": "7.4.7",
   "description": "tool for testing code examples in Markdown files",
-  "main": "src/main.js",
+  "type": "module",
+  "exports": "./src/main.js",
   "scripts": {
     "test": "npm run-script test-docs && npm run-script test-code",
     "test-code": "lsc test.ls",
@@ -21,6 +22,9 @@
   },
   "bugs": "https://github.com/anko/txm/issues",
   "license": "ISC",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "files": [
     "src",
     "readme.markdown"

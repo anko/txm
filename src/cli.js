@@ -1,20 +1,24 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'node:url'
 
-const concat = require('concat-stream');
+import concat from 'concat-stream'
 
-const parseAndRunTests = require('./main.js')
+import parseAndRunTests from './main.js'
 
-const { version } = require('../package.json')
+const packageMetadata = JSON.parse(readFileSync('./package.json'))
+const { version } = packageMetadata
+
 // Determine the name of the program for the purpose of usage help text.  We
 // can do this programmatically by parsing the `package.json` metadata, so it's
 // only stored in 1 place and easy to change later.
-const programName = Object.entries(require('../package.json').bin)
+const programName = Object.entries(packageMetadata.bin)
   .filter(([name, binPath]) => {
     const absBin = path.resolve(binPath)
-    const absSelf = path.resolve(__filename)
+    const absSelf = path.resolve(fileURLToPath(import.meta.url))
     return absBin === absSelf
   })[0][0]
 
