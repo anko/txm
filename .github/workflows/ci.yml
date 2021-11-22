@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  # Trigger on push and pull-request events, on any branch
+  push:
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  schedule:
+      # At 12:00 on the 10th day of every month
+      - cron: '00 12 10 * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dcodeIO/setup-node-nvm@v4
+        with:
+          node-version: lts/*
+
+      - name: test docs
+        run: npm run-script test-docs
+      - name: test main (with coverage)
+        run: npm run-script test-with-coverage
+
+      - name: generate LCOV coverage report
+        run: $(npm bin)/nyc report --reporter=text-lcov > ./.nyc_output/lcov.info
+      - name: upload coverage report to coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: './.nyc_output/lcov.info'
