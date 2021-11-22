@@ -2,7 +2,7 @@ import os from 'os'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import async from 'async'
-import color from 'colorette'
+import color from 'picocolors'
 import saxParser from 'parse5-sax-parser'
 import { exec } from 'child_process'
 import DMP from 'diff-match-patch'
@@ -11,10 +11,6 @@ import { readFileSync } from 'fs'
 const homepageLink = JSON.parse(readFileSync('./package.json')).homepage
 
 const dmp = new DMP()
-
-if (process.env.FORCE_COLOR !== undefined) {
-  color.options.enabled = true
-}
 
 const exitCode = {
   SUCCESS: 0,
@@ -90,7 +86,7 @@ const runTests = (queue, options) => {
     }
 
     const makeColouredDiff = (expected, actual) => {
-      if (!color.options.enabled) return { expected, actual }
+      if (!color.isColorSupported) return { expected, actual }
 
       const diff = dmp.diff_main(expected, actual)
       dmp.diff_cleanupSemantic(diff);

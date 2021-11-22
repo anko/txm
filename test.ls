@@ -1,7 +1,7 @@
 #!/usr/bin/env lsc
 { exec-sync } = require \child_process
 test = require \tape
-color = require \colorette
+color = require \picocolors
 tmp = require \tmp
 fs = require \fs
 
