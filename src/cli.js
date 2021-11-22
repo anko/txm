@@ -5,8 +5,6 @@ import path from 'node:path'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'node:url'
 
-import concat from 'concat-stream'
-
 import parseAndRunTests from './main.js'
 
 const packageMetadata = JSON.parse(readFileSync('./package.json'))
@@ -115,9 +113,8 @@ if (file) {
     parseAndRunTests(text, cleanOptions)
   })
 } else {
-  process.stdin
-    .on('error', (e) => { throw e })
-    .pipe(concat((text) => parseAndRunTests(text, cleanOptions)))
+  const text = await stringifyStream(process.stdin)
+  parseAndRunTests(text, cleanOptions)
 }
 
 function printUsageHint (stream = process.stdout) {
@@ -166,4 +163,14 @@ function printUsageHint (stream = process.stdout) {
       return s
     })
   }
+}
+
+function stringifyStream (stream) {
+  const chunks = []
+  return new Promise((resolve, reject) => {
+    stream
+      .on('data', chunk => chunks.push(Buffer.from(chunk)))
+      .on('error', e => reject(e))
+      .on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+  })
 }
