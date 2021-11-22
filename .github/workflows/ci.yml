@@ -21,6 +21,9 @@ jobs:
         with:
           node-version: lts/*
 
+      - name: install dependencies
+        run: npm ci # does a clean install, in contrast to `npm install`
+
       - name: test docs
         run: npm run-script test-docs
       - name: test main (with coverage)
