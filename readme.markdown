@@ -1,4 +1,4 @@
-# txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/travis/anko/txm/master.svg?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls] [![](https://img.shields.io/david/anko/txm.svg?style=flat-square)][3]
+# txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/github/workflow/status/anko/txm/CI/master?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls]
 
 <img align="right" width="40%" alt="example output for a test failure" src="https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png"></img>
 
@@ -403,8 +403,7 @@ hyphens: `#-` is automatically replaced by `-`.  If you need to write literally
 [ISC](LICENSE)
 
 [1]: https://www.npmjs.com/package/txm
-[2]: https://travis-ci.org/anko/txm
-[3]: https://david-dm.org/anko/txm
+[2]: https://github.com/anko/txm/actions/workflows/ci.yml
 [coveralls]: https://coveralls.io/github/anko/txm
 [nodejs]: https://nodejs.org/
 [markdown]: http://daringfireball.net/projects/markdown/syntax
