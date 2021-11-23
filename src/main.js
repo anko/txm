@@ -1,14 +1,18 @@
 import os from 'os'
+
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import async from 'async'
-import color from 'picocolors'
+import supportsColor from 'supports-color'
+import color from 'kleur'
 import saxParser from 'parse5-sax-parser'
 import { exec } from 'child_process'
 import DMP from 'diff-match-patch'
 
 import { readFileSync } from 'fs'
 const homepageLink = JSON.parse(readFileSync('./package.json')).homepage
+
+color.enabled = supportsColor.stdout
 
 const dmp = new DMP()
 
@@ -86,7 +90,7 @@ const runTests = (queue, options) => {
     }
 
     const makeColouredDiff = (expected, actual) => {
-      if (!color.isColorSupported) return { expected, actual }
+      if (!color.enabled) return { expected, actual }
 
       const diff = dmp.diff_main(expected, actual)
       dmp.diff_cleanupSemantic(diff);
