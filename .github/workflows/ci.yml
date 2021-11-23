@@ -30,9 +30,9 @@ jobs:
         run: npm run-script test-with-coverage
 
       - name: generate LCOV coverage report
-        run: $(npm bin)/nyc report --reporter=text-lcov > ./.nyc_output/lcov.info
+        run: $(npm bin)/c8 report --reporter=text-lcov > ./coverage/lcov.info
       - name: upload coverage report to coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: './.nyc_output/lcov.info'
+          path-to-lcov: './coverage/lcov.info'
