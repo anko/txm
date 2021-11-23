@@ -2,13 +2,13 @@
   "name": "txm",
   "version": "7.4.7",
   "description": "tool for testing code examples in Markdown files",
-  "main": "src/main.js",
+  "type": "module",
+  "exports": "./src/main.js",
   "scripts": {
     "test": "npm run-script test-docs && npm run-script test-code",
     "test-code": "lsc test.ls",
     "test-docs": "node src/cli.js readme.markdown",
-    "test-with-coverage": "nyc npm run-script test-code",
-    "upload-coverage-report": "nyc report --reporter=text-lcov | coveralls"
+    "test-with-coverage": "c8 npm run-script test-code"
   },
   "bin": {
     "txm": "src/cli.js"
@@ -21,6 +21,9 @@
   },
   "bugs": "https://github.com/anko/txm/issues",
   "license": "ISC",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "files": [
     "src",
     "readme.markdown"
@@ -35,18 +38,16 @@
   ],
   "dependencies": {
     "async": "^3.2.1",
-    "colorette": "1.2.0",
-    "concat-stream": "^2.0.0",
     "diff-match-patch": "^1.0.5",
+    "kleur": "^4.1.4",
     "parse5-sax-parser": "^6.0.1",
-    "remark-parse": "^9.0.0",
-    "unified": "^9.2.2",
-    "yargs": "^17.1.1"
+    "remark-parse": "^10.0.1",
+    "supports-color": "^9.1.0",
+    "unified": "^10.1.1"
   },
   "devDependencies": {
-    "coveralls": "^3.1.1",
+    "c8": "^7.10.0",
     "livescript": "^1.6.0",
-    "nyc": "^15.1.0",
     "tape": "^5.3.1",
     "tmp": "^0.2.1"
   }

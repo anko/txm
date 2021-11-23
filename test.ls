@@ -1,7 +1,7 @@
 #!/usr/bin/env lsc
 { exec-sync } = require \child_process
 test = require \tape
-color = require \colorette
+color = require \kleur
 tmp = require \tmp
 fs = require \fs
 
@@ -1422,9 +1422,28 @@ test "more than 1 file shows an error" (t) ->
   tmp.file (err, path, fd, cleanup) ->
     tmp.file (err, path2, fd2, cleanup2) ->
       { stdout, status, stderr } = run-program "#txm-command #path #path2"
-      t.equal status, 1
+      t.equal status, 2
       t.ok stderr.match /Expected 1.*got 2/
 
       cleanup!
       cleanup2!
       t.end!
+
+test "--jobs flag is recognised" (t) ->
+  tmp.file (err, path, fd, cleanup) ->
+    fs.writeSync fd, """
+    <!-- !test program cat -->
+    <!-- !test in 1 -->
+
+        hi
+
+    <!-- !test out 1 -->
+
+        hi
+    """
+    { stdout, status, stderr } = run-program "#txm-command --jobs 1 #path"
+    t.equal status, 0
+    t.ok stdout.match /ok 1 1/
+
+    cleanup!
+    t.end!

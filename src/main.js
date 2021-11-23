@@ -1,16 +1,20 @@
-const os = require('os');
-const unified = require('unified');
-const remarkParse = require('remark-parse');
-const async = require('async');
-const color = require('colorette');
-const saxParser = require('parse5-sax-parser');
-const exec = require('child_process').exec;
-const dmp = new (require('diff-match-patch'))();
-const homepageLink = require('../package.json').homepage;
+import os from 'os'
 
-if (process.env.FORCE_COLOR !== undefined) {
-  color.options.enabled = true
-}
+import { unified } from 'unified'
+import remarkParse from 'remark-parse'
+import async from 'async'
+import supportsColor from 'supports-color'
+import color from 'kleur'
+import saxParser from 'parse5-sax-parser'
+import { exec } from 'child_process'
+import DMP from 'diff-match-patch'
+
+import { readFileSync } from 'fs'
+const homepageLink = JSON.parse(readFileSync('./package.json')).homepage
+
+color.enabled = supportsColor.stdout
+
+const dmp = new DMP()
 
 const exitCode = {
   SUCCESS: 0,
@@ -86,7 +90,7 @@ const runTests = (queue, options) => {
     }
 
     const makeColouredDiff = (expected, actual) => {
-      if (!color.options.enabled) return { expected, actual }
+      if (!color.enabled) return { expected, actual }
 
       const diff = dmp.diff_main(expected, actual)
       dmp.diff_cleanupSemantic(diff);
@@ -578,4 +582,4 @@ const parsingError = (name, failureReason, properties) => {
   process.exit(exitCode.FORMAT_ERROR)
 }
 
-module.exports = parseAndRunTests
+export default parseAndRunTests
