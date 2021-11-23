@@ -13,7 +13,7 @@
   "bin": {
     "txm": "src/cli.js"
   },
-  "author": "Anko <an@cyan.io>",
+  "author": "Anko",
   "homepage": "https://github.com/anko/txm",
   "repository": {
     "type": "git",
