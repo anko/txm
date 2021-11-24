@@ -295,6 +295,38 @@ txm-expect do
   expect-stdout: /1..0\n# no tests/
 
 txm-expect do
+  name: "CDATA only, no comments"
+  input: """
+  <![CDATA[
+    stuff
+  ]]>
+  """
+  expect-stdout: /1..0\n# no tests/
+
+
+txm-expect do
+  name: "multiple CDATA, multiple comments"
+  input: """
+  <![CDATA[
+    This would be an error if it were parsed:
+    <!-- !test in whatever
+  ]]>
+  <![CDATA[
+    This would be an error if it were parsed:
+    <!-- !test in whatever
+  ]]>
+  <!--
+    This would be an error if it were parsed:
+    <![CDATA[ blah
+  -->
+  <!--
+    This would be an error if it were parsed:
+    <![CDATA[ blah
+  -->
+  """
+  expect-stdout: /1..0\n# no tests/
+
+txm-expect do
   name: "unterminated comment"
   expect-exit: 2
   input: """
