@@ -259,6 +259,66 @@ txm-expect do
   """
 
 txm-expect do
+  name: "using << heredocs in comments works"
+  input: """
+  <!-- !test program node <<X
+  console.log('YEAH')
+  X -->
+
+  <!-- !test in test name -->
+
+      doesn't matter
+
+  <!-- !test out test name -->
+
+      YEAH
+
+  """
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 test name
+
+  # 1/1 passed
+  # OK
+
+  """
+
+txm-expect do
+  name: "comment inside CDATA is not parsed"
+  input: """
+  <![CDATA[
+    This would be an error if it were parsed:
+    <!-- !test in whatever -->
+  ]]>
+  """
+  expect-stdout: /1..0\n# no tests/
+
+txm-expect do
+  name: "unterminated comment"
+  expect-exit: 2
+  input: """
+  <!-- !test check whatever
+
+    true
+
+  """
+  expect-stdout: /unterminated HTML comment[\s\S]*line 1/
+
+txm-expect do
+  name: "unterminated CDATA section"
+  expect-exit: 2
+  input: """
+  other stuff
+  <![CDATA[
+  <!-- !test check whatever -->
+
+      true
+
+  """
+  expect-stdout: /unterminated HTML CDATA[\s\S]*line 2/
+
+txm-expect do
   name: "no program specified"
   input: """
   <!-- !test in 1 -->

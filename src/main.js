@@ -5,7 +5,6 @@ import remarkParse from 'remark-parse'
 import async from 'async'
 import supportsColor from 'supports-color'
 import color from 'kleur'
-import saxParser from 'parse5-sax-parser'
 import { exec } from 'child_process'
 import DMP from 'diff-match-patch'
 
@@ -338,15 +337,99 @@ const runTests = (queue, options) => {
   }
 }
 
-const extractHtmlComments = function(input){
-  var comments, x$, p;
-  comments = [];
-  x$ = p = new saxParser();
-  x$.on('comment', function(it){
-    return comments.push(it.text);
-  });
-  x$.end(input);
-  return comments;
+const extractHtmlComments = function(input, nodePositionInMarkdown){
+  // Reference: https://html.spec.whatwg.org/#comments
+  //
+  // Comments are generally `<!-- stuff -->`, where `stuff` is disallowed from
+  // containing the ending delimiter.  However, the comment delimiters may also
+  // occur inside CDATA blocks, where we do *not* want to parse them.
+
+  const comments = []
+
+  const CDATA_OPENER = '<![CDATA['
+  const CDATA_CLOSER = ']]>'
+  const COMMENT_OPENER = '<!--'
+  const COMMENT_CLOSER = '-->'
+  const IN_CDATA = Symbol('parser in CDATA')
+  const IN_COMMENT = Symbol('parser in comment')
+  const BASE = Symbol('parser in base state')
+  let state = BASE
+  let nextIndex = 0
+  let done = false
+
+  while (!done) {
+    const rest = input.slice(nextIndex)
+
+    switch (state) {
+      case BASE:
+        // Parse the rest of whichever we see first.  CDATA "swallows"
+        // comments, and vice-versa.
+        const cdataIndex = rest.indexOf(CDATA_OPENER)
+        const commentIndex = rest.indexOf(COMMENT_OPENER)
+
+        if (cdataIndex === -1 && commentIndex === -1) { // No more of either; done
+          done = true
+        } else if (cdataIndex === -1 && commentIndex >= 0) { // Comment only
+          state = IN_COMMENT
+          nextIndex += commentIndex
+        } else if (cdataIndex >= 0 && commentIndex === -1) { // CDATA only
+          state = IN_CDATA
+          nextIndex += cdataIndex
+        } else { // Matched both.  Go with the earlier one.
+          if (cdataIndex < commentIndex) { // CDATA earlier
+            state = IN_CDATA
+            nextIndex += cdataIndex
+          } else { // Comment earlier
+            state = IN_COMMENT
+            nextIndex += commentIndex
+          }
+        }
+        break
+
+      case IN_COMMENT: {
+        // Parse end of comment
+        const closerIndex = rest.indexOf(COMMENT_CLOSER)
+        if (closerIndex >= 0) {
+          comments.push(rest.slice(0, closerIndex))
+          nextIndex += closerIndex
+          state = BASE
+        } else {
+          // Unterminated comment
+          const openerIndex = input.slice(nextIndex)
+          const line = input.slice(0, nextIndex).split('\n').length
+            + nodePositionInMarkdown.start.line - 1
+          parsingError(`'<!--'`, 'unterminated HTML comment', {
+            location: formatPosition({ start: { line }, end: { line } }),
+            'how to fix': `Terminate the comment with '-->' where appropriate.`
+              + `\nCheck that '-->' doesn't occur anywhere unexpected.`
+          })
+        }
+        break
+      }
+
+      case IN_CDATA: {
+        // Parse end of CDATA
+        const closerIndex = rest.indexOf(CDATA_CLOSER)
+        if (closerIndex >= 0) {
+          nextIndex += closerIndex
+          state = BASE
+        } else {
+          // Unterminated CDATA
+          const line = input.slice(0, nextIndex).split('\n').length
+            + nodePositionInMarkdown.start.line - 1
+          parsingError(`'<![CDATA['`, 'unterminated HTML CDATA section', {
+            location: formatPosition({ start: { line }, end: { line } }),
+            'how to fix': `Terminate the CDATA section with ']]>'`
+              + ` where appropriate.`
+              + `\nCheck that ']]>' doesn't occur anywhere unexpected.`
+          })
+        }
+        break
+      }
+    }
+  }
+
+  return comments
 };
 
 /*
@@ -462,7 +545,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
   const visitMarkdownNode = (node) => {
 
     if (node.type === 'html') {
-      extractHtmlComments(node.value).forEach((comment) => {
+      extractHtmlComments(node.value, node.position).forEach((comment) => {
 
         // Optional whitespace, followed by '!test', more optional whitespace,
         // then the commands we actually care about.
