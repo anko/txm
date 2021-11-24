@@ -68,15 +68,16 @@ const runTests = (queue, options) => {
     }
 
     const normaliseTest = (t) => {
+      // Turn lists of x into just x, so everything is neater.
 
-      const getIfOnce = (x) => x.length === 1 ? x[0] : undefined
-      const getIfExistsOnce = (prop) =>
-        (x) => x[prop] && getIfOnce(x[prop])
+      function getIfHas (prop) {
+        return x => x[prop] && x[prop][0]
+      }
 
-      const validInput = getIfExistsOnce('input')
-      const validOutput = getIfExistsOnce('output')
-      const validError = getIfExistsOnce('error')
-      const validCheck = getIfExistsOnce('check')
+      const validInput = getIfHas('input')
+      const validOutput = getIfHas('output')
+      const validError = getIfHas('error')
+      const validCheck = getIfHas('check')
       const validProgram = (test) => test.program[0]
 
       const normalised = { name: t.name, program: validProgram(t) }
