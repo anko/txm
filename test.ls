@@ -4,6 +4,7 @@ test = require \tape
 color = require \kleur
 tmp = require \tmp
 fs = require \fs
+{ randomUUID } = require \crypto
 
 txm-command = "node src/cli.js"
 
@@ -1573,3 +1574,13 @@ test "bad --jobs option" (t) ->
 
     cleanup!
     t.end!
+
+test "attempting to open nonexistent file" (t) ->
+  uuid = randomUUID!
+  path = "./#uuid.md" # This doesn't exist
+  { stdout, status, stderr } = run-program "#txm-command #path"
+  t.equal status, 2
+  lines = stderr.split \\n
+  t.ok lines.0.match new RegExp "ENOENT.*#uuid"
+
+  t.end!

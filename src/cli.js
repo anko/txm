@@ -109,7 +109,10 @@ const [ file ] = files
 // If a file was given, read that.  Else read stdin.
 if (file) {
   fs.readFile(file, (e, text) => {
-    if (e) throw e
+    if (e) {
+      process.stderr.write(e.message)
+      process.exit(2)
+    }
     parseAndRunTests(text, cleanOptions)
   })
 } else {
