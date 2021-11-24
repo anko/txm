@@ -1521,7 +1521,7 @@ test "more than 1 file shows an error" (t) ->
       cleanup2!
       t.end!
 
-test "--jobs flag is recognised" (t) ->
+test "--jobs option is recognised" (t) ->
   tmp.file (err, path, fd, cleanup) ->
     fs.writeSync fd, """
     <!-- !test program cat -->
@@ -1536,6 +1536,26 @@ test "--jobs flag is recognised" (t) ->
     { stdout, status, stderr } = run-program "#txm-command --jobs 1 #path"
     t.equal status, 0
     t.ok stdout.match /ok 1 1/
+
+    cleanup!
+    t.end!
+
+test "bad --jobs option" (t) ->
+  tmp.file (err, path, fd, cleanup) ->
+    fs.writeSync fd, """
+    <!-- !test program cat -->
+    <!-- !test in 1 -->
+
+        hi
+
+    <!-- !test out 1 -->
+
+        hi
+    """
+    { stdout, status, stderr } = run-program "#txm-command --jobs -1 #path"
+    t.equal status, 2
+    lines = stderr.split \\n
+    t.ok lines.0.match /--jobs.*expected/
 
     cleanup!
     t.end!

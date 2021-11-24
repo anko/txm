@@ -78,7 +78,7 @@ const { files, options } = (() => {
     const name = args[i]
     const spec = possibleOptions[name]
     if (spec) {
-      const { ok, value, index } = spec.eat(args, i)
+      const { ok, value, index } = spec.eat(args, i, name)
       if (ok) {
         options[name] = value
         i = index
