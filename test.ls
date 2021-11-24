@@ -1521,6 +1521,20 @@ test "more than 1 file shows an error" (t) ->
       cleanup2!
       t.end!
 
+test "--version option" (t) ->
+    { stdout, status, stderr } = run-program "cat | #txm-command --version"
+    t.equal status, 0
+    t.ok stdout.match require('./package.json').version
+    t.end!
+
+test "--help option" (t) ->
+    { stdout, status, stderr } = run-program "cat | #txm-command --help"
+    t.equal status, 0
+    t.ok stdout.match /--jobs/
+    t.ok stdout.match /--version/
+    t.ok stdout.match /--help/
+    t.end!
+
 test "--jobs option is recognised" (t) ->
   tmp.file (err, path, fd, cleanup) ->
     fs.writeSync fd, """
