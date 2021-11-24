@@ -318,7 +318,10 @@ const runTests = (queue, options) => {
       if (test.input) subprocess.stdin.end(test.input.text)
       else subprocess.stdin.end(test.check.text)
     }, (e) => {
+      /* c8 ignore start */
+      // Should never happen, but convenient for dev.
       if (e) die(e.message)
+      /* c8 ignore stop */
 
       // Print final summary comments
 
@@ -464,8 +467,9 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     testSpec[key] = testSpecArrayForKey
     testSpec[key].push(value)
   }
-  const setTestSpec = (name, key, value) => {
-    const testSpec = name in testSpecs ? testSpecs[name] : {}
+  const setFieldInTestSpec = (name, key, value) => {
+    // We can assume it exists already
+    const testSpec = testSpecs[name]
     testSpecs[name] = testSpec
     testSpec[key] = [value]
   }
@@ -528,7 +532,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
             parseStateMachine.now =
               parseStateMachine.waitingForAnyCommand({ program })
             addToTestSpec(name, annotationType, {text, position, lang})
-            setTestSpec(name, 'program', program)
+            setFieldInTestSpec(name, 'program', program)
           },
           gotCommand: (name, text, position) => {
             parsingError(`'${name} ${text}'`,
@@ -642,12 +646,12 @@ const formatProperties = (properties, indentLevel=0) => {
         if (value === '') text += " ''"
         else text += ' |\n' + indent(indentLevel + 1, value)
         break
+      /* c8 ignore start */
+      // Should never happen, but this is convenient while developing.
       default:
-        /* c8 ignore start */
-        // Should never happen, but this is convenient while developing.
         throw Error(`Unexpected property type ${type(value)}:`
           + `${JSON.stringify(value)}`)
-        /* c8 ignore stop */
+      /* c8 ignore stop */
     }
   }
   text += "\n" + horizontalRule
