@@ -309,8 +309,9 @@ const runTests = (queue, options) => {
       // stdin before we manage to write to it.  It's not a problem if it does:
       // the subprocess just doesn't want any more input.
       subprocess.stdin.on('error', (e) => {
-        /* istanbul ignore next: nondeterministic, and therefore difficult to
-         * cause on-demand and test for */
+        // Seems to be non-deterministic and normal, so it's hard to replicate
+        // in tests, so ignore in coverage.
+        /* c8 ignore next */
         if (e.code !== 'EPIPE') { throw e }
       })
       if (test.input) subprocess.stdin.end(test.input.text)
@@ -331,10 +332,10 @@ const runTests = (queue, options) => {
         process.exit(exitCode.TEST_FAILURE)
       }
     })
-  } catch (e) {
-    /* istanbul ignore next: shouldn't happen */
+  } catch (e) /* c8 ignore start */ {
+    // Should never happen
     die(e)
-  }
+  } /* c8 ignore stop */
 }
 
 const extractHtmlComments = function(input, nodePositionInMarkdown){
@@ -598,13 +599,14 @@ const repeatString = (str, n) => {
   return out
 }
 
-/* istanbul ignore next: shouldn't happen */
-const die = (message) => {
+/* c8 ignore start */
+function die (message) {
   // For fatal errors.  When possible, fail through 'parsingError', since that
   // still outputs valid TAP.
   console.error(message)
   process.exit(exitCode.INTERNAL_ERROR)
 }
+/* c8 ignore stop */
 
 const formatPosition = (position) => {
   const pos = {
@@ -640,9 +642,11 @@ const formatProperties = (properties, indentLevel=0) => {
         else text += ' |\n' + indent(indentLevel + 1, value)
         break
       default:
-        /* istanbul ignore next: shouldn't happen */
+        /* c8 ignore start */
+        // Should never happen, but this is convenient while developing.
         throw Error(`Unexpected property type ${type(value)}:`
           + `${JSON.stringify(value)}`)
+        /* c8 ignore stop */
     }
   }
   text += "\n" + horizontalRule
