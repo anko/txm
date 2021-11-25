@@ -1,81 +1,82 @@
-# txm [![](https://img.shields.io/npm/v/txm.svg?style=flat-square)][1] [![](https://img.shields.io/github/workflow/status/anko/txm/CI/master?style=flat-square)][2] [![](https://img.shields.io/coveralls/github/anko/txm?style=flat-square)][coveralls]
+# txm [![](https://img.shields.io/npm/v/txm.svg)][1] [![](https://img.shields.io/github/workflow/status/anko/txm/CI/master)][2] [![](https://img.shields.io/coveralls/github/anko/txm)][coveralls]
 
 <img align="right" width="40%" alt="example output for a test failure" src="https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png"></img>
 
+Command-line tool that checks correctness of your [Markdown][markdown]
+documentation's code examples.  Parses `<!-- !test command -->` annotations
+preceding code blocks, runs them, and checks that the outputs match.
 
-### Purpose
+ - __Only uses HTML comments__
+   <br><sup>The annotations aren't rendered.  You retain formatting
+   control.</sup>
+ - __Works with any programming language__
+   <br><sup>You choose the shell command(s).  Many languages in the same doc
+   are OK.</sup>
+ - __Helpful failure diagnostics__
+   <br><sup>Colours (optional), diffs, line numbers, exit code and stderr,
+   etc.</sup>
+ - __Parallel tests on multi-core machines__
+   <br><sup>Configurable.  Result output ordering remains constant.</sup>
+ - __[TAP][tap-spec] format output__
+   <br><sup>The standard supported by many testing tools.</sup>
 
-Command-line program that verifies the correctness of code examples in a given
-[Markdown][markdown] file.  It parses the file for code blocks preceded by
-[HTML comments containing `!test` annotations](#use), and checks that given
-inputs to the given program result in given outputs.
-
-### Features
-
- - Language-agnostic.  Runs tests with any shell command.
- - [TAP][tap-spec] format output.
- - Process-level parallelism.
- - [Clear diagnostics](#screenshot) when tests fail.
- - Users retain full choice of formatting.
-
-### Non-features
-
- - No compilation step.
- - No language-specific features.
- - No annotations visible in the rendered document.
-
-# example
+# Example
 
 <!-- !test program node src/cli.js -->
 
 <!-- !test in example -->
 
-`README.md`:
+1. Write a `README.md`, with comment annotations:
 
-```markdown
-# console.log
+   ```markdown
+   # console.log
 
-The [console.log][1] function in [Node.js][2] stringifies the given arguments
-and writes them to `stdout`, followed by a newline.  For example:
+   The [console.log][1] function in [Node.js][2] stringifies the given arguments
+   and writes them to `stdout`, followed by a newline.  For example:
 
-<!-- !test program node -->
+   <!-- !test program node -->
 
-<!-- !test in simple example -->
+   <!-- !test in simple example -->
 
-    console.log('a')
-    console.log(42)
-    console.log([1, 2, 3])
+       console.log('a')
+       console.log(42)
+       console.log([1, 2, 3])
 
-The output is:
+   The output is:
 
-<!-- !test out simple example -->
+   <!-- !test out simple example -->
 
-    a
-    42
-    [ 1, 2, 3 ]
+       a
+       42
+       [ 1, 2, 3 ]
 
-[1]: https://nodejs.org/api/console.html#console_console_log_data_args
-[2]: https://nodejs.org/
-```
+   [1]: https://nodejs.org/api/console.html#console_console_log_data_args
+   [2]: https://nodejs.org/
+   ```
 
-Run:
+   See [§ *Use*](#use) for more detail on how annotations work. Fenced code
+   blocks delimited by `` ``` `` work too.  Language tags also.
 
-```bash
-$ txm README.md
-```
+2. Run:
 
-Output:
+   ```bash
+   $ txm README.md
+   ```
 
-<!-- !test out example -->
+3. See output:
 
-> ```tap
-> TAP version 13
-> 1..1
-> ok 1 simple example
->
-> # 1/1 passed
-> # OK
-> ```
+   <!-- !test out example -->
+
+   <img align="right" alt="example output" src="https://user-images.githubusercontent.com/5231746/143256158-d4e8236c-720e-4b3b-be4c-e05dc679c526.png"></img>
+
+   > ```tap
+   > TAP version 13
+   > 1..1
+   > ok 1 simple example
+   >
+   > # 1/1 passed
+   > # OK
+   > ```
 
 - - -
 
@@ -263,80 +264,140 @@ code, and checks that the program exits with status `0`, ignoring its output.
 > ```
 </details>
 
-▹ [This
-readme](https://raw.githubusercontent.com/anko/txm/master/readme.markdown)
+As you may be suspecting, this readme is itself tested with txm.  All of the
+above examples run as part of the automatic tests, locally and [on the CI
+server](https://github.com/anko/txm/actions/workflows/ci.yml?query=is%3Asuccess).
+If you want to see the comment annotations, [see the readme
+source](https://github.com/anko/txm/blob/master/readme.markdown?plain=1).
+(It's a little trippy, because txm is recursively running itself.)
 
-# install
+# Install
 
-Requires [Node.js][nodejs].  Install with `npm install -g txm`.
+To install for current directory's project: `npm install txm`
+<br>To install globally: `npm install -g txm`
 
-# use
+Requires [Node.js][nodejs] (minimum version tested is _current LTS_).
 
-## `txm [--jobs <n>] [filename]`
+# Use
+
+## Command line
+
+### `txm [--jobs <n>] [filename]`
 
  - `filename`: Input file (default: read from `stdin`)
- - `--jobs`: How many tests may run in parallel.(default: `os.cpus().length`)
+ - `--jobs`: How many tests may run in parallel. (default: `os.cpus().length`)
 
-   Results will always be shown in insertion order in the output, regardless of
-   the order parallel tests complete.
+   When a test finishes, txm will only print its output after all
+   earlier-defined tests have printed their outputs, so that results appear in
+   the same order tests were defined.  Further tests continue to run in the
+   background, regardless of how many results are pending print.
 
  - `--version`
  - `--help`
 
-`txm` exits `0` *if and only if* all tests pass.
+## Annotations
 
-Coloured output is on if outputting to a terminal, and off otherwise.  If you
-want no colors ever, set the env variable `NO_COLOR=1`.  If you want to output
-colour codes even when not in a TTY, set `FORCE_COLOR=1`.
-
-Annotations (inside HTML comments):
+HTML comments that start with `!test` are read specially.  Use a separate
+comment for each annotation.
 
  - #### `!test program <program>`
 
    The `<program>` is run as a shell command for each following matching
    input/output pair.  It gets the input on `stdin`, and is expected to produce
-   the output on `stdout`.
+   the output on `stdout`.  The program may be as many lines as you like; a
+   full shell script if you wish.
 
-   To use the same program for each test, just declare it once.
-
-   The program sees these environment variables:
-
-    - `TXM_INDEX` (1-based number of test)
-    - `TXM_NAME` (name of test)
-    - `TXM_INDEX_FIRST`, `TXM_INDEX_LAST` (indexes of first and last tests)
-    - `TXM_INPUT_LANG` (the language tag of the input/check markdown code
-      block, if applicable)
+   The declared program is used for all tests after here, until a new program
+   is declared.
 
  - #### `!test in <name>` / `!test out <name>` / `!test err <name>`
 
-   The next code block is read as given input, or expected stdout or stderr.
+   The next code block is read as the input to give to a program for the test
+   `<name>`, or expected stdout or stderr of the test `<name>`.  These are
+   matched by `<name>`, and may be anywhere in relation to each other.
 
-   These are matched by `<name>`, and may be anywhere.
+   Errors are raised if a test has no input (`in`) or no output (`out` nor
+   `err`), or if it has duplicates of any.
 
  - #### `!test check <name>`
 
-   The next code block is read as a check test.  The previously-specified
-   program gets this as input, but its output is ignored.  The test passes if
-   the program exits `0`.
+   The next code block is read as a check test.  The program gets this as
+   input, but its output is ignored.  The test will pass if the program exits
+   successfully (with exit code `0`).
 
-   Use this for code examples that check their own correctness, (e.g.  by
-   calling `assert`), or if your test program is a linter.
+   Use this for code examples that check their own correctness, for example by
+   calling an `assert` function.
 
-Note that 2 consecutive hyphens (`--`) inside HTML comments are [disallowed by
-the HTML spec][html-comments-spec].  For this reason, `txm` lets you escape
-hyphens: `#-` is automatically replaced by `-`.  If you need to write literally
-`#-`, write `##-` instead, and so on.  `#` acts normally everywhere else.
+## Behaviour details
 
-# license
+### Exit code
+
+`txm` exits `0` if and only if all tests pass.  It exits 2 for bad input, and 1
+for other failures.
+
+### Colour <sub>(color, for Americans grepping)</sub>
+
+Coloured output is automatically enabled when outputting directly to a
+colour-capable console interface, and disabled otherwise.  It can be forced on
+or off with the environment variables `NO_COLOR=1` or `FORCE_COLOR=1`, or with
+the options `--no-color` or `--color`.
+
+Stripping colour codes from coloured output does not change its logical
+meaning, and indeed the same text is emitted regardless of whether colour is
+enabled.  The colours do not themselves carry meaning; they're just hints to
+guide the eye.
+
+### HTML comment character restrictions
+
+The [HTML spec regarding comments][html-comments-spec] has a few restrictions
+on what comments may contain:
+
+> the text must not start with the string `>`, nor start with the string `->`,
+> nor contain the strings `<!--`, `-->`, or `--!>`, nor end with the string
+> `<!-`.
+
+Some of those are valid constructs in some programming languages, which can be
+restrictive if you're writing a `!test program` command in one of those
+languages.
+
+Luckily all of them involve hyphens (`-`), so to work around "forbidden"
+character sequences, txm lets you optionally escape hyphens inside HTML
+comments: `#-` is automatically replaced by `-`.  So for example, `<!-- !test
+in -#-> -->` is legal HTML, and will be parsed by txm as the command `!test in
+-->`.
+
+To write literally `#-`, write `##-` instead, and so on.  `#` acts normally
+everywhere else, and doesn't need to be escaped.
+
+### Environment variables
+
+Your test program sees the same environment variables txm sees, plus these:
+
+- `TXM_INDEX` (1-based number of test)
+- `TXM_NAME` (name of test)
+- `TXM_INDEX_FIRST`, `TXM_INDEX_LAST` (indexes of first and last tests that
+  will be run)
+- `TXM_INPUT_LANG` (the [language identifier][gh-markdown-lang] of the
+  input/check markdown code block, if any)
+
+You can use these for example to descriptively name log files, or to easily
+detect languages and test them differently.
+
+# Trivia
+
+The name txm stands for "tests ex markdown" as in "deus ex machina", or
+*temptamentum ex Markdown* I guess if you're feeling extra Latin.
+
+# License
 
 [ISC](LICENSE)
 
 [1]: https://www.npmjs.com/package/txm
 [2]: https://github.com/anko/txm/actions/workflows/ci.yml
 [coveralls]: https://coveralls.io/github/anko/txm
-[nodejs]: https://nodejs.org/
-[markdown]: http://daringfireball.net/projects/markdown/syntax
-[tap-spec]: https://testanything.org/tap-version-13-specification.html
+[gh-markdown-lang]: https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks#syntax-highlighting
 [html-comments-spec]: https://html.spec.whatwg.org/multipage/syntax.html#comments
+[markdown]: http://daringfireball.net/projects/markdown/syntax
+[nodejs]: https://nodejs.org/
 [shell-redirection-q]: https://superuser.com/questions/1179844/what-does-dev-null-21-true-mean-in-linux
-
+[tap-spec]: https://testanything.org/tap-version-13-specification.html
