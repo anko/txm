@@ -1403,6 +1403,80 @@ txm-expect do
   """
 
 txm-expect do
+  name: "'exit': wrong exit code"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit 2 -->
+  <!-- !test check my test -->
+
+      console.log('output')
+      process.exit(1)
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: program exited with unexpected exit status
+    ---
+    program: |
+      node
+    exit status: 1
+    expected exit status: 2
+    stderr: ''
+    stdout: |
+      output
+
+    check location: |
+      lines 5-6
+    program location: |
+      line 1
+    exit location: |
+      line 2
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
+  name: "'exit': expect fail, get success"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit 1 -->
+  <!-- !test check my test -->
+
+      console.log('output')
+      process.exit(0)
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: program exited with unexpected success
+    ---
+    program: |
+      node
+    exit status: 0
+    expected exit status: 1
+    stderr: ''
+    stdout: |
+      output
+
+    check location: |
+      lines 5-6
+    program location: |
+      line 1
+    exit location: |
+      line 2
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
   name: "multiple expected exit status commands"
   input: """
   <!-- !test program node -->

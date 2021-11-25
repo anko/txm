@@ -281,10 +281,12 @@ const runTests = (queue, options) => {
       test = normaliseTest(test)
 
       const resultCallback = (e, stdout, stderr) => {
-        if (e) {
+
+        if (e || test.exit) {
+          e ??= { code: 0 }
           if (
             // It's an error if one of the following is true:
-            // - We want to see a nonzero exit code, but it's zero
+            // We want to see a nonzero exit code, but it's zero
             (test.exit && test.exit.code === ANY_NONZERO_EXIT_MARKER &&
               e.code === 0) ||
             // We want to see a specific exit code, but it's not this one
@@ -300,7 +302,8 @@ const runTests = (queue, options) => {
             failureData.stdout = stdout
             let wording = 'error'
             if (test.exit) {
-              if (test.exit.code === ANY_NONZERO_EXIT_MARKER) {
+              if (e.code === 0 && (test.exit.code > 0
+                  || test.exit.code === ANY_NONZERO_EXIT_MARKER)) {
                 wording = 'unexpected success'
               } else {
                 wording = 'unexpected exit status'
