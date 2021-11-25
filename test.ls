@@ -1364,6 +1364,8 @@ txm-expect do
   echo "first index: $TXM_INDEX_FIRST"
   echo "last index: $TXM_INDEX_LAST"
   echo "lang: $TXM_INPUT_LANG"
+  echo "color: $TXM_HAS_COLOR"
+  echo "colour: $TXM_HAS_COLOUR"
   -->
   <!-- !test in test name -->
 
@@ -1378,6 +1380,8 @@ txm-expect do
       first index: 1
       last index: 1
       lang: js
+      color: 0
+      colour: 0
 
   """
   expect-exit: 0
@@ -1390,6 +1394,29 @@ txm-expect do
   # OK
 
   """
+
+txm-expect do
+  name: "test program sees colour env variables if colour enabled"
+  input: """
+  <!-- !test program
+  echo "color: $TXM_HAS_COLOR"
+  echo "colour: $TXM_HAS_COLOUR"
+  -->
+  <!-- !test in test name -->
+
+  ```js
+  whatever
+  ```
+
+  <!-- !test out test name -->
+
+      color: 1
+      colour: 1
+
+  """
+  force-color: true
+  expect-exit: 0
+  expect-stdout: /ok.*1.*test name/
 
 txm-expect do
   name: "lang env variable in check test"
@@ -1481,6 +1508,23 @@ txm-expect do
   """
   expect-exit: 1
   expect-stdout: new RegExp(color.red('not ok').replace(/\[/g, '\\['))
+
+test "user failing check test emitted colours included" (t) ->
+  input = """
+  <!-- !test program node -->
+  <!-- !test check 1 -->
+
+      const c = require('kleur')
+      c.enabled = true
+      console.log(c.red('hi from stdout'))
+      console.error(c.red('hi from stderr'))
+      process.exit(1)
+  """
+  { stdout, status, stderr } = run-program txm-command, input
+  t.notEqual status, 0
+  t.notEqual stdout.indexOf(color.red('hi from stdout')), -1
+  t.notEqual stdout.indexOf(color.red('hi from stderr')), -1
+  t.end!
 
 test "file passed as argument" (t) ->
   tmp.file (err, path, fd, cleanup) ->

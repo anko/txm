@@ -297,6 +297,8 @@ const runTests = (queue, options) => {
           'TXM_NAME': test.name,
           'TXM_INDEX_FIRST': 1,
           'TXM_INDEX_LAST': queue.length,
+          'TXM_HAS_COLOR': color.enabled ? 1 : 0,
+          'TXM_HAS_COLOUR': color.enabled ? 1 : 0,
         }, process.env)
       }
       if (test.input && test.input.lang)

@@ -262,6 +262,13 @@ code, and checks that the program exits with status `0`, ignoring its output.
 > # 1/1 passed
 > # OK
 > ```
+
+If you are using an assert library that can output ANSI colour codes, it should
+detect that it is running without a TTY (as tests do), and not output colour.
+But if txm itself is run in coloured mode, the `TXM_HAS_COLOUR` environment
+variable will be set to `1`, and it's safe to force colour output on; they will
+be included in txm's error output.
+
 </details>
 
 As you may be suspecting, this readme is itself tested with txm.  All of the
@@ -371,7 +378,8 @@ everywhere else, and doesn't need to be escaped.
 
 ### Environment variables
 
-Your test program sees the same environment variables txm sees, plus these:
+For advanced use, your test program sees the same environment variables that
+txm sees, plus these introduced by txm:
 
 - `TXM_INDEX` (1-based number of test)
 - `TXM_NAME` (name of test)
@@ -379,9 +387,19 @@ Your test program sees the same environment variables txm sees, plus these:
   will be run)
 - `TXM_INPUT_LANG` (the [language identifier][gh-markdown-lang] of the
   input/check markdown code block, if any)
+- `TXM_HAS_COLOUR`, `TXM_HAS_COLOR` (both set to `1` if outputting with colours
+  enabled, or to `0` if disabled; they are logically equivalent, just alternate
+  spellings)
 
 You can use these for example to descriptively name log files, or to easily
 detect languages and test them differently.
+
+You can also tell with the colour variables whether txm is doing coloured
+output or not, and have your program emit debug output with ANSI colour codes
+by your method of choice.  This is probably only reasonable to do for the
+output of `check` tests, which output is shown unmodified.  Don't do this for
+`in`/`out` tests unless you _really_ know what you're doing; the colour codes
+used by txm's automatic diffing will interfere, and you'll get garbage.
 
 # Trivia
 
