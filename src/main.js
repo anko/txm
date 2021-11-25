@@ -38,6 +38,7 @@ const runTests = (queue, options) => {
     console.log(color.dim("1.." + queue.length));
     let nSuccesses = 0
     let nFailures = 0
+    let nSkipped = 0
 
     // Challenge:  Results of parallel operations may arrive out-of-order, but
     // we want them to always print their results in order.
@@ -51,7 +52,7 @@ const runTests = (queue, options) => {
     const printWhenOurTurn = (index, text) => {
       if (index === indexThatMayPrint) {
         // Everything before us has been printed.  We can go ahead.
-        console.log(text)
+        if (text !== undefined) console.log(text)
         const nextWaiting = printsWaiting[++indexThatMayPrint]
         if (nextWaiting) printWhenOurTurn(indexThatMayPrint, nextWaiting)
       } else {
@@ -68,6 +69,10 @@ const runTests = (queue, options) => {
       printWhenOurTurn(index,
         failureText(index + 1, name, failureReason, properties))
     }
+    const skip = (index, name) => {
+      ++nSkipped
+      printWhenOurTurn(index, undefined)
+    }
 
     const normaliseTest = (t) => {
       // Turn lists of x into just x, so everything is neater.
@@ -82,11 +87,13 @@ const runTests = (queue, options) => {
       const validCheck = getIfHas('check')
       const validProgram = (test) => test.program[0]
       const validExit = getIfHas('exit')
+      const validOnly = getIfHas('only')
 
       const normalised = {
         name: t.name,
         program: validProgram(t),
         exit: validExit(t),
+        only: validOnly(t),
       }
       let that
       if (that = validInput(t)) normalised.input = that
@@ -163,7 +170,17 @@ const runTests = (queue, options) => {
       return locations
     }
 
+    const someTestsHaveOnlyMarker = queue.find(test => test.only)
+
     return async.eachOfLimit(queue, options.jobs, (test, index, cb) => {
+
+      // If some tests are marked 'only', skip tests without that marker.
+      if (someTestsHaveOnlyMarker) {
+        if (!test.only) {
+          skip(index, test.name)
+          return cb()
+        }
+      }
 
       // Handle invalid 'program'
       if (!test.program[0]) {
@@ -366,11 +383,17 @@ const runTests = (queue, options) => {
       // Print final summary comments
 
       console.log()
-      const colour = (nFailures === 0) ? color.green : color.red
-      const colourInverse = (x) => color.inverse(colour(x))
+      const colourOfState = (nFailures === 0) ? color.green : color.red
+      const colourInverse = (x) => color.inverse(colourOfState(x))
 
-      console.log(colour(`# ${nSuccesses}/${queue.length} passed`))
-      if (nFailures === 0) console.log(colourInverse('# OK'))
+      console.log(colourOfState(`# ${nSuccesses}/${queue.length} passed`))
+      if (nFailures === 0){
+        if (nSkipped === 0) {
+          console.log(colourInverse('# OK'))
+        } else {
+          console.log(color.inverse(color.yellow(`# OK, SKIPPED ${nSkipped}`)))
+        }
+      }
       else {
         console.log(colourInverse(`# FAILED ${nFailures}`))
         process.exit(exitCode.TEST_FAILURE)
@@ -530,27 +553,30 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     that state.
   */
   const parseStateMachine = {
-    waitingForAnyCommand: ({program, exit}) => {
+    waitingForAnyCommand: ({program, exit, only}) => {
       return {
         gotText: () => {},
         gotCommand: (name, text, position) => {
           switch (name) {
             case 'program':
               parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
-                { program: { code: text, position: position }, exit })
+                { program: { code: text, position: position }, exit, only })
               break
             case 'exit':
               text = text.trim()
               if (text.match(/[0-9]+/)) {
                 const code = Number.parseInt(text)
                 parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
-                  { exit: { code, position: position }, program })
+                  { exit: { code, position: position }, program, only })
               } else if (text === 'nonzero') {
-                parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
-                  { exit: {
+                parseStateMachine.now =
+                  parseStateMachine.waitingForAnyCommand({
+                    exit: {
                       code: ANY_NONZERO_EXIT_MARKER,
                       position: position },
-                    program })
+                    program,
+                    only,
+                  })
               } else {
                 parsingError(`'${name} ${text}'`,
                   `bad exit code specified`, {
@@ -560,21 +586,26 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
                   })
               }
               break
+            case 'only':
+              parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
+                { program, exit, only: { position } })
+              break
             case 'in':
               parseStateMachine.now = parseStateMachine.waitingForInputText(
-                { program, exit, name: text })
+                { program, exit, only, name: text })
               break
             case 'out':
               parseStateMachine.now = parseStateMachine.waitingForOutputText(
-                { program, exit, name: text })
+                { program, exit, only, name: text })
               break
             case 'err':
               parseStateMachine.now = parseStateMachine.waitingForErrorText(
-                { program, exit, name: text })
+                { program, exit, only, name: text })
               break
             case 'check':
               parseStateMachine.now = parseStateMachine.waitingForCheckText(
-                { program, exit, name: text })
+                { program, exit, only, name: text })
+              break
           }
         }
       }
@@ -587,7 +618,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
   // expecting to next see a code block.
   for (let annotationType of ['input', 'output', 'error', 'check']) {
     parseStateMachine[`waitingFor${capitalise(annotationType)}Text`] =
-      ({program, name, exit}) => {
+      ({program, name, exit, only}) => {
         return {
           gotText: (text, position, lang) => {
             // The exit code only applies to this test, not continuously, so
@@ -597,6 +628,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
             addToTestSpec(name, annotationType, {text, position, lang})
             setFieldInTestSpec(name, 'program', program)
             if (exit) addToTestSpec(name, 'exit', exit)
+            if (only) addToTestSpec(name, 'only', only)
           },
           gotCommand: (name, text, position) => {
             parsingError(`'${name} ${text}'`,
@@ -626,7 +658,7 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
           const commandWords = command.split(/\s+/)
           const firstWord = commandWords[0]
           const supportedCommands = [
-            'program', 'in', 'out', 'err', 'check', 'exit'
+            'program', 'in', 'out', 'err', 'check', 'exit', 'only'
           ]
           if (supportedCommands.includes(firstWord)) {
             const rest = unescape(command.slice(firstWord.length).trim())

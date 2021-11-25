@@ -347,6 +347,15 @@ comment for each annotation.
 
    You can use `!test exit nonzero` to accept any non-0 exit code.
 
+ - #### `!test only`
+
+   If any test has this command in front of it, all tests without it are
+   skipped.  (They don't run, and their output is suppressed.)
+
+   This is intended for developer convenience:  When you have lots of tests of
+   which only a few are failing, you can use this command to focus on them, so
+   other tests don't waste time running or clutter your screen.
+
 ## Behaviour details
 
 ### Exit code

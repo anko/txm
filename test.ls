@@ -1018,6 +1018,7 @@ txm-expect do
       - err
       - check
       - exit
+      - only
     ---
 
   # FAILED TO PARSE TESTS
@@ -1434,6 +1435,34 @@ txm-expect do
   # FAILED 1
 
   """
+
+txm-expect do
+  name: "'only' test skips others"
+  input: """
+  <!-- !test program node -->
+  <!-- !test check my test 1 -->
+
+      process.exit(0)
+
+  <!-- !test only -->
+  <!-- !test check my test 2 -->
+
+      process.exit(0)
+
+  <!-- !test check my test 3 -->
+
+      process.exit(1)
+  """
+  expect-stdout: """
+  TAP version 13
+  1..3
+  ok 2 my test 2
+
+  # 1/3 passed
+  # OK, SKIPPED 2
+
+  """
+
 
 txm-expect do
   name: "test program sees metadata as env variables"
