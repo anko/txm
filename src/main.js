@@ -22,6 +22,8 @@ const exitCode = {
   INTERNAL_ERROR: 3
 }
 
+const ANY_NONZERO_EXIT_MARKER = 'nonzero'
+
 const runTests = (queue, options) => {
   try {
 
@@ -79,8 +81,13 @@ const runTests = (queue, options) => {
       const validError = getIfHas('error')
       const validCheck = getIfHas('check')
       const validProgram = (test) => test.program[0]
+      const validExit = getIfHas('exit')
 
-      const normalised = { name: t.name, program: validProgram(t) }
+      const normalised = {
+        name: t.name,
+        program: validProgram(t),
+        exit: validExit(t),
+      }
       let that
       if (that = validInput(t)) normalised.input = that
       if (that = validOutput(t)) normalised.output = that
@@ -134,7 +141,7 @@ const runTests = (queue, options) => {
     const collectAnnotationLocations = (test, annotationTypes) => {
       const locations = {}
       annotationTypes = annotationTypes
-        || ['input', 'output', 'error', 'check', 'program']
+        || ['input', 'output', 'error', 'check', 'program', 'exit']
 
       for (let type of annotationTypes) {
         if (test[type]) {
@@ -167,6 +174,17 @@ const runTests = (queue, options) => {
             + `\nusing <!-- !test program <TEST PROGRAM HERE> -->` })
 
         fail(index, test.name, "no program defined", debugProperties)
+        return cb()
+      }
+
+      // Handle ambiguous multiple exit codes
+      if (test.exit && test.exit.length > 1) {
+        fail(index, test.name, 'multiple expected exit statuses defined',
+          Object.assign(
+            collectAnnotationLocations(test, ['exit']), {
+              'how to fix': 'Have just 1 expected exit status, before one of'
+                + '\nthis test\'s \'!test\' commands.'
+            }))
         return cb()
       }
 
@@ -247,14 +265,34 @@ const runTests = (queue, options) => {
 
       const resultCallback = (e, stdout, stderr) => {
         if (e) {
-          fail(index, test.name, 'program exited with error',
-            Object.assign({
-              program: test.program.code,
-              'exit status': e.code,
-              stderr: stderr,
-              stdout: stdout
-            }, collectAnnotationLocations(test)))
-          return cb()
+          if (
+            // It's an error if one of the following is true:
+            // - We want to see a nonzero exit code, but it's zero
+            (test.exit && test.exit.code === ANY_NONZERO_EXIT_MARKER &&
+              e.code === 0) ||
+            // We want to see a specific exit code, but it's not this one
+            (test.exit && test.exit.code !== e.code) ||
+            // We aren't awaiting a particular one, but it's non-zero
+            (!test.exit && e.code !== 0)
+          ) {
+            const failureData = {}
+            failureData.program = test.program.code
+            failureData['exit status'] = e.code
+            if (test.exit) failureData['expected exit status'] = test.exit.code
+            failureData.stderr = stderr,
+            failureData.stdout = stdout
+            let wording = 'error'
+            if (test.exit) {
+              if (test.exit.code === ANY_NONZERO_EXIT_MARKER) {
+                wording = 'unexpected success'
+              } else {
+                wording = 'unexpected exit status'
+              }
+            }
+            fail(index, test.name, `program exited with ${wording}`,
+              Object.assign(failureData, collectAnnotationLocations(test)))
+            return cb()
+          }
         }
 
         if (test.check) {
@@ -492,33 +530,54 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
     that state.
   */
   const parseStateMachine = {
-    waitingForAnyCommand: ({program}) => {
+    waitingForAnyCommand: ({program, exit}) => {
       return {
         gotText: () => {},
         gotCommand: (name, text, position) => {
           switch (name) {
             case 'program':
               parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
-                { program: { code: text, position: position } })
+                { program: { code: text, position: position }, exit })
+              break
+            case 'exit':
+              text = text.trim()
+              if (text.match(/[0-9]+/)) {
+                const code = Number.parseInt(text)
+                parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
+                  { exit: { code, position: position }, program })
+              } else if (text === 'nonzero') {
+                parseStateMachine.now = parseStateMachine.waitingForAnyCommand(
+                  { exit: {
+                      code: ANY_NONZERO_EXIT_MARKER,
+                      position: position },
+                    program })
+              } else {
+                parsingError(`'${name} ${text}'`,
+                  `bad exit code specified`, {
+                    location: formatPosition(position),
+                    'how to fix': 'Use an integer >=0, or the word'
+                      + ' \'nonzero\',\nto accept any non-zero exit code'
+                  })
+              }
               break
             case 'in':
               parseStateMachine.now = parseStateMachine.waitingForInputText(
-                { program: program, name: text })
+                { program, exit, name: text })
               break
             case 'out':
               parseStateMachine.now = parseStateMachine.waitingForOutputText(
-                { program: program, name: text })
+                { program, exit, name: text })
               break
             case 'err':
               parseStateMachine.now = parseStateMachine.waitingForErrorText(
-                { program: program, name: text })
+                { program, exit, name: text })
               break
             case 'check':
               parseStateMachine.now = parseStateMachine.waitingForCheckText(
-                { program: program, name: text })
+                { program, exit, name: text })
           }
         }
-      };
+      }
     },
   }
 
@@ -528,13 +587,16 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
   // expecting to next see a code block.
   for (let annotationType of ['input', 'output', 'error', 'check']) {
     parseStateMachine[`waitingFor${capitalise(annotationType)}Text`] =
-      ({program, name}) => {
+      ({program, name, exit}) => {
         return {
           gotText: (text, position, lang) => {
+            // The exit code only applies to this test, not continuously, so
+            // don't pass it back to the `waitingForAnyCommand` state.
             parseStateMachine.now =
               parseStateMachine.waitingForAnyCommand({ program })
             addToTestSpec(name, annotationType, {text, position, lang})
             setFieldInTestSpec(name, 'program', program)
+            if (exit) addToTestSpec(name, 'exit', exit)
           },
           gotCommand: (name, text, position) => {
             parsingError(`'${name} ${text}'`,
@@ -563,7 +625,9 @@ const parseAndRunTests = (text, options={jobs: 1}) => {
           const [, command] = match
           const commandWords = command.split(/\s+/)
           const firstWord = commandWords[0]
-          const supportedCommands = ['program', 'in', 'out', 'err', 'check']
+          const supportedCommands = [
+            'program', 'in', 'out', 'err', 'check', 'exit'
+          ]
           if (supportedCommands.includes(firstWord)) {
             const rest = unescape(command.slice(firstWord.length).trim())
             parseStateMachine.now.gotCommand(firstWord, rest, node.position)

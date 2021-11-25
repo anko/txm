@@ -1017,6 +1017,7 @@ txm-expect do
       - out
       - err
       - check
+      - exit
     ---
 
   # FAILED TO PARSE TESTS
@@ -1352,6 +1353,85 @@ txm-expect do
 
   # 1/1 passed
   # OK
+
+  """
+
+txm-expect do
+  name: "expected exit status command"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit 1 -->
+  <!-- !test in my test -->
+
+      console.log('output')
+      process.exit(1)
+
+  <!-- !test out my test -->
+
+      output
+
+  """
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 my test
+
+  # 1/1 passed
+  # OK
+
+  """
+
+txm-expect do
+  name: "expected exit status command with check"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit 1 -->
+  <!-- !test check my test -->
+
+      console.log('output')
+      process.exit(1)
+  """
+  expect-stdout: """
+  TAP version 13
+  1..1
+  ok 1 my test
+
+  # 1/1 passed
+  # OK
+
+  """
+
+txm-expect do
+  name: "multiple expected exit status commands"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit 1 -->
+  <!-- !test in my test -->
+
+      console.log('output')
+      process.exit(1)
+
+  <!-- !test exit 1 -->
+  <!-- !test out my test -->
+
+      output
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 my test: multiple expected exit statuses defined
+    ---
+    exit locations:
+      - line 2
+      - line 8
+    how to fix: |
+      Have just 1 expected exit status, before one of
+      this test's '!test' commands.
+    ---
+
+  # 0/1 passed
+  # FAILED 1
 
   """
 

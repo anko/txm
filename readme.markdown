@@ -197,12 +197,16 @@ and `!test err` blocks.
 > ```
 </details>
 
-<details><summary>Testing a program that exits non-zero</summary>
+<details><summary>Ignoring the tested program's exit code</summary>
 
-`txm` assumes that if the test program exits non-zero, it must have been
-unintentional.  You can put `|| true` after the program command to make the
-shell swallow the exit code and pretend to `txm` that it was `0` and everything
-is fine.
+Normally, you'd use `!test exit nonzero` (or a specific exit code) to tell txm
+that a test is expected to fail.  But since you need to write that before every
+failing run, it can get pointlessly repetitive if e.g. it's obvious only from
+the output of your program when it failed.
+
+In such cases, just put `|| true` after the program command to make the shell
+swallow the exit code and pretend to `txm` that it was `0`.  Remember that the
+program tests are run with can be a whole script.
 
 <!-- !test in don't fail on non-zero -->
 
@@ -238,7 +242,7 @@ nonzero when the assert fails), then you don't really need an output block,
 because the example already documents its assumptions.
 
 In such cases you can use use a `!test check` annotation.  This simply runs the
-code, and checks that the program exits with status `0`, ignoring its output.
+code, ignoring its output.
 
 <!-- !test in asserting test -->
 
@@ -330,17 +334,24 @@ comment for each annotation.
 
    The next code block is read as a check test.  The program gets this as
    input, but its output is ignored.  The test will pass if the program exits
-   successfully (with exit code `0`).
+   successfully.  (With exit code `0`, or that specified in a `!test exit`
+   command prior.)
 
    Use this for code examples that check their own correctness, for example by
    calling an `assert` function.
+
+ - #### `!test exit <code>`
+
+   The _next test_ which is fully read is expected to fail, and to exit with
+   the given `code`, instead of the default `0`.
+
+   You can use `!test exit nonzero` to accept any non-0 exit code.
 
 ## Behaviour details
 
 ### Exit code
 
-`txm` exits `0` if and only if all tests pass.  It exits 2 for bad input, and 1
-for other failures.
+`txm` exits `0` if and only if all tests pass.
 
 ### Colour <sub>(color, for Americans grepping)</sub>
 
