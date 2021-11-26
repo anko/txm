@@ -289,8 +289,10 @@ const runTests = (queue, options) => {
             // We want to see a nonzero exit code, but it's zero
             (test.exit && test.exit.code === ANY_NONZERO_EXIT_MARKER &&
               e.code === 0) ||
-            // We want to see a specific exit code, but it's not this one
-            (test.exit && test.exit.code !== e.code) ||
+            // We want to see a specific exit code, and it's not this one
+            (test.exit
+              && test.exit.code !== ANY_NONZERO_EXIT_MARKER
+              && test.exit.code !== e.code) ||
             // We aren't awaiting a particular one, but it's non-zero
             (!test.exit && e.code !== 0)
           ) {

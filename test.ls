@@ -1477,6 +1477,33 @@ txm-expect do
   """
 
 txm-expect do
+  name: "'exit': expect nonzero"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit nonzero -->
+  <!-- !test check test 1 -->
+
+      console.log('output')
+      process.exit(1)
+
+  <!-- !test exit nonzero -->
+  <!-- !test check test 2 -->
+
+      console.log('output')
+      process.exit(2)
+  """
+  expect-stdout: """
+  TAP version 13
+  1..2
+  ok 1 test 1
+  ok 2 test 2
+
+  # 2/2 passed
+  # OK
+
+  """
+
+txm-expect do
   name: "multiple expected exit status commands"
   input: """
   <!-- !test program node -->
