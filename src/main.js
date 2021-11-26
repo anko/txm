@@ -304,8 +304,7 @@ const runTests = (queue, options) => {
             failureData.stdout = stdout
             let wording = 'error'
             if (test.exit) {
-              if (e.code === 0 && (test.exit.code > 0
-                  || test.exit.code === ANY_NONZERO_EXIT_MARKER)) {
+              if (e.code === 0 && test.exit.code !== 0) {
                 wording = 'unexpected success'
               } else {
                 wording = 'unexpected exit status'
