@@ -1504,6 +1504,19 @@ txm-expect do
   """
 
 txm-expect do
+  name: "'exit' bad error code"
+  input: """
+  <!-- !test program node -->
+  <!-- !test exit blah blah -->
+  <!-- !test check my test -->
+
+      process.exit(0)
+
+  """
+  expect-exit: 2
+  expect-stdout: /bad exit code/
+
+txm-expect do
   name: "multiple expected exit status commands"
   input: """
   <!-- !test program node -->
