@@ -8,8 +8,14 @@ import color from 'kleur'
 import { exec } from 'child_process'
 import DMP from 'diff-match-patch'
 
-import { readFileSync } from 'fs'
-const homepageLink = JSON.parse(readFileSync('./package.json')).homepage
+import path from 'node:path'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+const homepageLink = (() => {
+  const packageJsonPath = path.join(
+    path.dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
+  return JSON.parse(readFileSync(packageJsonPath)).homepage
+})()
 
 color.enabled = supportsColor.stdout
 

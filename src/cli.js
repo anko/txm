@@ -7,18 +7,23 @@ import { fileURLToPath } from 'node:url'
 
 import parseAndRunTests from './main.js'
 
-const packageMetadata = JSON.parse(readFileSync('./package.json'))
+const thisFilePath = fileURLToPath(import.meta.url)
+const rootDir = path.resolve(path.dirname(thisFilePath), '..')
+
+const packageMetadata = JSON.parse(readFileSync(
+  path.join(rootDir, 'package.json')))
 const { version } = packageMetadata
 
-// Determine the name of the program for the purpose of usage help text.  We
-// can do this programmatically by parsing the `package.json` metadata, so it's
-// only stored in 1 place and easy to change later.
-const programName = Object.entries(packageMetadata.bin)
-  .filter(([name, binPath]) => {
-    const absBin = path.resolve(binPath)
-    const absSelf = path.resolve(fileURLToPath(import.meta.url))
-    return absBin === absSelf
-  })[0][0]
+// Determine program name for use in usage help text.  We can parse
+// `package.json` metadata to keep it the "single source of truth".
+const programName = (() => {
+  for (let [name, binPath] of Object.entries(packageMetadata.bin)) {
+    const binPathAbsolute = path.resolve(rootDir, binPath)
+    if (binPathAbsolute === thisFilePath) return name
+  }
+  /* c8 ignore next */
+  throw Error('No package.json bin matches this file!')
+})()
 
 // The possible properties here:
 //

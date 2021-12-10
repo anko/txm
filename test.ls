@@ -1851,3 +1851,32 @@ test "attempting to open nonexistent file" (t) ->
   t.ok lines.0.match new RegExp "ENOENT.*#uuid"
 
   t.end!
+
+test "running txm from some other directory" (t) ->
+  # chdir to somewhere distant, and try to run txm from over there
+  tmp.dir (err, path, cleanup) ->
+    const previousCwd = process.cwd()
+    process.chdir(path)
+
+    # Create test file
+    fs.writeFileSync do
+      't.js'
+      """
+      <!-- !test program cat -->
+      <!-- !test in 1 -->
+
+          hi
+
+      <!-- !test out 1 -->
+
+          hi
+
+      """
+
+    { stdout, status, stderr } =
+      run-program "node #previousCwd/src/cli.js t.js"
+    t.equal(status, 0)
+
+    process.chdir(previousCwd)
+    cleanup!
+    t.end!
