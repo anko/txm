@@ -1,6 +1,6 @@
 {
   "name": "txm",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "description": "tool for testing code examples in Markdown files",
   "type": "module",
   "exports": "./src/main.js",
