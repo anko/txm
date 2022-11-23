@@ -110,13 +110,35 @@ const runTests = (queue, options) => {
     }
 
     const makeColouredDiff = (expected, actual) => {
-      if (!color.enabled) return { expected, actual }
 
       const diff = dmp.diff_main(expected, actual)
       dmp.diff_cleanupSemantic(diff);
 
-      const withVisibleNewlines = (text) =>
-        text.replace(new RegExp(os.EOL, 'g'), (x) => `↵${x}`)
+      // We intend to replace invisible control characters with standard
+      // Unicode Control Pictures. This set will be part of the return value.
+      // It will contain the Control Pictures that were used, so that they can
+      // be listed for easy reference by the user.
+      const controlPicturesUsed = new Set()
+
+      // Debugging issues with control characters is very painful, so let's
+      // make it easier.
+      const withVisibleControlCharacters = text => {
+
+        const controlPictures = []
+        const resultingText = text.replace(/[\x00-\x1f\x20]/g, x => {
+          const pic = String.fromCharCode(x.charCodeAt(0) + 0x2400)
+          controlPictures.push(pic)
+          // For line feeds, also retain the actual line feed. Else everything
+          // that's part of a diff would be forced onto one line.
+          if (x === '\n') {
+            return pic + '\n'
+          } else {
+            return pic
+          }
+        })
+
+        return { text: resultingText, controlPictures }
+      }
 
       const changeType = { NONE: 0, ADDED: 1, REMOVED: -1 }
 
@@ -127,9 +149,12 @@ const runTests = (queue, options) => {
               return textSoFar + text
             case changeType.ADDED:
               return textSoFar
-            case changeType.REMOVED:
+            case changeType.REMOVED: {
+              const { text: resultingText, controlPictures } = withVisibleControlCharacters(text)
+              controlPictures.forEach(x => controlPicturesUsed.add(x))
               return textSoFar + color.strikethrough(color.inverse(color.red(
-                withVisibleNewlines(text))))
+                resultingText)))
+            }
           }
         }, '')
 
@@ -138,9 +163,11 @@ const runTests = (queue, options) => {
           switch (change) {
             case changeType.NONE:
               return textSoFar + text
-            case changeType.ADDED:
-              return textSoFar + color.inverse(color.green(
-                withVisibleNewlines(text)))
+            case changeType.ADDED: {
+              const { text: resultingText, controlPictures } = withVisibleControlCharacters(text)
+              controlPictures.forEach(x => controlPicturesUsed.add(x))
+              return textSoFar + color.inverse(color.green(resultingText))
+            }
             case changeType.REMOVED:
               return textSoFar
           }
@@ -148,6 +175,7 @@ const runTests = (queue, options) => {
       return {
         expected: highlightedExpected,
         actual: highlightedActual,
+        controlPicturesUsed,
       }
     }
 
@@ -327,27 +355,50 @@ const runTests = (queue, options) => {
           return cb()
         }
 
+        // A helper function to generate the test-result note-text that lists
+        // invisible control characters replaced for clarity.
+        function controlPicturesNote(type, controlPicturesUsed) {
+          return [...controlPicturesUsed.values()].map(picture => {
+            const name = nameOfControlCharacterForControlPicture(picture)
+            return `${picture} represents ${name}`
+          }).join('\n')
+        }
+
         if (('output' in test) && stdout !== test.output.text) {
-          const {expected, actual} = makeColouredDiff(test.output.text, stdout)
-          fail(index, test.name, 'output mismatch',
-            Object.assign({
-              'expected stdout': expected,
-              'actual stdout': actual,
-              program: test.program.code,
-              'stderr': stderr,
-            }, collectAnnotationLocations(test)))
+          const {expected, actual, controlPicturesUsed} =
+            makeColouredDiff(test.output.text, stdout)
+
+          const notes = {}
+          notes['expected stdout'] = expected
+          notes['actual stdout'] = actual
+          if (controlPicturesUsed.size > 0) {
+            notes['invisible characters in diff'] =
+              controlPicturesNote('stdout', controlPicturesUsed)
+          }
+          notes['program'] = test.program.code
+          notes['stderr'] = stderr
+          Object.assign(notes, collectAnnotationLocations(test))
+
+          fail(index, test.name, 'output mismatch', notes)
           return cb()
         }
 
         if (('error' in test) && stderr !== test.error.text) {
-          const {expected, actual} = makeColouredDiff(test.error.text, stderr)
-          fail(index, test.name, 'error mismatch',
-            Object.assign({
-              'expected stderr': expected,
-              'actual stderr': actual,
-              program: test.program.code,
-              'stdout': stdout,
-            }, collectAnnotationLocations(test)))
+          const {expected, actual, controlPicturesUsed} =
+            makeColouredDiff(test.error.text, stderr)
+
+          const notes = {}
+          notes['expected stderr'] = expected
+          notes['actual stderr'] = actual
+          if (controlPicturesUsed.size > 0) {
+            notes['invisible characters in diff'] =
+              controlPicturesNote('stderr', controlPicturesUsed)
+          }
+          notes['program'] = test.program.code
+          notes['stdout'] = stdout
+          Object.assign(notes, collectAnnotationLocations(test))
+
+          fail(index, test.name, 'error mismatch', notes)
           return cb()
         }
 
@@ -780,6 +831,53 @@ const parsingError = (name, failureReason, properties) => {
   console.log()
   console.log(color.black(color.bgRed('# FAILED TO PARSE TESTS')))
   process.exit(exitCode.FORMAT_ERROR)
+}
+
+// Since the Unicode Control Pictures are not always self-explanatory, this
+// function is for listing the names, C escapes, and Unicode code points of the
+// characters they stand for. This is a lot of information, but bugs relating
+// to invisible characters can be correspondingly hairy.
+function nameOfControlCharacterForControlPicture(c) {
+  const codepoint = c.charCodeAt(0) - 0x2400
+  const hex = codepoint.toString(16)
+  const unicodeCodepoint = "U+" + "0000".substring(0, 4 - hex.length) + hex
+
+  return ({
+    0x00: 'Null ("\\0")',
+    0x01: 'Start of Heading',
+    0x02: 'Start of Text',
+    0x03: 'End of Text',
+    0x04: 'End of Transmission',
+    0x05: 'Enquiry',
+    0x06: 'Acknowledge',
+    0x07: 'Bell ("\\a")',
+    0x08: 'Backspace ("\\b")',
+    0x09: 'Horizontal Tabulation ("\\t")',
+    0x0A: 'Line Feed ("\\n")',
+    0x0B: 'Vertical Tabulation ("\\v")',
+    0x0C: 'Form Feed ("\\f")',
+    0x0D: 'Carriage Return ("\\r")',
+    0x0E: 'Shift Out',
+    0x0F: 'Shift In',
+    0x10: 'Data Link Escape',
+    0x11: 'Device Control One',
+    0x12: 'Device Control Two',
+    0x13: 'Device Control Three',
+    0x14: 'Device Control Four',
+    0x15: 'Negative Acknowledge',
+    0x16: 'Synchronous Idle',
+    0x17: 'End of Transmission Block',
+    0x18: 'Cancel',
+    0x19: 'End of Medium',
+    0x1A: 'Substitute',
+    0x1B: 'Escape ("\\e")',
+    0x1C: 'File Separator',
+    0x1D: 'Group Separator',
+    0x1E: 'Record Separator',
+    0x1F: 'Unit Separator',
+    0x20: 'Space (" ")',
+    0x23: 'Space (" ")',
+  })[codepoint] + ` [${unicodeCodepoint}]`
 }
 
 export default parseAndRunTests

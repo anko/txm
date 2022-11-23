@@ -114,12 +114,10 @@ txm-expect do
   <!-- !test out test name -->
 
       hello
-      there
 
   <!-- !test err test name -->
 
       hello
-      there
 
   """
   expect-exit: 1
@@ -130,7 +128,6 @@ txm-expect do
     ---
     expected stdout: |
       hello
-      there
 
     actual stdout: |
       hi
@@ -141,9 +138,9 @@ txm-expect do
     input location: |
       line 4
     output location: |
-      lines 8-9
+      line 8
     error location: |
-      lines 13-14
+      line 12
     program location: |
       line 1
     ---
@@ -156,15 +153,15 @@ txm-expect do
 txm-expect do
   name: "stderr mismatch"
   input: """
-  <!-- !test program cat -->
+  <!-- !test program node -->
   <!-- !test in test name -->
 
-      hi
+      console.error('hi')
+      console.log('hi')
 
   <!-- !test err test name -->
 
       hello
-      there
 
   """
   expect-exit: 1
@@ -175,18 +172,19 @@ txm-expect do
     ---
     expected stderr: |
       hello
-      there
 
-    actual stderr: ''
+    actual stderr: |
+      hi
+
     program: |
-      cat
+      node
     stdout: |
       hi
 
     input location: |
-      line 4
+      lines 4-5
     error location: |
-      lines 8-9
+      line 9
     program location: |
       line 1
     ---
@@ -1697,6 +1695,103 @@ txm-expect do
   # OK
 
   """
+
+txm-expect do
+  name: "stdout diff containing control characters"
+  input: """
+  <!-- !test program node -->
+
+  <!-- !test in name -->
+
+      process.stdout.write("line 1\\r\\0\\nline 2")
+
+  <!-- !test out name -->
+
+      line 1
+      line 2
+
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 name: output mismatch
+    ---
+    expected stdout: |
+      line 1
+      line 2␊
+
+    actual stdout: |
+      line 1␍␀
+      line 2
+    invisible characters in diff: |
+      ␊ represents Line Feed ("\\n") [U+000a]
+      ␍ represents Carriage Return ("\\r") [U+000d]
+      ␀ represents Null ("\\0") [U+0000]
+    program: |
+      node
+    stderr: ''
+    input location: |
+      line 5
+    output location: |
+      lines 9-10
+    program location: |
+      line 1
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
+txm-expect do
+  name: "stderr diff containing control characters"
+  input: """
+  <!-- !test program node -->
+
+  <!-- !test in name -->
+
+      process.stderr.write("line 1\\r\\0\\nline 2")
+
+  <!-- !test err name -->
+
+      line 1
+      line 2
+
+  """
+  expect-exit: 1
+  expect-stdout: """
+  TAP version 13
+  1..1
+  not ok 1 name: error mismatch
+    ---
+    expected stderr: |
+      line 1
+      line 2␊
+
+    actual stderr: |
+      line 1␍␀
+      line 2
+    invisible characters in diff: |
+      ␊ represents Line Feed ("\\n") [U+000a]
+      ␍ represents Carriage Return ("\\r") [U+000d]
+      ␀ represents Null ("\\0") [U+0000]
+    program: |
+      node
+    stdout: ''
+    input location: |
+      line 5
+    error location: |
+      lines 9-10
+    program location: |
+      line 1
+    ---
+
+  # 0/1 passed
+  # FAILED 1
+
+  """
+
 
 txm-expect do
   name: "success colours work"

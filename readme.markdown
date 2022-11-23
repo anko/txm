@@ -13,8 +13,8 @@ preceding code blocks, runs them, and checks that the outputs match.
    <br><sup>You choose the shell command(s).  Many languages in the same doc
    are OK.</sup>
  - __Helpful failure diagnostics__
-   <br><sup>Colours (optional), diffs, line numbers, exit code and stderr,
-   etc.</sup>
+   <br><sup>Colours (optional), diffs, line numbers, exit code, stderr,
+   invisible characters, etc.</sup>
  - __Parallel tests on multi-core machines__
    <br><sup>Configurable.  Result output ordering remains constant.</sup>
  - __[TAP][tap-spec] format output__
@@ -361,6 +361,34 @@ comment for each annotation.
 ### Exit code
 
 `txm` exits `0` if and only if all tests pass.
+
+### Invisible characters
+
+In diff additions and deletions, [C0 Control Characters][control-chars] (such
+as Null, Line Feed, or Space), which are ordinarily invisible, are shown as the
+corresponding [Unicode Control Picture][control-picture]. These take the form
+of small diagonally arranged letters, so Null becomes ␀, Line Feed becomes ␊,
+and Space becomes ␠. This is the standard way to show this set of invisible
+characters.
+
+Whenever such characters are used, an index will be present in the accompanying
+test data, listing what original character each picture corresponds to, with
+its name, C escape, and Unicode code point. This is intended to give as much
+information as possible, because bugs relating to invisible characters are
+awkward to debug.
+
+If an invisible character is not part of the diff, it is shown normally
+(without a Control Picture replacement.)
+
+To maintain line breaks, the Line Feed character is kept as-is, with its
+Control Picture (␊) added at the end of the line for clarity.
+
+Invisible characters that aren't part of the C0 set are shown as-is. Examples
+include the zero-width space, or right-to-left text flow marker.
+
+
+[control-chars]: https://en.wikipedia.org/wiki/C0_and_C1_control_codes#C0_controls
+[control-picture]: https://en.wikipedia.org/wiki/Unicode_control_characters#Control_pictures
 
 ### Colour <sub>(color, for Americans grepping)</sub>
 
