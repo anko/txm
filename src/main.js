@@ -787,41 +787,60 @@ const indent = (n, text) => {
     .map((line) => line.length ? `${spaces}${line}` : line)
     .join(os.EOL)
 }
-const formatProperties = (properties, indentLevel=0) => {
-  const horizontalRule = indent(indentLevel, color.dim("---"))
-  let text = horizontalRule
+
+// Format the given object's properties as valid YAML. This is used to present
+// notes along with test results.
+const formatYAMLProperties = (properties, indentLevel=0) => {
+  const propertyTexts = []
 
   for (let [key, value] of Object.entries(properties)) {
-    text += '\n' + indent(indentLevel, `${color.blue(key)}:`)
-    switch (type(value)) {
-      case 'Array':
-        for (let v of value)
-          text += '\n' + indent(indentLevel + 1, `- ${v.toString()}`)
-        break
-      case 'Number':
-        text += ' ' + value.toString();
-        break;
-      case 'String':
-        if (value === '') text += " ''"
-        else text += ' |\n' + indent(indentLevel + 1, value)
-        break
-      /* c8 ignore start */
-      // Should never happen, but this is convenient while developing.
-      default:
-        throw Error(`Unexpected property type ${type(value)}:`
-          + `${JSON.stringify(value)}`)
-      /* c8 ignore stop */
-    }
+    const keyText = indent(indentLevel, `${color.blue(key)}:`)
+
+    const valueText = (() => {
+      switch (type(value)) {
+        case 'Array':
+          return '\n' + value
+            .map(v => indent(indentLevel + 1, `- ${v.toString()}`))
+            .join('\n')
+        case 'Number':
+          return ' ' + value.toString()
+        case 'String': {
+          // We want to present string values compactly in the YAML output,
+          // while still being maximally unambiguous.
+
+          // The easiest case: The string contains no newlines or single-quotes
+          // that we'd have to escape, and there's space for it in 80 columns
+          // and quote characters after the key.
+          const availableWidthAfterKey = 80 - indent(indentLevel, key).length
+          const fitsOnSameLine = availableWidthAfterKey > value.length + 3
+          if (!value.match(/[\n']/) && fitsOnSameLine) {
+            return ` '${value}'`
+          } else {
+            // Otherwise, use "|"-notation.
+            return ` |\n${indent(indentLevel + 1, value)}`
+          }
+        }
+
+        /* c8 ignore start */
+        // Should never happen, but this is convenient while developing.
+        default:
+          throw Error(`Unexpected property type ${type(value)}:`
+            + `${JSON.stringify(value)}`)
+        /* c8 ignore stop */
+      }
+    })()
+
+    propertyTexts.push(`${keyText}${valueText}`)
   }
-  text += "\n" + horizontalRule
-  return text
+  const horizontalRule = indent(indentLevel, color.dim("---"))
+  return `${horizontalRule}\n${propertyTexts.join('\n')}\n${horizontalRule}`
 }
 const successText = (index, name) =>
   `${color.green('ok')} ${color.dim(index)} ${name}`
 const failureText = (index, name, failureReason, properties) => {
   let text = `${color.red('not ok')} ${color.dim(index)} ${name}`
     + color.dim(`: ${failureReason}`)
-  if (properties) text += "\n" + formatProperties(properties, 1)
+  if (properties) text += "\n" + formatYAMLProperties(properties, 1)
   return text
 }
 

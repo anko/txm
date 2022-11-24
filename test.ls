@@ -132,17 +132,12 @@ txm-expect do
     actual stdout: |
       hi
 
-    program: |
-      cat
+    program: 'cat'
     stderr: ''
-    input location: |
-      line 4
-    output location: |
-      line 8
-    error location: |
-      line 12
-    program location: |
-      line 1
+    input location: 'line 4'
+    output location: 'line 8'
+    error location: 'line 12'
+    program location: 'line 1'
     ---
 
   # 0/1 passed
@@ -176,17 +171,13 @@ txm-expect do
     actual stderr: |
       hi
 
-    program: |
-      node
+    program: 'node'
     stdout: |
       hi
 
-    input location: |
-      lines 4-5
-    error location: |
-      line 9
-    program location: |
-      line 1
+    input location: 'lines 4-5'
+    error location: 'line 9'
+    program location: 'line 1'
     ---
 
   # 0/1 passed
@@ -219,15 +210,12 @@ txm-expect do
   1..1
   not ok 1 test name: multiple errors defined
     ---
-    input location: |
-      line 4
+    input location: 'line 4'
     error locations:
       - lines 8-9
       - lines 13-14
-    program location: |
-      line 1
-    how to fix: |
-      Remove or rename the other errors.
+    program location: 'line 1'
+    how to fix: 'Remove or rename the other errors.'
     ---
 
   # 0/1 passed
@@ -367,10 +355,8 @@ txm-expect do
   1..1
   not ok 1 1: no program defined
     ---
-    input location: |
-      line 3
-    output location: |
-      line 7
+    input location: 'line 3'
+    output location: 'line 7'
     how to fix: |
       Declare a test program before your test,
       using <!-- !test program <TEST PROGRAM HERE> -->
@@ -407,8 +393,7 @@ txm-expect do
     input locations:
       - line 3
       - line 7
-    output location: |
-      line 11
+    output location: 'line 11'
     how to fix: |
       Declare a test program before your test,
       using <!-- !test program <TEST PROGRAM HERE> -->
@@ -433,8 +418,7 @@ txm-expect do
   1..1
   not ok 1 1: only input defined
     ---
-    input location: |
-      line 4
+    input location: 'line 4'
     how to fix: |
       Define an output or error for '1', using
 
@@ -466,8 +450,7 @@ txm-expect do
   1..1
   not ok 1 1: input not defined
     ---
-    output location: |
-      line 4
+    output location: 'line 4'
     how to fix: |
       Define an input for '1', using
 
@@ -503,8 +486,7 @@ txm-expect do
   0..0
   not ok 0 'in 2': unexpected command (expected input text)
     ---
-    location: |
-      line 3
+    location: 'line 3'
     how to fix: |
       Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
       by a block of code, not another test command.
@@ -537,8 +519,7 @@ txm-expect do
   0..0
   not ok 0 'out 2': unexpected command (expected output text)
     ---
-    location: |
-      line 3
+    location: 'line 3'
     how to fix: |
       Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
       by a block of code, not another test command.
@@ -571,8 +552,7 @@ txm-expect do
   0..0
   not ok 0 'err 2': unexpected command (expected error text)
     ---
-    location: |
-      line 3
+    location: 'line 3'
     how to fix: |
       Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
       by a block of code, not another test command.
@@ -598,8 +578,7 @@ txm-expect do
   0..0
   not ok 0 'check 2': unexpected command (expected check text)
     ---
-    location: |
-      line 3
+    location: 'line 3'
     how to fix: |
       Check that your 'in' / 'out' / 'err' / 'check' commands are each followed
       by a block of code, not another test command.
@@ -732,12 +711,9 @@ txm-expect do
       - line 4
       - line 8
       - line 16
-    output location: |
-      line 12
-    program location: |
-      line 1
-    how to fix: |
-      Remove or rename the other inputs.
+    output location: 'line 12'
+    program location: 'line 1'
+    how to fix: 'Remove or rename the other inputs.'
     ---
 
   # 0/1 passed
@@ -772,16 +748,13 @@ txm-expect do
   1..1
   not ok 1 1: multiple outputs defined
     ---
-    input location: |
-      line 12
+    input location: 'line 12'
     output locations:
       - line 4
       - line 8
       - line 16
-    program location: |
-      line 1
-    how to fix: |
-      Remove or rename the other outputs.
+    program location: 'line 1'
+    how to fix: 'Remove or rename the other outputs.'
     ---
 
   # 0/1 passed
@@ -949,8 +922,7 @@ txm-expect do
   1..2
   not ok 1 x: program exited with error
     ---
-    program: |
-      echo stdout hello; >&2 echo stderr hello; exit 1
+    program: 'echo stdout hello; >&2 echo stderr hello; exit 1'
     exit status: 1
     stderr: |
       stderr hello
@@ -958,17 +930,13 @@ txm-expect do
     stdout: |
       stdout hello
 
-    input location: |
-      line 4
-    output location: |
-      line 8
-    program location: |
-      line 1
+    input location: 'line 4'
+    output location: 'line 8'
+    program location: 'line 1'
     ---
   not ok 2 y: program exited with error
     ---
-    program: |
-      echo stdout hello; >&2 echo stderr hello; exit 1
+    program: 'echo stdout hello; >&2 echo stderr hello; exit 1'
     exit status: 1
     stderr: |
       stderr hello
@@ -976,12 +944,9 @@ txm-expect do
     stdout: |
       stdout hello
 
-    input location: |
-      lines 12-13
-    output location: |
-      lines 17-18
-    program location: |
-      line 1
+    input location: 'lines 12-13'
+    output location: 'lines 17-18'
+    program location: 'line 1'
     ---
 
   # 0/2 passed
@@ -1007,8 +972,7 @@ txm-expect do
   0..0
   not ok 0 'something': unknown command type
     ---
-    location: |
-      line 2
+    location: 'line 2'
     supported commands:
       - program
       - in
@@ -1041,17 +1005,13 @@ txm-expect do
   1..1
   not ok 1 my test: program exited with error
     ---
-    program: |
-      exit 1
+    program: 'exit 1'
     exit status: 1
     stderr: ''
     stdout: ''
-    input location: |
-      line 4
-    output location: |
-      line 8
-    program location: |
-      line 1
+    input location: 'line 4'
+    output location: 'line 8'
+    program location: 'line 1'
     ---
 
   # 0/1 passed
@@ -1112,10 +1072,8 @@ txm-expect do
     stdout: |
       stdout here
 
-    check location: |
-      line 8
-    program location: |
-      lines 1-4
+    check location: 'line 8'
+    program location: 'lines 1-4'
     ---
 
   # 0/1 passed
@@ -1146,12 +1104,9 @@ txm-expect do
   1..1
   not ok 1 my test: defined as check, but also has input
     ---
-    input location: |
-      line 12
-    check location: |
-      line 8
-    how to fix: |
-      Remove the input, or create an in/out test instead.
+    input location: 'line 12'
+    check location: 'line 8'
+    how to fix: 'Remove the input, or create an in/out test instead.'
     ---
 
   # 0/1 passed
@@ -1182,12 +1137,9 @@ txm-expect do
   1..1
   not ok 1 my test: defined as check, but also has output
     ---
-    output location: |
-      line 12
-    check location: |
-      line 8
-    how to fix: |
-      Remove the output, or create an in/out test instead.
+    output location: 'line 12'
+    check location: 'line 8'
+    how to fix: 'Remove the output, or create an in/out test instead.'
     ---
 
   # 0/1 passed
@@ -1218,12 +1170,9 @@ txm-expect do
   1..1
   not ok 1 my test: defined as check, but also has error
     ---
-    error location: |
-      line 12
-    check location: |
-      line 8
-    how to fix: |
-      Remove the error, or create an in/out test instead.
+    error location: 'line 12'
+    check location: 'line 8'
+    how to fix: 'Remove the error, or create an in/out test instead.'
     ---
 
   # 0/1 passed
@@ -1257,8 +1206,7 @@ txm-expect do
     check locations:
       - line 8
       - line 12
-    how to fix: |
-      Remove or rename the other checks.
+    how to fix: 'Remove or rename the other checks.'
     ---
 
   # 0/1 passed
@@ -1281,17 +1229,14 @@ txm-expect do
   1..1
   not ok 1 my test: program exited with error
     ---
-    program: |
-      cat ; exit 1
+    program: 'cat ; exit 1'
     exit status: 1
     stderr: ''
     stdout: |
       hi
 
-    check location: |
-      line 4
-    program location: |
-      line 1
+    check location: 'line 4'
+    program location: 'line 1'
     ---
 
   # 0/1 passed
@@ -1416,20 +1361,16 @@ txm-expect do
   1..1
   not ok 1 my test: program exited with unexpected exit status
     ---
-    program: |
-      node
+    program: 'node'
     exit status: 1
     expected exit status: 2
     stderr: ''
     stdout: |
       output
 
-    check location: |
-      lines 5-6
-    program location: |
-      line 1
-    exit location: |
-      line 2
+    check location: 'lines 5-6'
+    program location: 'line 1'
+    exit location: 'line 2'
     ---
 
   # 0/1 passed
@@ -1453,20 +1394,16 @@ txm-expect do
   1..1
   not ok 1 my test: program exited with unexpected success
     ---
-    program: |
-      node
+    program: 'node'
     exit status: 0
     expected exit status: 1
     stderr: ''
     stdout: |
       output
 
-    check location: |
-      lines 5-6
-    program location: |
-      line 1
-    exit location: |
-      line 2
+    check location: 'lines 5-6'
+    program location: 'line 1'
+    exit location: 'line 2'
     ---
 
   # 0/1 passed
@@ -1728,15 +1665,11 @@ txm-expect do
       ␊ represents Line Feed ("\\n") [U+000a]
       ␍ represents Carriage Return ("\\r") [U+000d]
       ␀ represents Null ("\\0") [U+0000]
-    program: |
-      node
+    program: 'node'
     stderr: ''
-    input location: |
-      line 5
-    output location: |
-      lines 9-10
-    program location: |
-      line 1
+    input location: 'line 5'
+    output location: 'lines 9-10'
+    program location: 'line 1'
     ---
 
   # 0/1 passed
@@ -1776,15 +1709,11 @@ txm-expect do
       ␊ represents Line Feed ("\\n") [U+000a]
       ␍ represents Carriage Return ("\\r") [U+000d]
       ␀ represents Null ("\\0") [U+0000]
-    program: |
-      node
+    program: 'node'
     stdout: ''
-    input location: |
-      line 5
-    error location: |
-      lines 9-10
-    program location: |
-      line 1
+    input location: 'line 5'
+    error location: 'lines 9-10'
+    program location: 'line 1'
     ---
 
   # 0/1 passed
