@@ -1,4 +1,4 @@
-# txm [![](https://img.shields.io/npm/v/txm.svg)][1] [![](https://img.shields.io/github/workflow/status/anko/txm/CI/master)][2] [![](https://img.shields.io/coveralls/github/anko/txm)][coveralls]
+# txm [![](https://img.shields.io/npm/v/txm.svg)][1] [![](https://img.shields.io/github/actions/workflow/status/anko/txm/ci.yml?branch=master)][2] [![](https://img.shields.io/coveralls/github/anko/txm)][coveralls]
 
 <img align="right" width="40%" alt="example output for a test failure" src="https://user-images.githubusercontent.com/5231746/78293904-a7f23a00-7529-11ea-9632-799402a0219b.png"></img>
 
@@ -459,7 +459,7 @@ The name txm stands for "tests ex markdown" as in "deus ex machina", or
 [ISC](LICENSE)
 
 [1]: https://www.npmjs.com/package/txm
-[2]: https://github.com/anko/txm/actions/workflows/ci.yml
+[2]: https://github.com/anko/txm/actions/workflows/ci.yml?query=branch%3Amaster
 [coveralls]: https://coveralls.io/github/anko/txm
 [gh-markdown-lang]: https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks#syntax-highlighting
 [html-comments-spec]: https://html.spec.whatwg.org/multipage/syntax.html#comments
