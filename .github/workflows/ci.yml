@@ -30,7 +30,7 @@ jobs:
         run: npm run-script test-with-coverage
 
       - name: generate LCOV coverage report
-        run: $(npm bin)/c8 report --reporter=text-lcov > ./coverage/lcov.info
+        run: ./node_modules/.bin/c8 report --reporter=text-lcov > ./coverage/lcov.info
       - name: upload coverage report to coveralls
         uses: coverallsapp/github-action@master
         with:
